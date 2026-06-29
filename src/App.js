@@ -11,6 +11,110 @@ const DEFAULT_TB = [
   {id:"s3",title:"세종학당 한국어 3A / Sejong 3A",sl:"3A",lv:"intermediate",desc:"중급으로 도약하는 3A 교재\nStepping into intermediate level",ko:DRIVE,en:""},
 ];
 const LV = {beginner:{b:"bg-emerald-100 text-emerald-700",e:"🌱",n:"초급"},intermediate:{b:"bg-amber-100 text-amber-700",e:"⭐",n:"중급"},advanced:{b:"bg-rose-100 text-rose-700",e:"🏆",n:"고급"}};
+const STARTER_100 = [
+  {word:"안녕하세요",meaning:"Hello / Hi"},
+  {word:"감사합니다",meaning:"Thank you"},
+  {word:"죄송합니다",meaning:"I'm sorry"},
+  {word:"네",meaning:"Yes"},
+  {word:"아니요",meaning:"No"},
+  {word:"저 / 나",meaning:"I / Me"},
+  {word:"사람",meaning:"Person / People"},
+  {word:"친구",meaning:"Friend"},
+  {word:"집",meaning:"House / Home"},
+  {word:"이름",meaning:"Name"},
+  {word:"물",meaning:"Water"},
+  {word:"커피",meaning:"Coffee"},
+  {word:"밥",meaning:"Rice / Meal"},
+  {word:"음식",meaning:"Food"},
+  {word:"돈",meaning:"Money"},
+  {word:"가방",meaning:"Bag"},
+  {word:"옷",meaning:"Clothes"},
+  {word:"문",meaning:"Door"},
+  {word:"창문",meaning:"Window"},
+  {word:"지하철",meaning:"Subway"},
+  {word:"차 (차량)",meaning:"Car"},
+  {word:"책",meaning:"Book"},
+  {word:"컴퓨터",meaning:"Computer"},
+  {word:"휴대폰",meaning:"Cellphone"},
+  {word:"화장실",meaning:"Restroom / Bathroom"},
+  {word:"가게",meaning:"Store / Shop"},
+  {word:"시장",meaning:"Market"},
+  {word:"병원",meaning:"Hospital"},
+  {word:"약국",meaning:"Pharmacy"},
+  {word:"회사",meaning:"Company / Office"},
+  {word:"학교",meaning:"School"},
+  {word:"역",meaning:"Station"},
+  {word:"가족",meaning:"Family"},
+  {word:"부모",meaning:"Parents"},
+  {word:"아버지 (아빠)",meaning:"Father (Dad)"},
+  {word:"어머니 (엄마)",meaning:"Mother (Mom)"},
+  {word:"동생",meaning:"Younger sibling"},
+  {word:"형",meaning:"Older brother (used by males)"},
+  {word:"오빠",meaning:"Older brother (used by females)"},
+  {word:"누나",meaning:"Older sister (used by males)"},
+  {word:"언니",meaning:"Older sister (used by females)"},
+  {word:"학생",meaning:"Student"},
+  {word:"선생님",meaning:"Teacher"},
+  {word:"의사",meaning:"Doctor"},
+  {word:"오늘",meaning:"Today"},
+  {word:"어제",meaning:"Yesterday"},
+  {word:"내일",meaning:"Tomorrow"},
+  {word:"지금",meaning:"Now"},
+  {word:"매일",meaning:"Everyday"},
+  {word:"아침",meaning:"Morning / Breakfast"},
+  {word:"점심",meaning:"Afternoon / Lunch"},
+  {word:"저녁",meaning:"Evening / Dinner"},
+  {word:"밤",meaning:"Night"},
+  {word:"시간",meaning:"Time / Hour"},
+  {word:"시 (時)",meaning:"O'clock"},
+  {word:"분 (分)",meaning:"Minute"},
+  {word:"월 (月)",meaning:"Month"},
+  {word:"일 (日)",meaning:"Day / Date"},
+  {word:"월요일",meaning:"Monday"},
+  {word:"금요일",meaning:"Friday"},
+  {word:"토요일",meaning:"Saturday"},
+  {word:"일요일",meaning:"Sunday"},
+  {word:"하다",meaning:"To do"},
+  {word:"오다",meaning:"To come"},
+  {word:"가다",meaning:"To go"},
+  {word:"먹다",meaning:"To eat"},
+  {word:"보다",meaning:"To see / watch / look"},
+  {word:"듣다",meaning:"To listen / hear"},
+  {word:"자다",meaning:"To sleep"},
+  {word:"만나다",meaning:"To meet"},
+  {word:"살다",meaning:"To live"},
+  {word:"사다",meaning:"To buy"},
+  {word:"마시다",meaning:"To drink"},
+  {word:"알다",meaning:"To know"},
+  {word:"모르다",meaning:"To not know"},
+  {word:"말하다",meaning:"To speak / talk / say"},
+  {word:"기다리다",meaning:"To wait"},
+  {word:"일하다",meaning:"To work"},
+  {word:"공부하다",meaning:"To study"},
+  {word:"배우다",meaning:"To learn"},
+  {word:"있다",meaning:"To have / To be (somewhere)"},
+  {word:"없다",meaning:"To not have / To not be (somewhere)"},
+  {word:"많다",meaning:"To be many / much"},
+  {word:"적다",meaning:"To be few / little"},
+  {word:"싸다",meaning:"To be cheap"},
+  {word:"비싸다",meaning:"To be expensive"},
+  {word:"맛있다",meaning:"To be delicious"},
+  {word:"재미있다",meaning:"To be fun / interesting"},
+  {word:"좋다",meaning:"To be good / nice"},
+  {word:"나쁘다",meaning:"To be bad"},
+  {word:"크다",meaning:"To be big"},
+  {word:"작다",meaning:"To be small"},
+  {word:"바쁘다",meaning:"To be busy"},
+  {word:"아프다",meaning:"To be sick / painful"},
+  {word:"어렵다",meaning:"To be difficult"},
+  {word:"쉽다",meaning:"To be easy"},
+  {word:"누구",meaning:"Who"},
+  {word:"무엇 (뭐)",meaning:"What"},
+  {word:"언제",meaning:"When"},
+  {word:"어디",meaning:"Where"},
+  {word:"어떻게",meaning:"How"},
+  {word:"왜",meaning:"Why"},
+];
 const TEACHER_PASSWORD = process.env.REACT_APP_TEACHER_PASSWORD || "may2024";
 
 // Firestore helpers
@@ -376,11 +480,22 @@ function TeacherVoc({data,save}){
     await save("voc",u);setForm(null);
   };
   const del=async id=>{await save("voc",voc.filter(v=>v.id!==id));};
+  const autoGen=async()=>{
+    if(!window.confirm("초보자 필수 100단어 단어장과 연습용 단어장을 생성합니다. 계속할까요?"))return;
+    const ts=Date.now();
+    const now=new Date().toISOString();
+    const base={id:ts+"",name:"초보자 필수 100단어",words:STARTER_100.map(w=>({...w})),createdAt:now};
+    const practice={id:(ts+1)+"",name:"초보자 필수 100단어 (연습용)",words:STARTER_100.map(w=>({...w})),practice:true,createdAt:now};
+    await save("voc",[base,practice,...voc]);
+  };
   return(
     <div>
       <div className="flex justify-between items-center mb-3">
         <SectionTitle ko="단어장" en="Vocabulary"/>
-        {!form&&<button onClick={openAdd} className="bg-purple-500 text-white px-3 py-2 rounded-xl text-sm font-medium flex items-center gap-1"><Plus className="w-4 h-4"/>만들기</button>}
+        {!form&&<div className="flex gap-2">
+          <button onClick={autoGen} className="bg-indigo-500 text-white px-3 py-2 rounded-xl text-sm font-medium flex items-center gap-1"><Sparkles className="w-4 h-4"/>자동생성</button>
+          <button onClick={openAdd} className="bg-purple-500 text-white px-3 py-2 rounded-xl text-sm font-medium flex items-center gap-1"><Plus className="w-4 h-4"/>만들기</button>
+        </div>}
       </div>
       {form&&<div className="bg-white rounded-xl p-4 mb-3 border-2 border-purple-200 space-y-2">
         <div className="text-xs font-bold text-purple-600">{form.id?"✏️ 수정":"➕ 새 단어장"}</div>
@@ -480,7 +595,8 @@ function StudentVoc({voc}){
   const [ans,setAns]=useState({});const [checked,setChecked]=useState(false);
   const back=()=>{setSel(null);setMode(null);setAns({});setChecked(false);};
   const printPDF=s=>{
-    const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${s.name}</title><style>body{font-family:sans-serif;padding:24px;max-width:600px;margin:auto}h1{font-size:18px;color:#4338ca;border-bottom:2px solid #e0e7ff;padding-bottom:6px;margin-bottom:12px}table{width:100%;border-collapse:collapse}th{background:#f1f5f9;font-size:12px;padding:8px 10px;text-align:left;border:1px solid #e2e8f0}td{padding:8px 10px;border:1px solid #e2e8f0;font-size:13px}tr:nth-child(even){background:#f8fafc}</style></head><body><h1>📖 ${s.name}</h1><p style="font-size:11px;color:#94a3b8;margin-bottom:12px">May's Korean Class · ${new Date().toLocaleDateString("ko-KR")}</p><table><thead><tr><th>#</th><th>단어</th><th>뜻</th></tr></thead><tbody>${s.words.map((w,i)=>`<tr><td>${i+1}</td><td>${w.word}</td><td>${w.meaning}</td></tr>`).join("")}</tbody></table></body></html>`;
+    const meanStyle=s.practice?' style="color:#cbd5e1"':"";
+    const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${s.name}</title><style>body{font-family:sans-serif;padding:24px;max-width:600px;margin:auto}h1{font-size:18px;color:#4338ca;border-bottom:2px solid #e0e7ff;padding-bottom:6px;margin-bottom:12px}table{width:100%;border-collapse:collapse}th{background:#f1f5f9;font-size:12px;padding:8px 10px;text-align:left;border:1px solid #e2e8f0}td{padding:8px 10px;border:1px solid #e2e8f0;font-size:13px}tr:nth-child(even){background:#f8fafc}</style></head><body><h1>📖 ${s.name}</h1><p style="font-size:11px;color:#94a3b8;margin-bottom:12px">May's Korean Class · ${new Date().toLocaleDateString("ko-KR")}</p><table><thead><tr><th>#</th><th>단어</th><th>뜻</th></tr></thead><tbody>${s.words.map((w,i)=>`<tr><td>${i+1}</td><td>${w.word}</td><td${meanStyle}>${w.meaning}</td></tr>`).join("")}</tbody></table></body></html>`;
     const blob=new Blob([html],{type:"text/html"});
     const url=URL.createObjectURL(blob);
     const a=document.createElement("a");a.href=url;a.download=`${s.name}.html`;
@@ -517,7 +633,7 @@ function StudentVoc({voc}){
           <tr key={i} className={`border-b border-slate-100 ${i%2===1?"bg-slate-50/50":""}`}>
             <td className="text-xs text-slate-400 px-2 py-2.5">{i+1}</td>
             <td className="font-medium text-slate-800 px-3 py-2.5">{w.word}</td>
-            <td className="text-slate-600 px-3 py-2.5">{w.meaning}</td>
+            <td className={`px-3 py-2.5 ${sel.practice?"text-slate-300 italic":"text-slate-600"}`}>{w.meaning}</td>
           </tr>
         ))}</tbody>
       </table>
@@ -543,7 +659,7 @@ function StudentVoc({voc}){
             <td className="font-medium text-slate-800 px-3 py-2 whitespace-nowrap">{w.word}</td>
             <td className="px-2 py-1.5">
               <div className="flex items-center gap-1">
-                <input value={ans[i]||""} onChange={e=>setAns({...ans,[i]:e.target.value})} disabled={checked} placeholder="meaning..." className={`w-full min-w-0 px-2 py-1 rounded border text-sm focus:outline-none ${ok?"border-green-400 text-green-700":bad?"border-red-300 text-red-700":"border-slate-200 focus:border-indigo-400"}`}/>
+                <input value={ans[i]||""} onChange={e=>setAns({...ans,[i]:e.target.value})} disabled={checked} placeholder={sel.practice?w.meaning:"meaning..."} className={`w-full min-w-0 px-2 py-1 rounded border text-sm focus:outline-none ${ok?"border-green-400 text-green-700":bad?"border-red-300 text-red-700":"border-slate-200 focus:border-indigo-400"}`}/>
                 {ok&&<CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0"/>}
                 {bad&&<XCircle className="w-4 h-4 text-red-400 flex-shrink-0"/>}
               </div>
