@@ -128,11 +128,10 @@ function LoginScreen({onLogin}){
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm">
         <div className="text-center mb-6">
-          <div className="w-14 h-14 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg"><BookOpen className="w-7 h-7 text-white"/></div>
-          <p className="text-[10px] font-bold tracking-[0.3em] text-purple-500 uppercase mb-1">— by May —</p>
-          <h1 className="text-2xl font-bold text-slate-800">May's Korean Class</h1>
-          <p className="text-slate-600 text-sm mt-2">✨ May와 함께하는 한국어 학습 공간 ✨</p>
-          <p className="text-xs text-slate-400 italic">A cozy Korean learning space with May</p>
+          <div className="w-14 h-14 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg"><BookOpen className="w-7 h-7 text-white"/></div
+            <h1 className="text-2xl font-bold text-slate-800">May's Korean Class</h1>
+            <p className="text-slate-600 text-sm mt-2">✨ 함께하는 한국어 학습 공간 ✨</p>
+            <p className="text-xs text-slate-400 italic">A cozy Korean learning space</p>
         </div>
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-2">
