@@ -1017,7 +1017,9 @@ function AITutor(){
     if(!inp.trim()||loading)return;
     const um={role:"user",content:inp.trim()};const nm=[...msgs,um];setMsgs(nm);setInp("");setLoading(true);
     try{
-      const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:1000,system:"You are a friendly Korean language tutor for beginners. Always answer bilingually: Korean first, then '---', then English explanation.",messages:nm.map(m=>({role:m.role,content:m.content}))})});
+      const apiKey=process.env.REACT_APP_ANTHROPIC_API_KEY;
+      if(!apiKey){setMsgs([...nm,{role:"assistant",content:"API 키가 설정되지 않았습니다. Vercel 환경변수 REACT_APP_ANTHROPIC_API_KEY를 추가해주세요."}]);setLoading(false);return;}
+      const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:"claude-haiku-4-5-20251001",max_tokens:1000,system:"You are a friendly Korean language tutor for beginners. Always answer bilingually: Korean first, then '---', then English explanation.",messages:nm.map(m=>({role:m.role,content:m.content}))})});
       const d=await r.json();
       setMsgs([...nm,{role:"assistant",content:d.content?.find(c=>c.type==="text")?.text||"다시 시도해주세요."}]);
     }catch{setMsgs([...nm,{role:"assistant",content:"오류가 발생했어요. / Error occurred."}]);}
