@@ -878,17 +878,20 @@ function StudentAnn({ann}){
 }
 
 function StudentMat({mat}){
-  const [open,setOpen]=useState(null);
+  const [open,setOpen]=useState("");
   return(<div><SectionTitle ko="📚 학습 자료" en="Materials"/>
-    {mat.length===0?<Empty ko="자료가 없습니다" en="No materials yet"/>:mat.map(m=>(
-      <div key={m.id} className="bg-white rounded-xl mb-2 border border-slate-200">
-        <button onClick={()=>setOpen(open===m.id?null:m.id)} className="w-full flex items-center justify-between px-4 py-3 text-left">
-          <span className="font-medium text-slate-800 text-sm flex-1 min-w-0 truncate">{m.title}</span>
-          {open===m.id?<ChevronUp className="w-4 h-4 text-slate-400 flex-shrink-0"/>:<ChevronDown className="w-4 h-4 text-slate-400 flex-shrink-0"/>}
-        </button>
-        {open===m.id&&<div className="px-4 pb-4 border-t border-slate-100 pt-3"><p className="text-sm text-slate-600 whitespace-pre-wrap">{m.content}</p>{m.link&&<a href={m.link} target="_blank" rel="noopener noreferrer" className="text-indigo-500 text-sm mt-2 inline-block">🔗 링크</a>}</div>}
-      </div>
-    ))}
+    {mat.length===0?<Empty ko="자료가 없습니다" en="No materials yet"/>:mat.map((m,idx)=>{
+      const mid=m.id||String(idx);
+      return(
+        <div key={mid} className="bg-white rounded-xl mb-2 border border-slate-200">
+          <button onClick={()=>setOpen(open===mid?"":mid)} className="w-full flex items-center justify-between px-4 py-3 text-left">
+            <span className="font-medium text-slate-800 text-sm flex-1 min-w-0 truncate">{m.title}</span>
+            {open===mid?<ChevronUp className="w-4 h-4 text-slate-400 flex-shrink-0"/>:<ChevronDown className="w-4 h-4 text-slate-400 flex-shrink-0"/>}
+          </button>
+          {open===mid&&<div className="px-4 pb-4 border-t border-slate-100 pt-3"><p className="text-sm text-slate-600 whitespace-pre-wrap">{m.content}</p>{m.link&&<a href={m.link} target="_blank" rel="noopener noreferrer" className="text-indigo-500 text-sm mt-2 inline-block">🔗 링크</a>}</div>}
+        </div>
+      );
+    })}
   </div>);
 }
 
