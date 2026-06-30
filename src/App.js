@@ -789,7 +789,7 @@ function TeacherVoc({data,save}){
   };
   const del=async id=>{await save("voc",voc.filter(v=>v.id!==id));};
   const autoGen=async()=>{
-    if(!window.confirm("초급1/초급2/중급1/중급2 단어장과 연습용 8개를 생성합니다. 계속할까요?"))return;
+    if(!window.confirm("초급1/초급2/중급1/중급2 단어장 4개를 생성합니다. 계속할까요?"))return;
     let ts=Date.now();
     const now=new Date().toISOString();
     const existingWords=new Set(voc.flatMap(s=>(s.words||[]).map(w=>w.word)));
@@ -798,16 +798,22 @@ function TeacherVoc({data,save}){
       const fresh=lv.words.filter(w=>!existingWords.has(w.word)).map(w=>({...w}));
       if(!fresh.length) continue;
       newSets.push({id:(ts++)+"",name:lv.name,words:fresh,createdAt:now});
-      newSets.push({id:(ts++)+"",name:lv.name+" (연습용)",words:fresh.map(w=>({...w})),practice:true,createdAt:now});
     }
     if(!newSets.length){window.alert("이미 모든 단어가 존재합니다.");return;}
     await save("voc",[...newSets,...voc]);
+  };
+  const delPractice=async()=>{
+    const cnt=voc.filter(v=>v.practice).length;
+    if(!cnt){window.alert("연습용 단어장이 없습니다.");return;}
+    if(!window.confirm(`연습용 단어장 ${cnt}개를 모두 삭제합니다. 계속할까요?`))return;
+    await save("voc",voc.filter(v=>!v.practice));
   };
   return(
     <div>
       <div className="flex justify-between items-center mb-3">
         <SectionTitle ko="단어장" en="Vocabulary"/>
         {!form&&<div className="flex gap-2">
+          {voc.some(v=>v.practice)&&<button onClick={delPractice} className="bg-red-100 text-red-600 px-3 py-2 rounded-xl text-sm font-medium flex items-center gap-1"><Trash2 className="w-4 h-4"/>연습용 삭제</button>}
           <button onClick={autoGen} className="bg-indigo-500 text-white px-3 py-2 rounded-xl text-sm font-medium flex items-center gap-1"><Sparkles className="w-4 h-4"/>자동생성</button>
           <button onClick={openAdd} className="bg-purple-500 text-white px-3 py-2 rounded-xl text-sm font-medium flex items-center gap-1"><Plus className="w-4 h-4"/>만들기</button>
         </div>}
@@ -909,10 +915,9 @@ function StudentVoc({voc}){
   const [sel,setSel]=useState(null);const [mode,setMode]=useState(null);
   const [ans,setAns]=useState({});const [checked,setChecked]=useState(false);
   const back=()=>{setSel(null);setMode(null);setAns({});setChecked(false);};
-  const printPDF=s=>{
-    const isP=s.practice;
-    const meanCell=w=>isP?'<td style="height:28px">&nbsp;</td>':`<td>${w.meaning}</td>`;
-    const subtitle=isP?'<p style="font-size:11px;color:#94a3b8;margin-bottom:12px">연습용 워크시트 · 영어 뜻을 직접 적어보세요</p>':"";
+  const printPDF=(s, isPractice=false)=>{
+    const meanCell=w=>isPractice?'<td style="height:28px">&nbsp;</td>':`<td>${w.meaning}</td>`;
+    const subtitle=isPractice?'<p style="font-size:11px;color:#94a3b8;margin-bottom:12px">연습용 워크시트 · 영어 뜻을 직접 적어보세요</p>':"";
     const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${s.name}</title><style>body{font-family:sans-serif;padding:24px;max-width:600px;margin:auto}h1{font-size:18px;color:#4338ca;border-bottom:2px solid #e0e7ff;padding-bottom:6px;margin-bottom:12px}table{width:100%;border-collapse:collapse}th{background:#f1f5f9;font-size:12px;padding:8px 10px;text-align:left;border:1px solid #e2e8f0}td{padding:8px 10px;border:1px solid #e2e8f0;font-size:13px}tr:nth-child(even){background:#f8fafc}</style></head><body><h1>📖 ${s.name}</h1>${subtitle}<p style="font-size:11px;color:#94a3b8;margin-bottom:12px">May's Korean Class · ${new Date().toLocaleDateString("ko-KR")}</p><table><thead><tr><th>#</th><th>단어</th><th>뜻</th></tr></thead><tbody>${s.words.map((w,i)=>`<tr><td>${i+1}</td><td>${w.word}</td>${meanCell(w)}</tr>`).join("")}</tbody></table></body></html>`;
     const blob=new Blob([html],{type:"text/html"});
     const url=URL.createObjectURL(blob);
@@ -924,7 +929,8 @@ function StudentVoc({voc}){
       <div key={s.id} className="bg-white rounded-xl p-4 mb-3 border border-slate-200">
         <div className="mb-3">
           <p className="font-bold text-slate-800">{s.name}</p>
-          <p className="text-xs text-slate-500">{s.words.length}개 단어{s.practice&&" · 연습용 (영어 칸 비어있음)"}</p>
+          <p className="text-xs text-slate-500">{s.words.length}개 단어</p>
+          <p className="text-xs text-slate-400 mt-1 truncate">{s.words.slice(0,4).map(w=>`${w.word} / ${w.meaning}`).join(" · ")}{s.words.length>4&&" ···"}</p>
         </div>
         <div className="flex gap-2 mb-2">
           <button onClick={()=>{setSel(s);setMode("view");}} className="flex-1 bg-indigo-500 text-white py-2.5 rounded-xl text-sm font-medium">📖 보기</button>
@@ -951,7 +957,7 @@ function StudentVoc({voc}){
           <tr key={i} className={`border-b border-slate-100 ${i%2===1?"bg-slate-50/50":""}`}>
             <td className="text-xs text-slate-400 px-2 py-2.5">{i+1}</td>
             <td className="font-medium text-slate-800 px-3 py-2.5">{w.word}</td>
-            <td className={`px-3 py-2.5 text-slate-600 ${sel.practice?"h-9 border-l border-dashed border-slate-200":""}`}>{sel.practice?"":w.meaning}</td>
+            <td className="px-3 py-2.5 text-slate-600">{w.meaning}</td>
           </tr>
         ))}</tbody>
       </table>
@@ -962,7 +968,7 @@ function StudentVoc({voc}){
     <button onClick={back} className="text-slate-500 text-sm mb-3 hover:underline">← 목록으로</button>
     <div className="flex justify-between items-center mb-1">
       <h2 className="font-bold text-slate-800 text-lg">✏️ {sel.name}</h2>
-      <button onClick={()=>printPDF(sel)} className="bg-white border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg text-xs flex items-center gap-1 shadow-sm"><Download className="w-3.5 h-3.5"/>PDF 다운로드</button>
+      <button onClick={()=>printPDF(sel,true)} className="bg-white border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg text-xs flex items-center gap-1 shadow-sm"><Download className="w-3.5 h-3.5"/>PDF 다운로드</button>
     </div>
     <p className="text-xs text-slate-400 italic mb-3">뜻을 영어로 입력하세요 / Fill in the English meaning</p>
     <div className="bg-white rounded-xl border border-slate-200 overflow-hidden mb-4">
