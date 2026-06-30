@@ -608,7 +608,7 @@ function TeacherApp({user,data,save,onLogout}){
 
 function StudentApp({user,data,onLogout}){
   const [tab,setTab]=useState("ann");
-  const tabs=[["ann",Bell,"공지"],["mat",FileText,"학습자료"],["tb",BookMarked,"수업교재"],["voc",BookText,"단어장"],["ai",Sparkles,"AI도우미"]];
+  const tabs=[["ann",Bell,"공지"],["mat",FileText,"학습자료"],["tb",BookMarked,"수업교재"],["voc",BookText,"단어장"]];
   return(
     <div className="min-h-screen bg-slate-50">
       <Hdr user={user} onLogout={onLogout} tc={false}/>
@@ -618,7 +618,6 @@ function StudentApp({user,data,onLogout}){
         {tab==="mat"&&<StudentMat mat={data.mat}/>}
         {tab==="tb"&&<StudentTB tb={data.tb}/>}
         {tab==="voc"&&<StudentVoc voc={data.voc}/>}
-        {tab==="ai"&&<AITutor/>}
       </Wrap>
     </div>
   );
