@@ -681,7 +681,7 @@ function TeacherMat({data,save}){
   const upd=f=>setForm(p=>({...p,...f}));
   const saveForm=async()=>{
     if(!form.title.trim()||!form.content.trim())return;
-    const u=form.id?mat.map(m=>m.id===form.id?{...m,...form}:m):[{id:Date.now()+"",createdAt:new Date().toISOString(),...form},...mat];
+    const u=form.id?mat.map(m=>m.id===form.id?{...m,...form}:m):[{...form,id:Date.now()+"",createdAt:new Date().toISOString()},...mat];
     await save("mat",u);setForm(null);
   };
   const del=async id=>{await save("mat",mat.filter(m=>m.id!==id));};
