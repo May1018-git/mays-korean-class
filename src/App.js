@@ -673,18 +673,41 @@ function TeacherStudents({data,save}){
   );
 }
 
+const toEmbedUrl=url=>{
+  if(!url)return"";
+  const m=url.match(/docs\.google\.com\/presentation\/d\/([\w-]+)/);
+  if(m)return`https://docs.google.com/presentation/d/${m[1]}/embed?start=false&loop=false`;
+  return url;
+};
+
+function MatContent({m}){
+  return(
+    <div className="space-y-3">
+      {m.embed&&<div className="rounded-xl overflow-hidden bg-slate-100" style={{position:"relative",paddingTop:"56.25%"}}>
+        <iframe src={toEmbedUrl(m.embed)} style={{position:"absolute",top:0,left:0,width:"100%",height:"100%"}} frameBorder="0" allowFullScreen title={m.title}/>
+      </div>}
+      {(m.images||[]).filter(Boolean).map((img,i)=>(
+        <img key={i} src={img} alt={`자료 ${i+1}`} className="w-full rounded-xl" onError={e=>e.target.style.display="none"}/>
+      ))}
+      {m.content&&<p className="text-sm text-slate-600 whitespace-pre-wrap">{m.content}</p>}
+      {m.link&&<a href={m.link} target="_blank" rel="noopener noreferrer" className="text-indigo-500 text-sm inline-block">🔗 링크</a>}
+    </div>
+  );
+}
+
 function TeacherMat({data,save}){
   const mat=data.mat;
   const [form,setForm]=useState(null);
   const [open,setOpen]=useState(null);
-  const E={id:null,title:"",content:"",link:""};
+  const E={id:null,title:"",content:"",link:"",images:[],embed:""};
   const upd=f=>setForm(p=>({...p,...f}));
   const saveForm=async()=>{
-    if(!form.title.trim()||!form.content.trim())return;
+    if(!form.title.trim())return;
     const u=form.id?mat.map(m=>m.id===form.id?{...m,...form}:m):[{...form,id:Date.now()+"",createdAt:new Date().toISOString()},...mat];
     await save("mat",u);setForm(null);
   };
   const del=async id=>{await save("mat",mat.filter(m=>m.id!==id));};
+  const imgs=form?.images||[];
   return(
     <div>
       <div className="flex justify-between items-center mb-3">
@@ -694,8 +717,22 @@ function TeacherMat({data,save}){
       {form&&<div className="bg-white rounded-xl p-4 mb-3 border-2 border-purple-200 space-y-2">
         <div className="text-xs font-bold text-purple-600">{form.id?"✏️ 수정":"➕ 새 자료"}</div>
         <input placeholder="제목 / Title" value={form.title} onChange={e=>upd({title:e.target.value})} className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:border-purple-400 focus:outline-none"/>
-        <textarea placeholder="내용 / Content" value={form.content} onChange={e=>upd({content:e.target.value})} rows={5} className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:border-purple-400 focus:outline-none"/>
-        <input placeholder="링크 (선택) / Link" value={form.link} onChange={e=>upd({link:e.target.value})} className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:border-purple-400 focus:outline-none"/>
+        <textarea placeholder="내용 / Content (선택)" value={form.content} onChange={e=>upd({content:e.target.value})} rows={4} className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:border-purple-400 focus:outline-none"/>
+        <div className="rounded-lg border border-slate-200 p-3 space-y-2 bg-slate-50">
+          <p className="text-xs font-medium text-slate-600">🖼 이미지 URL</p>
+          {imgs.map((img,i)=>(
+            <div key={i} className="flex gap-1">
+              <input value={img} onChange={e=>{const a=[...imgs];a[i]=e.target.value;upd({images:a});}} placeholder="https://..." className="flex-1 px-2 py-1.5 rounded-lg border border-slate-200 text-xs focus:outline-none bg-white"/>
+              <button onClick={()=>upd({images:imgs.filter((_,j)=>j!==i)})} className="text-slate-300 hover:text-red-400 p-1"><Trash2 className="w-3.5 h-3.5"/></button>
+            </div>
+          ))}
+          <button onClick={()=>upd({images:[...imgs,""]})} className="text-purple-600 text-xs hover:underline">+ 이미지 추가</button>
+        </div>
+        <div className="rounded-lg border border-slate-200 p-3 bg-slate-50 space-y-1">
+          <p className="text-xs font-medium text-slate-600">📊 Google Slides 링크</p>
+          <input placeholder="공유 링크 붙여넣기 → 자동 변환" value={form.embed||""} onChange={e=>upd({embed:e.target.value})} className="w-full px-2 py-1.5 rounded-lg border border-slate-200 text-xs focus:outline-none bg-white"/>
+        </div>
+        <input placeholder="🔗 외부 링크 (선택)" value={form.link} onChange={e=>upd({link:e.target.value})} className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:border-purple-400 focus:outline-none"/>
         <div className="flex gap-2"><button onClick={saveForm} className="bg-purple-500 text-white px-4 py-2 rounded-lg text-sm">저장</button><button onClick={()=>setForm(null)} className="bg-slate-100 text-slate-600 px-4 py-2 rounded-lg text-sm">취소</button></div>
       </div>}
       {mat.length===0&&!form?<Empty ko="자료가 없습니다" en="No materials yet"/>:mat.filter(m=>m.id!==form?.id).map(m=>(
@@ -706,11 +743,11 @@ function TeacherMat({data,save}){
               {open===m.id?<ChevronUp className="w-4 h-4 text-slate-400 flex-shrink-0"/>:<ChevronDown className="w-4 h-4 text-slate-400 flex-shrink-0"/>}
             </button>
             <div className="flex gap-1 ml-2">
-              <button onClick={()=>setForm({id:m.id,title:m.title,content:m.content,link:m.link||""})} className="text-slate-400 hover:text-indigo-500 p-1.5 rounded-lg"><Edit3 className="w-4 h-4"/></button>
+              <button onClick={()=>setForm({id:m.id,title:m.title,content:m.content||"",link:m.link||"",images:m.images||[],embed:m.embed||""})} className="text-slate-400 hover:text-indigo-500 p-1.5 rounded-lg"><Edit3 className="w-4 h-4"/></button>
               <button onClick={()=>del(m.id)} className="text-slate-400 hover:text-red-500 p-1.5 rounded-lg"><Trash2 className="w-4 h-4"/></button>
             </div>
           </div>
-          {open===m.id&&<div className="px-3 pb-3 border-t border-slate-100 pt-3"><p className="text-sm text-slate-600 whitespace-pre-wrap">{m.content}</p>{m.link&&<a href={m.link} target="_blank" rel="noopener noreferrer" className="text-indigo-500 text-sm mt-2 inline-block">🔗 링크</a>}</div>}
+          {open===m.id&&<div className="px-3 pb-3 border-t border-slate-100 pt-3"><MatContent m={m}/></div>}
         </div>
       ))}
     </div>
@@ -887,7 +924,7 @@ function StudentMat({mat}){
             <span className="font-medium text-slate-800 text-sm flex-1 min-w-0 truncate">{m.title}</span>
             {open===mid?<ChevronUp className="w-4 h-4 text-slate-400 flex-shrink-0"/>:<ChevronDown className="w-4 h-4 text-slate-400 flex-shrink-0"/>}
           </button>
-          {open===mid&&<div className="px-4 pb-4 border-t border-slate-100 pt-3"><p className="text-sm text-slate-600 whitespace-pre-wrap">{m.content}</p>{m.link&&<a href={m.link} target="_blank" rel="noopener noreferrer" className="text-indigo-500 text-sm mt-2 inline-block">🔗 링크</a>}</div>}
+          {open===mid&&<div className="px-4 pb-4 border-t border-slate-100 pt-3"><MatContent m={m}/></div>}
         </div>
       );
     })}
