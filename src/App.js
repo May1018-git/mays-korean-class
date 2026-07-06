@@ -687,11 +687,21 @@ const toEmbedUrl=url=>{
 function MatContent({m}){
   return(
     <div className="space-y-3">
-      {m.embed&&<div className="rounded-xl overflow-hidden bg-slate-100" style={{position:"relative",paddingTop:"56.25%"}}>
-        <iframe src={toEmbedUrl(m.embed)} style={{position:"absolute",top:0,left:0,width:"100%",height:"100%"}} frameBorder="0" allowFullScreen title={m.title}/>
-      </div>}
+      {m.embed&&(
+        <div className="space-y-1.5">
+          <div className="rounded-xl overflow-hidden bg-slate-100" style={{position:"relative",paddingTop:"56.25%"}}>
+            <iframe src={toEmbedUrl(m.embed)} style={{position:"absolute",top:0,left:0,width:"100%",height:"100%"}} frameBorder="0" allowFullScreen title={m.title}/>
+          </div>
+          <a href={m.embed} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-1.5 w-full py-2 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-600 text-sm font-medium hover:bg-indigo-100 transition">
+            <ExternalLink className="w-4 h-4"/>전체화면으로 열기
+          </a>
+          <p className="text-xs text-slate-400 text-center">⚠️ 로그인 요구 시 → Google 문서 공유를 <b>"링크 있는 모든 사용자"</b>로 변경하세요</p>
+        </div>
+      )}
       {(m.images||[]).filter(Boolean).map((img,i)=>(
-        <img key={i} src={img} alt={`자료 ${i+1}`} className="w-full rounded-xl" onError={e=>e.target.style.display="none"}/>
+        <a key={i} href={img} target="_blank" rel="noopener noreferrer">
+          <img src={img} alt={`자료 ${i+1}`} className="w-full rounded-xl cursor-pointer hover:opacity-90 transition" onError={e=>e.target.style.display="none"}/>
+        </a>
       ))}
       {m.content&&<p className="text-sm text-slate-600 whitespace-pre-wrap">{m.content}</p>}
       {m.link&&<a href={m.link} target="_blank" rel="noopener noreferrer" className="text-indigo-500 text-sm inline-block">🔗 링크</a>}
