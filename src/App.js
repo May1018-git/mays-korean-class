@@ -675,8 +675,12 @@ function TeacherStudents({data,save}){
 
 const toEmbedUrl=url=>{
   if(!url)return"";
-  const m=url.match(/docs\.google\.com\/presentation\/d\/([\w-]+)/);
-  if(m)return`https://docs.google.com/presentation/d/${m[1]}/embed?start=false&loop=false`;
+  const slides=url.match(/docs\.google\.com\/presentation\/d\/([\w-]+)/);
+  if(slides)return`https://docs.google.com/presentation/d/${slides[1]}/embed?start=false&loop=false`;
+  const docs=url.match(/docs\.google\.com\/document\/d\/([\w-]+)/);
+  if(docs)return`https://docs.google.com/document/d/${docs[1]}/preview`;
+  const sheets=url.match(/docs\.google\.com\/spreadsheets\/d\/([\w-]+)/);
+  if(sheets)return`https://docs.google.com/spreadsheets/d/${sheets[1]}/preview`;
   return url;
 };
 
@@ -729,8 +733,8 @@ function TeacherMat({data,save}){
           <button onClick={()=>upd({images:[...imgs,""]})} className="text-purple-600 text-xs hover:underline">+ 이미지 추가</button>
         </div>
         <div className="rounded-lg border border-slate-200 p-3 bg-slate-50 space-y-1">
-          <p className="text-xs font-medium text-slate-600">📊 Google Slides 링크</p>
-          <input placeholder="공유 링크 붙여넣기 → 자동 변환" value={form.embed||""} onChange={e=>upd({embed:e.target.value})} className="w-full px-2 py-1.5 rounded-lg border border-slate-200 text-xs focus:outline-none bg-white"/>
+          <p className="text-xs font-medium text-slate-600">📄 Google 문서 링크 (Slides · Docs · Sheets)</p>
+          <input placeholder="공유 링크 붙여넣기 → 자동으로 뷰어 모드 변환" value={form.embed||""} onChange={e=>upd({embed:e.target.value})} className="w-full px-2 py-1.5 rounded-lg border border-slate-200 text-xs focus:outline-none bg-white"/>
         </div>
         <input placeholder="🔗 외부 링크 (선택)" value={form.link} onChange={e=>upd({link:e.target.value})} className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:border-purple-400 focus:outline-none"/>
         <div className="flex gap-2"><button onClick={saveForm} className="bg-purple-500 text-white px-4 py-2 rounded-lg text-sm">저장</button><button onClick={()=>setForm(null)} className="bg-slate-100 text-slate-600 px-4 py-2 rounded-lg text-sm">취소</button></div>
