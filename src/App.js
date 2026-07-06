@@ -695,7 +695,6 @@ function MatContent({m}){
           <a href={m.embed} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-1.5 w-full py-2 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-600 text-sm font-medium hover:bg-indigo-100 transition">
             <ExternalLink className="w-4 h-4"/>전체화면으로 열기
           </a>
-          <p className="text-xs text-slate-400 text-center">⚠️ 로그인 요구 시 → Google 문서 공유를 <b>"링크 있는 모든 사용자"</b>로 변경하세요</p>
         </div>
       )}
       {(m.images||[]).filter(Boolean).map((img,i)=>(
