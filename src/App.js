@@ -453,9 +453,11 @@ const Hdr = ({user,onLogout,tc}) => (
 const Tabs = ({tabs,active,setActive}) => (
   <div className="bg-white border-b border-slate-100 sticky top-[57px] z-10">
     <div className="max-w-2xl mx-auto flex overflow-x-auto">
-      {tabs.map(([id,Icon,ko])=>(
-        <button key={id} onClick={()=>setActive(id)} className={`flex-1 min-w-0 flex flex-col items-center gap-0.5 py-2 px-1 text-[11px] font-medium border-b-2 transition ${active===id?"border-indigo-500 text-indigo-600":"border-transparent text-slate-500"}`}>
-          <Icon className="w-4 h-4"/>{ko}
+      {tabs.map(([id,Icon,ko,en])=>(
+        <button key={id} onClick={()=>setActive(id)} className={`flex-1 min-w-0 flex flex-col items-center gap-0 py-2 px-1 border-b-2 transition ${active===id?"border-indigo-500 text-indigo-600":"border-transparent text-slate-500"}`}>
+          <Icon className="w-4 h-4 mb-0.5"/>
+          <span className="text-[11px] font-medium leading-tight">{ko}</span>
+          {en&&<span className="text-[9px] opacity-50 leading-tight">{en}</span>}
         </button>
       ))}
     </div>
@@ -590,7 +592,7 @@ function PendingScreen({user,data,onApproved,onRejected,onCancel}){
 function TeacherApp({user,data,save,onLogout}){
   const [tab,setTab]=useState("students");
   const pending=data.stu.filter(s=>s.status==="pending").length;
-  const tabs=[["students",BarChart3,`학생${pending>0?`(${pending})`:""}` ],["mat",FileText,"학습자료"],["tb",BookMarked,"수업교재"],["voc",BookText,"단어장"],["ann",Megaphone,"공지"]];
+  const tabs=[["students",BarChart3,`학생${pending>0?`(${pending})`:""}`, "Students"],["mat",FileText,"학습자료","Materials"],["tb",BookMarked,"수업교재","Textbook"],["voc",BookText,"단어장","Vocab"],["ann",Megaphone,"공지","Notice"]];
   return(
     <div className="min-h-screen bg-slate-50">
       <Hdr user={user} onLogout={onLogout} tc/>
@@ -608,7 +610,7 @@ function TeacherApp({user,data,save,onLogout}){
 
 function StudentApp({user,data,onLogout}){
   const [tab,setTab]=useState("ann");
-  const tabs=[["ann",Bell,"공지"],["mat",FileText,"학습자료"],["tb",BookMarked,"수업교재"],["voc",BookText,"단어장"]];
+  const tabs=[["ann",Bell,"공지","Notice"],["mat",FileText,"학습자료","Materials"],["tb",BookMarked,"수업교재","Textbook"],["voc",BookText,"단어장","Vocab"]];
   return(
     <div className="min-h-screen bg-slate-50">
       <Hdr user={user} onLogout={onLogout} tc={false}/>
