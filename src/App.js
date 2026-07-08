@@ -545,7 +545,7 @@ function LoginScreen({onLogin}){
 <div className="w-14 h-14 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg"><BookOpen className="w-7 h-7 text-white"/></div>
             <h1 className="text-2xl font-bold text-slate-800">Korean Class</h1>
             <p className="text-slate-600 text-sm mt-2">✨ 함께하는 한국어 학습 공간 ✨</p>
-            <p className="text-xs text-slate-400 italic">A cozy Korean learning space</p>
+            <p className="text-xs text-slate-400 italic">A cozy Korean learning space with May</p>
         </div>
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-2">
@@ -556,7 +556,7 @@ function LoginScreen({onLogin}){
             ))}
           </div>
           <input type="text" value={n} onChange={e=>setN(e.target.value)} onKeyDown={e=>e.key==="Enter"&&go()} placeholder="이름 / Your name" className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-indigo-400 focus:outline-none text-sm"/>
-          {role==="student"&&<p className="text-xs text-slate-400 italic">ℹ️ 첫 접속은 May 선생님 승인 필요 / First access needs approval</p>}
+          {role==="student"&&<p className="text-xs text-slate-400 italic leading-relaxed">ℹ️ 첫 접속은 May 선생님 승인 필요<br/>First access needs teacher approval</p>}
           {role==="teacher"&&<input type="password" value={code} onChange={e=>setCode(e.target.value)} onKeyDown={e=>e.key==="Enter"&&go()} placeholder="선생님 코드 / Teacher code" className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-purple-400 focus:outline-none text-sm"/>}
           {err&&<div className="bg-red-50 border border-red-200 text-red-600 text-xs rounded-lg px-3 py-2 whitespace-pre-wrap">{err}</div>}
           <button onClick={go} disabled={loading} className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-medium py-3 rounded-xl shadow-md transition disabled:opacity-50 flex items-center justify-center gap-2">
