@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { db } from "./firebase";
 import { doc, getDoc, setDoc, onSnapshot } from "firebase/firestore";
-import { BookOpen, FileText, Bell, BarChart3, Plus, Trash2, Send, User, GraduationCap, LogOut, Sparkles, CheckCircle, XCircle, Loader2, Megaphone, Lock, Clock, UserCheck, UserX, BookMarked, Edit3, ExternalLink, ChevronDown, ChevronUp, Download, BookText } from "lucide-react";
+import { BookOpen, FileText, Bell, BarChart3, Plus, Trash2, Send, User, GraduationCap, LogOut, Sparkles, CheckCircle, XCircle, Loader2, Megaphone, Lock, Clock, UserCheck, UserX, BookMarked, Edit3, ExternalLink, ChevronDown, ChevronUp, Download, BookText, ArrowUp, ArrowDown } from "lucide-react";
 
 const DRIVE = "https://drive.google.com/drive/folders/1OL0qtkASaU_sj-VM0T79qXlef07zEseZ?usp=drive_link";
 const DEFAULT_TB = [
@@ -423,6 +423,328 @@ const AUTO_VOC = [
     {word:"부분",meaning:"Part / Portion"},
   ]},
 ];
+const TOPIC_VOC=[
+  {topic:"식당/외식",keywords:["식당","음식","외식","먹","메뉴","레스토랑","밥","점심","저녁","식사"],words:[
+    {word:"메뉴판",meaning:"Menu (booklet)"},
+    {word:"주문하다",meaning:"To order"},
+    {word:"계산서",meaning:"Bill / Check"},
+    {word:"반찬",meaning:"Side dish"},
+    {word:"국물",meaning:"Broth / Soup base"},
+    {word:"젓가락",meaning:"Chopsticks"},
+    {word:"숟가락",meaning:"Spoon"},
+    {word:"포장하다",meaning:"To take out / pack"},
+    {word:"예약하다",meaning:"To make a reservation"},
+    {word:"맵다",meaning:"To be spicy"},
+    {word:"달다",meaning:"To be sweet"},
+    {word:"짜다",meaning:"To be salty"},
+    {word:"싱겁다",meaning:"To be bland"},
+    {word:"쓰다",meaning:"To be bitter"},
+    {word:"불고기",meaning:"Bulgogi (grilled beef)"},
+    {word:"갈비",meaning:"Galbi (ribs)"},
+    {word:"삼겹살",meaning:"Samgyeopsal (pork belly)"},
+    {word:"된장찌개",meaning:"Doenjang jjigae (soybean paste stew)"},
+    {word:"순두부찌개",meaning:"Sundubu jjigae (soft tofu stew)"},
+    {word:"냉면",meaning:"Cold noodles"},
+    {word:"비빔밥",meaning:"Bibimbap (mixed rice bowl)"},
+    {word:"잡채",meaning:"Japchae (glass noodles)"},
+    {word:"떡볶이",meaning:"Tteokbokki (spicy rice cakes)"},
+    {word:"1인분",meaning:"One serving"},
+    {word:"서비스",meaning:"On the house / Complimentary"},
+    {word:"맛있다",meaning:"To be delicious"},
+    {word:"맛없다",meaning:"To taste bad"},
+    {word:"배부르다",meaning:"To be full"},
+    {word:"배고프다",meaning:"To be hungry"},
+    {word:"음료",meaning:"Beverage"},
+  ]},
+  {topic:"여행/관광",keywords:["여행","관광","여권","비자","숙소","해외","공항","투어","trip","travel"],words:[
+    {word:"여권",meaning:"Passport"},
+    {word:"비자",meaning:"Visa"},
+    {word:"체크인",meaning:"Check-in"},
+    {word:"체크아웃",meaning:"Check-out"},
+    {word:"숙소",meaning:"Accommodation"},
+    {word:"관광지",meaning:"Tourist spot"},
+    {word:"여행사",meaning:"Travel agency"},
+    {word:"지도",meaning:"Map"},
+    {word:"환전",meaning:"Currency exchange"},
+    {word:"환율",meaning:"Exchange rate"},
+    {word:"입국심사",meaning:"Immigration check"},
+    {word:"수하물",meaning:"Baggage / Luggage"},
+    {word:"탑승권",meaning:"Boarding pass"},
+    {word:"명소",meaning:"Famous attraction"},
+    {word:"기념품",meaning:"Souvenir"},
+    {word:"사진찍다",meaning:"To take a photo"},
+    {word:"구경하다",meaning:"To sightsee / look around"},
+    {word:"안내소",meaning:"Information center"},
+    {word:"왕복",meaning:"Round trip"},
+    {word:"편도",meaning:"One way"},
+    {word:"투어",meaning:"Tour"},
+    {word:"현지인",meaning:"Local person"},
+    {word:"자유여행",meaning:"Independent travel"},
+    {word:"패키지",meaning:"Package tour"},
+    {word:"비수기",meaning:"Off-season"},
+    {word:"성수기",meaning:"Peak season"},
+    {word:"일출",meaning:"Sunrise"},
+    {word:"일몰",meaning:"Sunset"},
+    {word:"야경",meaning:"Night view"},
+    {word:"렌트카",meaning:"Rental car"},
+  ]},
+  {topic:"쇼핑/패션",keywords:["쇼핑","패션","옷","의류","백화점","스타일","구매","구입","fashion","shopping"],words:[
+    {word:"백화점",meaning:"Department store"},
+    {word:"세일",meaning:"Sale"},
+    {word:"사이즈",meaning:"Size"},
+    {word:"교환하다",meaning:"To exchange"},
+    {word:"환불하다",meaning:"To get a refund"},
+    {word:"포인트",meaning:"Points / Rewards"},
+    {word:"브랜드",meaning:"Brand"},
+    {word:"유행",meaning:"Fashion trend"},
+    {word:"트렌드",meaning:"Trend"},
+    {word:"탈의실",meaning:"Fitting room"},
+    {word:"바지",meaning:"Pants / Trousers"},
+    {word:"치마",meaning:"Skirt"},
+    {word:"원피스",meaning:"Dress"},
+    {word:"자켓",meaning:"Jacket"},
+    {word:"신발",meaning:"Shoes"},
+    {word:"가방",meaning:"Bag"},
+    {word:"악세서리",meaning:"Accessories"},
+    {word:"목걸이",meaning:"Necklace"},
+    {word:"귀걸이",meaning:"Earrings"},
+    {word:"반지",meaning:"Ring"},
+    {word:"무료배송",meaning:"Free shipping"},
+    {word:"한정판",meaning:"Limited edition"},
+    {word:"품절",meaning:"Out of stock"},
+    {word:"재고",meaning:"Inventory / Stock"},
+    {word:"코디",meaning:"Outfit coordination"},
+    {word:"캐주얼",meaning:"Casual"},
+    {word:"정장",meaning:"Formal wear / Suit"},
+    {word:"어울리다",meaning:"To suit / match"},
+    {word:"착용하다",meaning:"To wear"},
+    {word:"핏",meaning:"Fit"},
+  ]},
+  {topic:"연애/관계",keywords:["연애","사랑","데이트","관계","커플","남자친구","여자친구","소개팅","썸","고백","love","dating"],words:[
+    {word:"소개팅",meaning:"Blind date"},
+    {word:"데이트",meaning:"Date"},
+    {word:"고백하다",meaning:"To confess feelings"},
+    {word:"사귀다",meaning:"To date / go out with"},
+    {word:"헤어지다",meaning:"To break up"},
+    {word:"짝사랑",meaning:"One-sided love / Crush"},
+    {word:"썸",meaning:"Romantic tension / 'Almost dating'"},
+    {word:"두근거리다",meaning:"To have a racing heart"},
+    {word:"설레다",meaning:"To feel excited / flutter"},
+    {word:"보고싶다",meaning:"To miss someone"},
+    {word:"그리워하다",meaning:"To long for / miss"},
+    {word:"질투하다",meaning:"To feel jealous"},
+    {word:"다투다",meaning:"To argue / quarrel"},
+    {word:"화해하다",meaning:"To make up / reconcile"},
+    {word:"커플",meaning:"Couple"},
+    {word:"연인",meaning:"Partner / Lover"},
+    {word:"남자친구",meaning:"Boyfriend"},
+    {word:"여자친구",meaning:"Girlfriend"},
+    {word:"프러포즈",meaning:"Proposal"},
+    {word:"기념일",meaning:"Anniversary"},
+    {word:"장거리연애",meaning:"Long-distance relationship"},
+    {word:"첫눈에반하다",meaning:"To fall in love at first sight"},
+    {word:"밀당",meaning:"Push and pull (in dating)"},
+    {word:"인연",meaning:"Fate / Connection"},
+    {word:"매력",meaning:"Charm / Appeal"},
+    {word:"이상형",meaning:"Ideal type"},
+    {word:"솔로",meaning:"Single"},
+    {word:"복잡하다",meaning:"To be complicated"},
+    {word:"진지하다",meaning:"To be serious"},
+    {word:"설레임",meaning:"Excitement / Flutter"},
+  ]},
+  {topic:"K-pop/연예",keywords:["kpop","k-pop","케이팝","아이돌","팬","콘서트","연예","한류","드라마","엔터","idol","hallyu"],words:[
+    {word:"아이돌",meaning:"Idol"},
+    {word:"팬클럽",meaning:"Fan club"},
+    {word:"콘서트",meaning:"Concert"},
+    {word:"앨범",meaning:"Album"},
+    {word:"음원",meaning:"Digital music / Track"},
+    {word:"뮤직비디오",meaning:"Music video"},
+    {word:"안무",meaning:"Choreography"},
+    {word:"데뷔",meaning:"Debut"},
+    {word:"활동하다",meaning:"To promote / be active"},
+    {word:"예능",meaning:"Entertainment show"},
+    {word:"시청률",meaning:"TV ratings"},
+    {word:"오디션",meaning:"Audition"},
+    {word:"연습생",meaning:"Trainee"},
+    {word:"팬미팅",meaning:"Fan meeting"},
+    {word:"굿즈",meaning:"Merchandise / Goods"},
+    {word:"포토카드",meaning:"Photo card"},
+    {word:"스트리밍",meaning:"Streaming"},
+    {word:"차트",meaning:"Chart"},
+    {word:"입덕하다",meaning:"To become a fan"},
+    {word:"탈덕하다",meaning:"To stop being a fan"},
+    {word:"최애",meaning:"Favorite member / Bias"},
+    {word:"직캠",meaning:"Fancam"},
+    {word:"응원봉",meaning:"Light stick"},
+    {word:"한류",meaning:"Korean Wave / Hallyu"},
+    {word:"OST",meaning:"Original Soundtrack"},
+    {word:"그룹",meaning:"Group"},
+    {word:"리더",meaning:"Leader"},
+    {word:"메인보컬",meaning:"Main vocalist"},
+    {word:"래퍼",meaning:"Rapper"},
+    {word:"컴백",meaning:"Comeback"},
+  ]},
+  {topic:"인터넷/SNS",keywords:["인터넷","sns","소셜","유튜브","인스타","온라인","미디어","앱","internet","social"],words:[
+    {word:"검색하다",meaning:"To search"},
+    {word:"다운로드",meaning:"Download"},
+    {word:"업로드",meaning:"Upload"},
+    {word:"공유하다",meaning:"To share"},
+    {word:"팔로우",meaning:"Follow"},
+    {word:"팔로워",meaning:"Follower"},
+    {word:"게시물",meaning:"Post"},
+    {word:"인플루언서",meaning:"Influencer"},
+    {word:"유튜버",meaning:"YouTuber"},
+    {word:"해시태그",meaning:"Hashtag"},
+    {word:"알림",meaning:"Notification"},
+    {word:"댓글",meaning:"Comment"},
+    {word:"좋아요",meaning:"Like"},
+    {word:"이모티콘",meaning:"Emoji / Emoticon"},
+    {word:"비밀번호",meaning:"Password"},
+    {word:"계정",meaning:"Account"},
+    {word:"앱",meaning:"App"},
+    {word:"업데이트",meaning:"Update"},
+    {word:"와이파이",meaning:"Wi-Fi"},
+    {word:"데이터",meaning:"Mobile data"},
+    {word:"라이브",meaning:"Live broadcast"},
+    {word:"구독자",meaning:"Subscriber"},
+    {word:"조회수",meaning:"View count"},
+    {word:"개인정보",meaning:"Personal information"},
+    {word:"로그인",meaning:"Log in"},
+    {word:"로그아웃",meaning:"Log out"},
+    {word:"회원가입",meaning:"Sign up"},
+    {word:"링크",meaning:"Link"},
+    {word:"바이럴",meaning:"Viral"},
+    {word:"블로그",meaning:"Blog"},
+  ]},
+  {topic:"요리/음식조리",keywords:["요리","조리","레시피","주방","부엌","만들기","cooking","recipe"],words:[
+    {word:"재료",meaning:"Ingredient"},
+    {word:"레시피",meaning:"Recipe"},
+    {word:"냄비",meaning:"Pot"},
+    {word:"프라이팬",meaning:"Frying pan"},
+    {word:"칼",meaning:"Knife"},
+    {word:"도마",meaning:"Cutting board"},
+    {word:"볶다",meaning:"To stir-fry"},
+    {word:"끓이다",meaning:"To boil"},
+    {word:"굽다",meaning:"To grill / bake"},
+    {word:"튀기다",meaning:"To deep-fry"},
+    {word:"찌다",meaning:"To steam"},
+    {word:"썰다",meaning:"To slice / cut"},
+    {word:"다지다",meaning:"To mince / chop finely"},
+    {word:"간을하다",meaning:"To season"},
+    {word:"양념",meaning:"Seasoning / Marinade"},
+    {word:"마늘",meaning:"Garlic"},
+    {word:"생강",meaning:"Ginger"},
+    {word:"파",meaning:"Green onion"},
+    {word:"고춧가루",meaning:"Red pepper powder"},
+    {word:"간장",meaning:"Soy sauce"},
+    {word:"된장",meaning:"Soybean paste"},
+    {word:"고추장",meaning:"Red pepper paste"},
+    {word:"참기름",meaning:"Sesame oil"},
+    {word:"식초",meaning:"Vinegar"},
+    {word:"후추",meaning:"Black pepper"},
+    {word:"밀가루",meaning:"Flour"},
+    {word:"반죽하다",meaning:"To knead dough"},
+    {word:"삶다",meaning:"To boil (food)"},
+    {word:"식히다",meaning:"To cool down"},
+    {word:"냉동하다",meaning:"To freeze"},
+  ]},
+  {topic:"집/생활",keywords:["집","생활","아파트","이사","주거","가구","인테리어","방","home","living"],words:[
+    {word:"아파트",meaning:"Apartment"},
+    {word:"원룸",meaning:"Studio apartment"},
+    {word:"월세",meaning:"Monthly rent"},
+    {word:"전세",meaning:"Jeonse (lump-sum deposit lease)"},
+    {word:"보증금",meaning:"Security deposit"},
+    {word:"집주인",meaning:"Landlord"},
+    {word:"세입자",meaning:"Tenant"},
+    {word:"거실",meaning:"Living room"},
+    {word:"침실",meaning:"Bedroom"},
+    {word:"발코니",meaning:"Balcony"},
+    {word:"전등",meaning:"Light fixture"},
+    {word:"에어컨",meaning:"Air conditioner"},
+    {word:"냉장고",meaning:"Refrigerator"},
+    {word:"세탁기",meaning:"Washing machine"},
+    {word:"청소기",meaning:"Vacuum cleaner"},
+    {word:"전자레인지",meaning:"Microwave"},
+    {word:"이사하다",meaning:"To move (house)"},
+    {word:"인테리어",meaning:"Interior design"},
+    {word:"소파",meaning:"Sofa"},
+    {word:"침대",meaning:"Bed"},
+    {word:"책상",meaning:"Desk"},
+    {word:"옷장",meaning:"Wardrobe / Closet"},
+    {word:"수납",meaning:"Storage"},
+    {word:"분리수거",meaning:"Waste sorting / Recycling"},
+    {word:"수도세",meaning:"Water bill"},
+    {word:"전기세",meaning:"Electricity bill"},
+    {word:"관리비",meaning:"Maintenance fee"},
+    {word:"아늑하다",meaning:"To be cozy"},
+    {word:"쾌적하다",meaning:"To be comfortable / pleasant"},
+    {word:"방음",meaning:"Soundproofing"},
+  ]},
+  {topic:"학교/교육",keywords:["학교","교육","공부","학습","수업","학생","대학","수험","시험","성적","study","school"],words:[
+    {word:"과목",meaning:"Subject"},
+    {word:"성적",meaning:"Grade / Score"},
+    {word:"장학금",meaning:"Scholarship"},
+    {word:"강의",meaning:"Lecture"},
+    {word:"과제",meaning:"Assignment / Homework"},
+    {word:"동아리",meaning:"Club / Society"},
+    {word:"학생증",meaning:"Student ID"},
+    {word:"필기하다",meaning:"To take notes"},
+    {word:"복습하다",meaning:"To review"},
+    {word:"예습하다",meaning:"To study in advance"},
+    {word:"졸업하다",meaning:"To graduate"},
+    {word:"합격하다",meaning:"To pass (an exam)"},
+    {word:"불합격하다",meaning:"To fail (an exam)"},
+    {word:"입학하다",meaning:"To enter school"},
+    {word:"학기",meaning:"Semester"},
+    {word:"방학",meaning:"School vacation"},
+    {word:"교환학생",meaning:"Exchange student"},
+    {word:"유학생",meaning:"International student"},
+    {word:"수강신청",meaning:"Course enrollment"},
+    {word:"출석",meaning:"Attendance"},
+    {word:"지각하다",meaning:"To be late"},
+    {word:"결석하다",meaning:"To be absent"},
+    {word:"교과서",meaning:"Textbook"},
+    {word:"숙제",meaning:"Homework"},
+    {word:"연필",meaning:"Pencil"},
+    {word:"지우개",meaning:"Eraser"},
+    {word:"가위",meaning:"Scissors"},
+    {word:"풀",meaning:"Glue"},
+    {word:"칠판",meaning:"Blackboard"},
+    {word:"시험공부",meaning:"Exam preparation"},
+  ]},
+  {topic:"스포츠/운동",keywords:["스포츠","운동","체육","헬스","피트니스","체력","선수","경기","sport","fitness"],words:[
+    {word:"헬스장",meaning:"Gym"},
+    {word:"트레이너",meaning:"Trainer"},
+    {word:"운동복",meaning:"Sportswear"},
+    {word:"스트레칭",meaning:"Stretching"},
+    {word:"준비운동",meaning:"Warm-up exercise"},
+    {word:"마라톤",meaning:"Marathon"},
+    {word:"배드민턴",meaning:"Badminton"},
+    {word:"탁구",meaning:"Table tennis"},
+    {word:"골프",meaning:"Golf"},
+    {word:"테니스",meaning:"Tennis"},
+    {word:"볼링",meaning:"Bowling"},
+    {word:"스키",meaning:"Skiing"},
+    {word:"서핑",meaning:"Surfing"},
+    {word:"필라테스",meaning:"Pilates"},
+    {word:"요가",meaning:"Yoga"},
+    {word:"근육",meaning:"Muscle"},
+    {word:"유산소",meaning:"Cardio / Aerobic exercise"},
+    {word:"무산소",meaning:"Anaerobic exercise"},
+    {word:"경기",meaning:"Match / Game"},
+    {word:"선수",meaning:"Player / Athlete"},
+    {word:"감독",meaning:"Coach / Director"},
+    {word:"응원하다",meaning:"To cheer for"},
+    {word:"우승하다",meaning:"To win (championship)"},
+    {word:"기록",meaning:"Record"},
+    {word:"훈련하다",meaning:"To train"},
+    {word:"부상",meaning:"Injury"},
+    {word:"회복하다",meaning:"To recover"},
+    {word:"다이어트",meaning:"Diet"},
+    {word:"몸무게",meaning:"Body weight"},
+    {word:"칼로리",meaning:"Calorie"},
+  ]},
+];
 const TEACHER_PASSWORD = process.env.REACT_APP_TEACHER_PASSWORD || "may2024";
 
 // Firestore helpers
@@ -722,6 +1044,16 @@ function TeacherMat({data,save}){
     await save("mat",u);setForm(null);
   };
   const del=async id=>{await save("mat",mat.filter(m=>m.id!==id));};
+  const moveUp=async origIdx=>{
+    if(origIdx===0)return;
+    const arr=[...mat];[arr[origIdx-1],arr[origIdx]]=[arr[origIdx],arr[origIdx-1]];
+    await save("mat",arr);
+  };
+  const moveDown=async origIdx=>{
+    if(origIdx>=mat.length-1)return;
+    const arr=[...mat];[arr[origIdx],arr[origIdx+1]]=[arr[origIdx+1],arr[origIdx]];
+    await save("mat",arr);
+  };
   const imgs=form?.images||[];
   return(
     <div>
@@ -750,21 +1082,26 @@ function TeacherMat({data,save}){
         <input placeholder="🔗 외부 링크 (선택)" value={form.link} onChange={e=>upd({link:e.target.value})} className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:border-purple-400 focus:outline-none"/>
         <div className="flex gap-2"><button onClick={saveForm} className="bg-purple-500 text-white px-4 py-2 rounded-lg text-sm">저장</button><button onClick={()=>setForm(null)} className="bg-slate-100 text-slate-600 px-4 py-2 rounded-lg text-sm">취소</button></div>
       </div>}
-      {mat.length===0&&!form?<Empty ko="자료가 없습니다" en="No materials yet"/>:mat.filter(m=>m.id!==form?.id).map(m=>(
+      {mat.length===0&&!form?<Empty ko="자료가 없습니다" en="No materials yet"/>:mat.filter(m=>m.id!==form?.id).map((m,fi,fa)=>{
+        const oi=mat.findIndex(x=>x.id===m.id);
+        return(
         <div key={m.id} className="bg-white rounded-xl mb-2 border border-slate-200">
           <div className="flex items-center px-3 py-3">
             <button onClick={()=>setOpen(open===m.id?null:m.id)} className="flex-1 flex items-center gap-2 text-left min-w-0">
               <span className="font-medium text-slate-800 text-sm truncate">{m.title}</span>
               {open===m.id?<ChevronUp className="w-4 h-4 text-slate-400 flex-shrink-0"/>:<ChevronDown className="w-4 h-4 text-slate-400 flex-shrink-0"/>}
             </button>
-            <div className="flex gap-1 ml-2">
+            <div className="flex gap-0.5 ml-2">
+              <button onClick={()=>moveUp(oi)} disabled={fi===0} className="text-slate-300 hover:text-indigo-500 p-1.5 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed"><ArrowUp className="w-3.5 h-3.5"/></button>
+              <button onClick={()=>moveDown(oi)} disabled={fi===fa.length-1} className="text-slate-300 hover:text-indigo-500 p-1.5 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed"><ArrowDown className="w-3.5 h-3.5"/></button>
               <button onClick={()=>setForm({id:m.id,title:m.title,content:m.content||"",link:m.link||"",images:m.images||[],embed:m.embed||""})} className="text-slate-400 hover:text-indigo-500 p-1.5 rounded-lg"><Edit3 className="w-4 h-4"/></button>
               <button onClick={()=>del(m.id)} className="text-slate-400 hover:text-red-500 p-1.5 rounded-lg"><Trash2 className="w-4 h-4"/></button>
             </div>
           </div>
           {open===m.id&&<div className="px-3 pb-3 border-t border-slate-100 pt-3"><MatContent m={m}/></div>}
         </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -827,6 +1164,8 @@ function TeacherVoc({data,save}){
   const voc=data.voc;
   const [form,setForm]=useState(null);
   const [rows,setRows]=useState([{word:"",meaning:""}]);
+  const [genModal,setGenModal]=useState(false);
+  const [genName,setGenName]=useState("");
   const openAdd=()=>{setForm({id:null,name:""});setRows([{word:"",meaning:""}]);};
   const openEdit=s=>{setForm({id:s.id,name:s.name});setRows([...s.words.map(w=>({...w})),{word:"",meaning:""}]);};
   const updRow=(i,f,v)=>{const r=[...rows];r[i][f]=v;setRows(r);};
@@ -839,19 +1178,16 @@ function TeacherVoc({data,save}){
     await save("voc",u);setForm(null);
   };
   const del=async id=>{await save("voc",voc.filter(v=>v.id!==id));};
-  const autoGen=async()=>{
-    if(!window.confirm("초급1/초급2/중급1/중급2 단어장 4개를 생성합니다. 계속할까요?"))return;
-    let ts=Date.now();
-    const now=new Date().toISOString();
+  const doAutoGen=async()=>{
+    if(!genName.trim())return;
+    const lower=genName.toLowerCase();
     const existingWords=new Set(voc.flatMap(s=>(s.words||[]).map(w=>w.word)));
-    const newSets=[];
-    for(const lv of AUTO_VOC){
-      const fresh=lv.words.filter(w=>!existingWords.has(w.word)).map(w=>({...w}));
-      if(!fresh.length) continue;
-      newSets.push({id:(ts++)+"",name:lv.name,words:fresh,createdAt:now});
-    }
-    if(!newSets.length){window.alert("이미 모든 단어가 존재합니다.");return;}
-    await save("voc",[...newSets,...voc]);
+    let matched=TOPIC_VOC.find(t=>t.keywords.some(k=>lower.includes(k.toLowerCase())));
+    if(!matched) matched=TOPIC_VOC.find(t=>t.topic.toLowerCase().split(/[\/·]/).some(p=>lower.includes(p.trim())));
+    const pool=(matched?matched.words:TOPIC_VOC.flatMap(t=>t.words)).filter(w=>!existingWords.has(w.word)).map(w=>({...w}));
+    if(!pool.length){window.alert("이미 모든 관련 단어가 존재합니다. 다른 주제를 시도해보세요.");return;}
+    await save("voc",[{id:Date.now()+"",name:genName.trim(),words:pool,createdAt:new Date().toISOString()},...voc]);
+    setGenModal(false);setGenName("");
   };
   const delPractice=async()=>{
     const cnt=voc.filter(v=>v.practice).length;
@@ -865,7 +1201,7 @@ function TeacherVoc({data,save}){
         <SectionTitle ko="단어장" en="Vocabulary"/>
         {!form&&<div className="flex gap-2">
           {voc.some(v=>v.practice)&&<button onClick={delPractice} className="bg-red-100 text-red-600 px-3 py-2 rounded-xl text-sm font-medium flex items-center gap-1"><Trash2 className="w-4 h-4"/>연습용 삭제</button>}
-          <button onClick={autoGen} className="bg-indigo-500 text-white px-3 py-2 rounded-xl text-sm font-medium flex items-center gap-1"><Sparkles className="w-4 h-4"/>자동생성</button>
+          <button onClick={()=>setGenModal(true)} className="bg-indigo-500 text-white px-3 py-2 rounded-xl text-sm font-medium flex items-center gap-1"><Sparkles className="w-4 h-4"/>자동생성</button>
           <button onClick={openAdd} className="bg-purple-500 text-white px-3 py-2 rounded-xl text-sm font-medium flex items-center gap-1"><Plus className="w-4 h-4"/>만들기</button>
         </div>}
       </div>
@@ -892,6 +1228,18 @@ function TeacherVoc({data,save}){
           <div className="flex gap-1"><button onClick={()=>openEdit(s)} className="text-slate-400 hover:text-indigo-500 p-1.5 rounded-lg"><Edit3 className="w-4 h-4"/></button><button onClick={()=>del(s.id)} className="text-slate-400 hover:text-red-500 p-1.5 rounded-lg"><Trash2 className="w-4 h-4"/></button></div>
         </div>
       ))}
+      {genModal&&<div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={()=>setGenModal(false)}>
+        <div className="bg-white rounded-2xl p-6 w-full max-w-sm" onClick={e=>e.stopPropagation()}>
+          <h3 className="font-bold text-slate-800 mb-1 flex items-center gap-2"><Sparkles className="w-5 h-5 text-indigo-500"/>단어장 자동생성</h3>
+          <p className="text-xs text-slate-500 mb-4">단어장 이름(주제)을 입력하면 관련 단어를 자동으로 추가합니다.<br/>이미 업로드된 단어는 제외됩니다.</p>
+          <input autoFocus placeholder="예: 식당 표현, 여행 어휘, K-pop 용어..." value={genName} onChange={e=>setGenName(e.target.value)} onKeyDown={e=>e.key==="Enter"&&doAutoGen()} className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:border-indigo-400 focus:outline-none mb-3"/>
+          <p className="text-[11px] text-slate-400 mb-4 leading-relaxed">추천 주제: 식당/외식 · 여행/관광 · 쇼핑/패션 · 연애/관계 · K-pop/연예 · 인터넷/SNS · 요리 · 집/생활 · 학교/교육 · 스포츠/운동</p>
+          <div className="flex gap-2">
+            <button onClick={()=>setGenModal(false)} className="flex-1 bg-slate-100 text-slate-600 py-2.5 rounded-xl text-sm">취소</button>
+            <button onClick={doAutoGen} className="flex-1 bg-indigo-500 text-white py-2.5 rounded-xl text-sm font-medium flex items-center justify-center gap-1"><Sparkles className="w-4 h-4"/>생성하기</button>
+          </div>
+        </div>
+      </div>}
     </div>
   );
 }
