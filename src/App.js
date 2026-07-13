@@ -794,14 +794,12 @@ export default function App() {
   const [data,setData]=useState({mat:[],tb:DEFAULT_TB,voc:[],ann:[],stu:[]});
 
   useEffect(()=>{
+    setView("login"); // show login immediately; data loads in background
     (async()=>{
-      const mat=await fget("materials")||[];
-      const tb=await fget("textbooks")||DEFAULT_TB;
-      const voc=await fget("vocab")||[];
-      const ann=await fget("announcements")||[];
-      const stuRaw=await fget("students")||[];
-      setData({mat,tb,voc,ann,stu:normStudents(stuRaw)});
-      setView("login");
+      const [mat,tb,voc,ann,stuRaw]=await Promise.all([
+        fget("materials"),fget("textbooks"),fget("vocab"),fget("announcements"),fget("students"),
+      ]);
+      setData({mat:mat||[],tb:tb||DEFAULT_TB,voc:voc||[],ann:ann||[],stu:normStudents(stuRaw||[])});
     })();
   },[]);
 
