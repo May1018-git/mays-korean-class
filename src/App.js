@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { db } from "./firebase";
 import { doc, getDoc, setDoc, onSnapshot } from "firebase/firestore";
-import { BookOpen, FileText, Bell, BarChart3, Plus, Trash2, Send, User, GraduationCap, LogOut, Sparkles, CheckCircle, XCircle, Loader2, Megaphone, Lock, Clock, UserCheck, UserX, BookMarked, Edit3, ExternalLink, ChevronDown, ChevronUp, Download, BookText, ArrowUp, ArrowDown } from "lucide-react";
+import { BookOpen, FileText, Bell, BarChart3, Plus, Trash2, Send, User, GraduationCap, LogOut, Sparkles, CheckCircle, XCircle, Loader2, Megaphone, Lock, Clock, UserCheck, UserX, BookMarked, Edit3, ExternalLink, ChevronDown, ChevronUp, Download, BookText, ArrowUp, ArrowDown, Layers, RotateCcw, ArrowLeft, ArrowRight } from "lucide-react";
 
 const DRIVE = "https://drive.google.com/drive/folders/1OL0qtkASaU_sj-VM0T79qXlef07zEseZ?usp=drive_link";
 const DEFAULT_TB = [
@@ -745,6 +745,10 @@ const TOPIC_VOC=[
     {word:"칼로리",meaning:"Calorie"},
   ]},
 ];
+const FLASH_DECKS = [
+  ...AUTO_VOC.map(v=>({id:`lv-${v.name}`,name:v.name,words:v.words})),
+  ...TOPIC_VOC.map(t=>({id:`tp-${t.topic}`,name:t.topic,words:t.words})),
+];
 const TEACHER_PASSWORD = process.env.REACT_APP_TEACHER_PASSWORD || "may2024";
 
 // Firestore helpers
@@ -914,7 +918,7 @@ function PendingScreen({user,data,onApproved,onRejected,onCancel}){
 function TeacherApp({user,data,save,onLogout}){
   const [tab,setTab]=useState("students");
   const pending=data.stu.filter(s=>s.status==="pending").length;
-  const tabs=[["students",BarChart3,`학생${pending>0?`(${pending})`:""}`, "Students"],["mat",FileText,"학습자료","Materials"],["tb",BookMarked,"수업교재","Textbook"],["voc",BookText,"단어장","Vocab"],["ann",Megaphone,"공지","Notice"]];
+  const tabs=[["students",BarChart3,`학생${pending>0?`(${pending})`:""}`, "Students"],["mat",FileText,"학습자료","Materials"],["tb",BookMarked,"수업교재","Textbook"],["voc",BookText,"단어장","Vocab"],["flash",Layers,"플래시카드","Flashcards"],["ann",Megaphone,"공지","Notice"]];
   return(
     <div className="min-h-screen bg-slate-50">
       <Hdr user={user} onLogout={onLogout} tc/>
@@ -924,6 +928,7 @@ function TeacherApp({user,data,save,onLogout}){
         {tab==="mat"&&<TeacherMat data={data} save={save}/>}
         {tab==="tb"&&<TeacherTB data={data} save={save}/>}
         {tab==="voc"&&<TeacherVoc data={data} save={save}/>}
+        {tab==="flash"&&<TeacherFlash/>}
         {tab==="ann"&&<TeacherAnn data={data} save={save}/>}
       </Wrap>
     </div>
@@ -1240,6 +1245,54 @@ function TeacherVoc({data,save}){
           </div>
         </div>
       </div>}
+    </div>
+  );
+}
+
+function TeacherFlash(){
+  const [sel,setSel]=useState(null);
+  const [idx,setIdx]=useState(0);
+  const [flipped,setFlipped]=useState(false);
+  const open=d=>{setSel(d);setIdx(0);setFlipped(false);};
+  const back=()=>{setSel(null);setIdx(0);setFlipped(false);};
+  const go=dir=>{setFlipped(false);setIdx(i=>(i+dir+sel.words.length)%sel.words.length);};
+  if(!sel)return(
+    <div>
+      <SectionTitle ko="🎴 플래시카드" en="Flashcards"/>
+      <p className="text-xs text-slate-500 mb-3">단어장을 선택하고 카드를 넘기며 학습하세요. (선생님 전용)</p>
+      {FLASH_DECKS.map(d=>(
+        <div key={d.id} className="bg-white rounded-xl p-4 mb-2 border border-slate-200 flex items-center justify-between">
+          <div><p className="font-bold text-slate-800">{d.name}</p><p className="text-xs text-slate-500">{d.words.length}개 단어</p></div>
+          <button onClick={()=>open(d)} className="bg-indigo-500 text-white px-3 py-2 rounded-xl text-sm font-medium flex items-center gap-1"><Layers className="w-4 h-4"/>시작</button>
+        </div>
+      ))}
+    </div>
+  );
+  const w=sel.words[idx];
+  return(
+    <div>
+      <button onClick={back} className="text-slate-500 text-sm mb-3 hover:underline">← 목록으로</button>
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="font-bold text-slate-800 text-lg">{sel.name}</h2>
+        <span className="text-xs text-slate-400">{idx+1} / {sel.words.length}</span>
+      </div>
+      <div onClick={()=>setFlipped(f=>!f)} style={{perspective:"1000px"}} className="cursor-pointer select-none">
+        <div style={{transformStyle:"preserve-3d",transition:"transform 0.5s",transform:flipped?"rotateY(180deg)":"none"}} className="relative h-64">
+          <div style={{backfaceVisibility:"hidden"}} className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex flex-col items-center justify-center p-6 text-white shadow-lg">
+            <span className="text-3xl font-bold text-center">{w.word}</span>
+            <span className="text-xs mt-4 opacity-70">탭하여 뜻 보기 · Tap to flip</span>
+          </div>
+          <div style={{backfaceVisibility:"hidden",transform:"rotateY(180deg)"}} className="absolute inset-0 bg-white border-2 border-indigo-200 rounded-2xl flex flex-col items-center justify-center p-6 shadow-lg">
+            <span className="text-sm text-slate-400 mb-2">{w.word}</span>
+            <span className="text-2xl font-bold text-indigo-700 text-center">{w.meaning}</span>
+          </div>
+        </div>
+      </div>
+      <div className="flex items-center justify-center gap-3 mt-5">
+        <button onClick={()=>go(-1)} className="w-11 h-11 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-600 shadow-sm"><ArrowLeft className="w-5 h-5"/></button>
+        <button onClick={()=>setFlipped(f=>!f)} className="px-4 py-2.5 rounded-xl bg-indigo-50 text-indigo-600 text-sm font-medium flex items-center gap-1"><RotateCcw className="w-4 h-4"/>뒤집기</button>
+        <button onClick={()=>go(1)} className="w-11 h-11 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-600 shadow-sm"><ArrowRight className="w-5 h-5"/></button>
+      </div>
     </div>
   );
 }
