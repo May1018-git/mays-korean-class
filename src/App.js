@@ -1093,7 +1093,7 @@ function TeacherApp({user,data,save,onLogout}){
         {tab==="mat"&&<TeacherMat data={data} save={save}/>}
         {tab==="tb"&&<TeacherTB data={data} save={save}/>}
         {tab==="voc"&&<TeacherVoc data={data} save={save}/>}
-        {tab==="flash"&&<TeacherFlash/>}
+        {tab==="flash"&&<TeacherFlash data={data} save={save}/>}
         {tab==="ann"&&<TeacherAnn data={data} save={save}/>}
       </Wrap>
     </div>
@@ -1441,7 +1441,8 @@ const shuffleArr = arr => {
   return a;
 };
 
-function TeacherFlash(){
+function TeacherFlash({data,save}){
+  const decks=data?.voc?.length?data.voc:FLASH_DECKS;
   const [multiMode,setMultiMode]=useState(false);
   const [selectedIds,setSelectedIds]=useState([]);
   const [session,setSession]=useState(null);
@@ -1449,13 +1450,16 @@ function TeacherFlash(){
   const [flipped,setFlipped]=useState(false);
   const [checked,setChecked]=useState(()=>new Set());
   const [done,setDone]=useState(false);
+  const usingVoc=!!(data?.voc?.length);
+  const moveUp=async oi=>{if(!usingVoc||oi===0)return;const a=[...data.voc];[a[oi-1],a[oi]]=[a[oi],a[oi-1]];await save("voc",a);};
+  const moveDown=async oi=>{if(!usingVoc||oi>=data.voc.length-1)return;const a=[...data.voc];[a[oi],a[oi+1]]=[a[oi+1],a[oi]];await save("voc",a);};
   const toggleSel=id=>setSelectedIds(s=>s.includes(id)?s.filter(x=>x!==id):[...s,id]);
   const openSingle=d=>{setSession({id:d.id,name:d.name,words:d.words});setIdx(0);setFlipped(false);setChecked(new Set());setDone(false);};
   const startMerged=()=>{
-    const decks=FLASH_DECKS.filter(d=>selectedIds.includes(d.id));
-    if(!decks.length)return;
-    const words=decks.flatMap(d=>d.words);
-    setSession({id:"merged",name:`선택한 ${decks.length}개 단어장`,words});
+    const sel=decks.filter(d=>selectedIds.includes(d.id));
+    if(!sel.length)return;
+    const words=sel.flatMap(d=>d.words);
+    setSession({id:"merged",name:`선택한 ${sel.length}개 단어장`,words});
     setIdx(0);setFlipped(false);setChecked(new Set());setDone(false);
   };
   const back=()=>{setSession(null);setIdx(0);setFlipped(false);setMultiMode(false);setSelectedIds([]);setChecked(new Set());setDone(false);};
@@ -1480,7 +1484,7 @@ function TeacherFlash(){
   const stopHere=()=>setDone(true);
 
   if(!session){
-    const selectedWordCount=FLASH_DECKS.filter(d=>selectedIds.includes(d.id)).reduce((s,d)=>s+d.words.length,0);
+    const selectedWordCount=decks.filter(d=>selectedIds.includes(d.id)).reduce((s,d)=>s+d.words.length,0);
     return(
       <div className="pb-16">
         <SectionTitle ko="🎴 플래시카드" en="Flashcards"/>
@@ -1488,14 +1492,19 @@ function TeacherFlash(){
         <button onClick={()=>{setMultiMode(m=>!m);setSelectedIds([]);}} className={`mb-3 px-3 py-2 rounded-xl text-sm font-medium flex items-center gap-1 ${multiMode?"bg-indigo-500 text-white":"bg-indigo-50 text-indigo-600"}`}>
           <Layers className="w-4 h-4"/>{multiMode?"덱 여러 개 선택 중 (탭하여 해제)":"여러 덱 합쳐서 길게 학습하기"}
         </button>
-        {FLASH_DECKS.map(d=>{
-          const checked=selectedIds.includes(d.id);
+        {decks.map((d,fi,fa)=>{
+          const isSel=selectedIds.includes(d.id);
+          const oi=usingVoc?data.voc.findIndex(x=>x.id===d.id):fi;
           return(
-            <div key={d.id} onClick={()=>multiMode&&toggleSel(d.id)} className={`bg-white rounded-xl p-4 mb-2 border flex items-center justify-between ${multiMode?`cursor-pointer ${checked?"border-indigo-400 ring-2 ring-indigo-100":"border-slate-200"}`:"border-slate-200"}`}>
-              <div><p className="font-bold text-slate-800">{d.name}</p><p className="text-xs text-slate-500">{d.words.length}개 단어</p></div>
+            <div key={d.id} onClick={()=>multiMode&&toggleSel(d.id)} className={`bg-white rounded-xl p-4 mb-2 border flex items-center justify-between ${multiMode?`cursor-pointer ${isSel?"border-indigo-400 ring-2 ring-indigo-100":"border-slate-200"}`:"border-slate-200"}`}>
+              <div className="flex-1 min-w-0 mr-2"><p className="font-bold text-slate-800 truncate">{d.name}</p><p className="text-xs text-slate-500">{d.words.length}개 단어</p></div>
               {multiMode?
-                <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 ${checked?"bg-indigo-500 border-indigo-500":"border-slate-300"}`}>{checked&&<CheckCircle className="w-4 h-4 text-white"/>}</div>
-              :<button onClick={()=>openSingle(d)} className="bg-indigo-500 text-white px-3 py-2 rounded-xl text-sm font-medium flex items-center gap-1"><Layers className="w-4 h-4"/>시작</button>}
+                <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 ${isSel?"bg-indigo-500 border-indigo-500":"border-slate-300"}`}>{isSel&&<CheckCircle className="w-4 h-4 text-white"/>}</div>
+              :<div className="flex gap-0.5 items-center">
+                {usingVoc&&<><button onClick={e=>{e.stopPropagation();moveUp(oi);}} disabled={fi===0} className="text-slate-300 hover:text-indigo-500 p-1.5 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed"><ArrowUp className="w-3.5 h-3.5"/></button>
+                <button onClick={e=>{e.stopPropagation();moveDown(oi);}} disabled={fi===fa.length-1} className="text-slate-300 hover:text-indigo-500 p-1.5 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed"><ArrowDown className="w-3.5 h-3.5"/></button></>}
+                <button onClick={()=>openSingle(d)} className="bg-indigo-500 text-white px-3 py-2 rounded-xl text-sm font-medium flex items-center gap-1 ml-1"><Layers className="w-4 h-4"/>시작</button>
+              </div>}
             </div>
           );
         })}
