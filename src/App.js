@@ -1380,23 +1380,43 @@ function TeacherVoc({data,save}){
   );
 }
 
+const wordKey = w => `${w.word}|${w.meaning}`;
+
 function TeacherFlash(){
   const [multiMode,setMultiMode]=useState(false);
   const [selectedIds,setSelectedIds]=useState([]);
   const [session,setSession]=useState(null);
   const [idx,setIdx]=useState(0);
   const [flipped,setFlipped]=useState(false);
+  const [checked,setChecked]=useState(()=>new Set());
+  const [done,setDone]=useState(false);
   const toggleSel=id=>setSelectedIds(s=>s.includes(id)?s.filter(x=>x!==id):[...s,id]);
-  const openSingle=d=>{setSession({id:d.id,name:d.name,words:d.words});setIdx(0);setFlipped(false);};
+  const openSingle=d=>{setSession({id:d.id,name:d.name,words:d.words});setIdx(0);setFlipped(false);setChecked(new Set());setDone(false);};
   const startMerged=()=>{
     const decks=FLASH_DECKS.filter(d=>selectedIds.includes(d.id));
     if(!decks.length)return;
     const words=decks.flatMap(d=>d.words);
     setSession({id:"merged",name:`선택한 ${decks.length}개 단어장`,words});
-    setIdx(0);setFlipped(false);
+    setIdx(0);setFlipped(false);setChecked(new Set());setDone(false);
   };
-  const back=()=>{setSession(null);setIdx(0);setFlipped(false);setMultiMode(false);setSelectedIds([]);};
-  const go=dir=>{setFlipped(false);setIdx(i=>(i+dir+session.words.length)%session.words.length);};
+  const back=()=>{setSession(null);setIdx(0);setFlipped(false);setMultiMode(false);setSelectedIds([]);setChecked(new Set());setDone(false);};
+  const go=dir=>{
+    if(dir===1&&idx===session.words.length-1){setDone(true);return;}
+    setFlipped(false);
+    setIdx(i=>(i+dir+session.words.length)%session.words.length);
+  };
+  const toggleCheck=w=>setChecked(prev=>{
+    const next=new Set(prev);
+    const key=wordKey(w);
+    next.has(key)?next.delete(key):next.add(key);
+    return next;
+  });
+  const reviewChecked=()=>{
+    const words=session.words.filter(w=>checked.has(wordKey(w)));
+    setSession(s=>({...s,words}));
+    setIdx(0);setFlipped(false);setChecked(new Set());setDone(false);
+  };
+  const restart=()=>{setIdx(0);setFlipped(false);setChecked(new Set());setDone(false);};
 
   if(!session){
     const selectedWordCount=FLASH_DECKS.filter(d=>selectedIds.includes(d.id)).reduce((s,d)=>s+d.words.length,0);
@@ -1429,22 +1449,44 @@ function TeacherFlash(){
       </div>
     );
   }
+  if(done){
+    const checkedCount=session.words.filter(w=>checked.has(wordKey(w))).length;
+    return(
+      <div>
+        <button onClick={back} className="text-slate-500 text-sm mb-3 hover:underline">← 목록으로</button>
+        <div className="bg-white rounded-2xl p-6 border border-slate-200 text-center">
+          <p className="text-lg font-bold text-slate-800 mb-1">학습 완료! 🎉</p>
+          <p className="text-sm text-slate-500 mb-5">{session.name} · 총 {session.words.length}장 중 체크 {checkedCount}개</p>
+          <div className="flex flex-col gap-2">
+            {checkedCount>0&&<button onClick={reviewChecked} className="bg-indigo-500 text-white py-2.5 rounded-xl text-sm font-medium flex items-center justify-center gap-1"><CheckCircle className="w-4 h-4"/>체크한 {checkedCount}개 다시 보기</button>}
+            <button onClick={restart} className="bg-indigo-50 text-indigo-600 py-2.5 rounded-xl text-sm font-medium flex items-center justify-center gap-1"><RotateCcw className="w-4 h-4"/>처음부터 다시</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
   const w=session.words[idx];
+  const isChecked=checked.has(wordKey(w));
   return(
     <div>
       <button onClick={back} className="text-slate-500 text-sm mb-3 hover:underline">← 목록으로</button>
       <div className="flex items-center justify-between mb-3">
         <h2 className="font-bold text-slate-800 text-lg">{session.name}</h2>
-        <span className="text-xs text-slate-400">{idx+1} / {session.words.length}</span>
+        <span className="text-xs text-slate-400">{idx+1} / {session.words.length}{checked.size>0&&` · 체크 ${checked.size}개`}</span>
       </div>
-      <div onClick={()=>setFlipped(f=>!f)} style={{perspective:"1000px"}} className="cursor-pointer select-none">
-        <div style={{transformStyle:"preserve-3d",transition:"transform 0.5s",transform:flipped?"rotateY(180deg)":"none"}} className="relative h-64">
-          <div style={{backfaceVisibility:"hidden"}} className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex flex-col items-center justify-center p-6 text-white shadow-lg">
-            <span className="text-3xl font-bold text-center">{w.meaning}</span>
-            <span className="text-xs mt-4 opacity-70">탭하여 한국어 보기 · Tap to flip</span>
-          </div>
-          <div style={{backfaceVisibility:"hidden",transform:"rotateY(180deg)"}} className="absolute inset-0 bg-white border-2 border-indigo-200 rounded-2xl flex flex-col items-center justify-center p-6 shadow-lg">
-            <span className="text-3xl font-bold text-indigo-700 text-center">{w.word}</span>
+      <div className="relative">
+        <button onClick={()=>toggleCheck(w)} aria-label="체크" className={`absolute top-2 right-2 z-10 w-8 h-8 rounded-full border-2 flex items-center justify-center transition ${isChecked?"bg-emerald-500 border-emerald-500 text-white":"bg-white/90 border-slate-200 text-slate-300"}`}>
+          <CheckCircle className="w-4 h-4"/>
+        </button>
+        <div onClick={()=>setFlipped(f=>!f)} style={{perspective:"1000px"}} className="cursor-pointer select-none">
+          <div style={{transformStyle:"preserve-3d",transition:"transform 0.5s",transform:flipped?"rotateY(180deg)":"none"}} className="relative h-64">
+            <div style={{backfaceVisibility:"hidden"}} className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex flex-col items-center justify-center p-6 text-white shadow-lg">
+              <span className="text-3xl font-bold text-center">{w.meaning}</span>
+              <span className="text-xs mt-4 opacity-70">탭하여 한국어 보기 · Tap to flip</span>
+            </div>
+            <div style={{backfaceVisibility:"hidden",transform:"rotateY(180deg)"}} className="absolute inset-0 bg-white border-2 border-indigo-200 rounded-2xl flex flex-col items-center justify-center p-6 shadow-lg">
+              <span className="text-3xl font-bold text-indigo-700 text-center">{w.word}</span>
+            </div>
           </div>
         </div>
       </div>
