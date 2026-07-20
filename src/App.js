@@ -745,6 +745,54 @@ const TOPIC_VOC=[
     {word:"칼로리",meaning:"Calorie"},
   ]},
 ];
+// Word -> emoji lookup so flashcards have a visual even without custom artwork.
+const EMOJI_MAP = {
+  "하나":"1️⃣","둘":"2️⃣","셋":"3️⃣","넷":"4️⃣","다섯":"5️⃣","여섯":"6️⃣","일곱":"7️⃣","여덟":"8️⃣","아홉":"9️⃣","열":"🔟","백":"💯","천":"🔢","만":"🔢",
+  "색깔":"🎨","빨강":"🔴","파랑":"🔵","노랑":"🟡","초록":"🟢","검정":"⚫","하양":"⚪",
+  "머리":"💇","얼굴":"😊","눈":"❄️","코":"👃","입":"👄","귀":"👂","손":"✋","발":"🦶","팔":"💪","다리":"🦵",
+  "화요일":"📅","수요일":"📅","목요일":"📅","주":"🗓️","년":"📆","오전":"🌅","오후":"🌇","주말":"🎉","평일":"🗓️","작년":"📅","올해":"📍","내년":"📆","새벽":"🌌",
+  "빵":"🍞","우유":"🥛","사과":"🍎","바나나":"🍌","딸기":"🍓","김치":"🥬","라면":"🍜","치킨":"🍗","피자":"🍕","과일":"🍇","야채":"🥦","고기":"🥩","계란":"🥚","설탕":"🍬","소금":"🧂","차":"🍵","주스":"🧃",
+  "카페":"☕","식당":"🍽️","공원":"🌳","도서관":"📚","영화관":"🎬","은행":"🏦","우체국":"📮","호텔":"🏨","공항":"✈️","버스":"🚌","택시":"🚕","자전거":"🚲","비행기":"✈️","기차":"🚆","배":"🚢","길":"🛣️","신호등":"🚦",
+  "쓰다":"✍️","읽다":"📖","주다":"🎁","받다":"🤲","보내다":"📤","열다":"🔓","닫다":"🔒","앉다":"🪑","서다":"🧍","걷다":"🚶","뛰다":"🏃","입다":"👕","벗다":"🧥","씻다":"🚿","쉬다":"😌",
+  "길다":"📏","짧다":"✂️","높다":"⬆️","낮다":"⬇️","빠르다":"⚡","느리다":"🐢","뜨겁다":"🔥","차갑다":"🧊","덥다":"🥵","춥다":"🥶",
+  "날씨":"🌤️","비":"🌧️","바람":"💨","구름":"☁️","해":"☀️","달":"🌙","별":"⭐","하늘":"🌌","산":"⛰️","바다":"🌊","강":"🏞️","호수":"🏞️","나무":"🌳","꽃":"🌸","풀":"🌿","잎":"🍃",
+  "동물":"🐾","개":"🐶","고양이":"🐱","새":"🐦","물고기":"🐟","닭":"🐔","소":"🐮","돼지":"🐷","말":"🐴","토끼":"🐰","곰":"🐻","사자":"🦁","호랑이":"🐯",
+  "형제":"👬","자매":"👭","부부":"💑","남편":"🤵","아내":"👰","아들":"👦","딸":"👧","할아버지":"👴","할머니":"👵","손자":"👶","손녀":"👶","삼촌":"👨","이모":"👩","고모":"👩","사촌":"🧑","남자":"👨","여자":"👩","아저씨":"👨","아주머니":"👩","청년":"🧑","노인":"👴",
+  "취미":"🎯","운동":"🏋️","축구":"⚽","야구":"⚾","농구":"🏀","수영":"🏊","등산":"🥾","여행":"🧳","영화":"🎬","음악":"🎵","노래":"🎤","춤":"💃","그림":"🎨","사진":"📷","게임":"🎮","운전":"🚗","요리":"🍳","청소":"🧹","빨래":"🧺","쇼핑":"🛍️","산책":"🚶","휴가":"🏖️","생일":"🎂","파티":"🎉","선물":"🎁","결혼":"💍",
+  "사랑":"❤️","행복":"😊","슬픔":"😢","기쁨":"😄","걱정":"😟","두려움":"😨","화":"😠","마음":"💗","생각":"💭","꿈":"💤","희망":"🌈","추억":"📸","약속":"🤝","부탁":"🙏","도움":"🤝","칭찬":"👏","인사":"👋","대답":"💬","질문":"❓","이야기":"📖","소리":"🔊","목소리":"🗣️","노력":"💪",
+  "직업":"💼","회의":"🗣️","발표":"📊","보고서":"📄","계획":"📝","일정":"🗓️","마감":"⏰","출장":"🧳","면접":"🤝","월급":"💰","직장":"🏢","동료":"🧑‍🤝‍🧑","사장":"👔","부장":"👔","과장":"👔",
+  "정부":"🏛️","대통령":"🎖️","법":"⚖️","경찰":"👮","군인":"🎖️","변호사":"👨‍⚖️","교수":"🎓","기자":"📰","작가":"✍️","가수":"🎤","배우":"🎭",
+  "사회":"🌐","문화":"🎭","역사":"📜","전통":"🏮","종교":"🙏","정치":"🏛️","경제":"📈","환경":"🌱","자연":"🍃","세계":"🌍","나라":"🏳️","도시":"🏙️","시골":"🌾","마을":"🏘️","거리":"🛣️","광장":"🏛️","건물":"🏢","시설":"🏗️","박물관":"🏛️","미술관":"🖼️","극장":"🎭","교회":"⛪","절":"🛕","성당":"⛪",
+  "결정":"✅","선택":"🤔","의견":"💭","주장":"📢","토론":"🗣️","회비":"💵","가격":"🏷️","할인":"💸","세금":"🧾","영수증":"🧾","계산":"🧮","카드":"💳","현금":"💵","통장":"📔","저축":"🐖","투자":"📈","빚":"📉","부자":"🤑","가난":"😔","성공":"🏆","실패":"❌","기회":"🌟","도전":"🔥",
+  "노력하다":"💪","성장하다":"🌱","발전하다":"📈","변하다":"🔄","결정하다":"✅","선택하다":"☑️","설명하다":"💬","이해하다":"💡","기억하다":"🧠","잊다":"🌀","느끼다":"❤️","생각하다":"💭","걱정하다":"😟","사랑하다":"❤️","미워하다":"💔","좋아하다":"👍","싫어하다":"👎","필요하다":"🙏","가능하다":"✅","불가능하다":"🚫","중요하다":"⭐","특별하다":"✨","평범하다":"😐","친절하다":"😊","정직하다":"🤝","똑똑하다":"🧠","게으르다":"🦥",
+  "건강":"💪","병":"🤒","감기":"🤧","두통":"🤕","치료":"🩺","수술":"🏥","약":"💊","주사":"💉","환자":"🛌","간호사":"👩‍⚕️","응급실":"🚑",
+  "교통":"🚦","사고":"💥","위험":"⚠️","안전":"🛡️","보호":"🛡️","규칙":"📏","질서":"🔢","평화":"☮️","전쟁":"⚔️","자유":"🕊️","권리":"📜","의무":"📋","책임":"🎯",
+  "약속하다":"🤝","지키다":"🛡️","잃다":"💔","찾다":"🔍","얻다":"🎁","만들다":"🛠️","짓다":"🏗️","부수다":"💥","고치다":"🔧","깨다":"💥","사용하다":"🔧","준비하다":"📋","시작하다":"▶️","끝나다":"⏹️","계속하다":"🔁","멈추다":"⏸️","시도하다":"🎯","포기하다":"🏳️","도착하다":"🛬","출발하다":"🛫","떠나다":"🚪","돌아오다":"🔙","머무르다":"🏠","방문하다":"🚪","초대하다":"💌","환영하다":"🤗","감사하다":"🙏","미안하다":"😔",
+  "부끄럽다":"😳","자랑스럽다":"😌","두렵다":"😨","외롭다":"😔","그립다":"🥺","즐겁다":"😄","답답하다":"😤","시원하다":"🍃","부드럽다":"🧴","딱딱하다":"🪨","깨끗하다":"✨","더럽다":"🧹","조용하다":"🤫","시끄럽다":"📢","가볍다":"🪶","무겁다":"🏋️","두껍다":"📚","얇다":"📃","넓다":"↔️","좁다":"🤏","깊다":"🕳️","얕다":"🏖️","가깝다":"📍","멀다":"🛰️","같다":"🟰","다르다":"🔀","비슷하다":"👥",
+  "예술":"🎨","과학":"🔬","기술":"⚙️","발명":"💡","연구":"🔬","실험":"🧪","자료":"🗂️","정보":"ℹ️","지식":"📚","경험":"🧭","능력":"💪","재능":"🌟","성격":"🧬","태도":"🙆","습관":"🔁","행동":"🏃","표정":"😐","모양":"🔷","종류":"📦","부분":"🧩",
+  "메뉴판":"📋","주문하다":"🙋","계산서":"🧾","반찬":"🥗","국물":"🍲","젓가락":"🥢","숟가락":"🥄","포장하다":"🥡","예약하다":"📅","맵다":"🌶️","달다":"🍯","짜다":"🧂","싱겁다":"💧","불고기":"🥩","갈비":"🍖","삼겹살":"🥓","된장찌개":"🍲","순두부찌개":"🍲","냉면":"🍜","잡채":"🍝","1인분":"🍽️","서비스":"🎁","맛있다":"😋","맛없다":"😖","배부르다":"🤰","배고프다":"😋","음료":"🥤",
+  "여권":"🛂","비자":"📇","체크인":"🏨","체크아웃":"🚪","숙소":"🏨","관광지":"🗺️","여행사":"🏢","지도":"🗺️","환전":"💱","환율":"💹","입국심사":"🛃","수하물":"🧳","탑승권":"🎫","명소":"📍","기념품":"🎁","사진찍다":"📸","구경하다":"👀","안내소":"ℹ️","왕복":"🔄","편도":"➡️","투어":"🚌","현지인":"🧑‍🤝‍🧑","자유여행":"🎒","패키지":"📦","비수기":"📉","성수기":"📈","일출":"🌅","일몰":"🌇","야경":"🌃","렌트카":"🚙",
+  "백화점":"🏬","세일":"🏷️","사이즈":"📏","교환하다":"🔄","환불하다":"💸","포인트":"⭐","브랜드":"™️","유행":"👗","트렌드":"📈","탈의실":"🚪","바지":"👖","치마":"👗","원피스":"👗","자켓":"🧥","신발":"👟","가방":"👜","악세서리":"💍","목걸이":"📿","귀걸이":"💎","반지":"💍","무료배송":"🚚","한정판":"🌟","품절":"🚫","재고":"📦","코디":"👔","캐주얼":"👕","정장":"🤵","어울리다":"✨","착용하다":"👕","핏":"📐",
+  "소개팅":"🍽️","데이트":"💑","고백하다":"💌","사귀다":"💞","헤어지다":"💔","짝사랑":"🥺","썸":"😳","두근거리다":"💓","설레다":"🦋","보고싶다":"🥺","그리워하다":"🥹","질투하다":"😤","다투다":"😠","화해하다":"🤝","커플":"👫","연인":"💑","남자친구":"🧑","여자친구":"👩","프러포즈":"💍","기념일":"🎉","장거리연애":"✈️","첫눈에반하다":"⚡","밀당":"🔄","인연":"🧵","매력":"✨","이상형":"🌟","솔로":"1️⃣","복잡하다":"🌀","진지하다":"😐","설레임":"🦋",
+  "아이돌":"🌟","팬클럽":"👥","콘서트":"🎤","앨범":"💿","음원":"🎵","뮤직비디오":"🎬","안무":"💃","데뷔":"🎉","활동하다":"📢","예능":"📺","시청률":"📊","오디션":"🎤","연습생":"🎓","팬미팅":"🤝","굿즈":"🛍️","포토카드":"🃏","스트리밍":"📡","차트":"📈","입덕하다":"💘","탈덕하다":"👋","최애":"⭐","직캠":"📹","응원봉":"🔦","한류":"🌊","OST":"🎼","그룹":"👥","리더":"👑","메인보컬":"🎤","래퍼":"🎤","컴백":"🔁",
+  "검색하다":"🔍","다운로드":"⬇️","업로드":"⬆️","공유하다":"🔗","팔로우":"➕","팔로워":"👥","게시물":"📝","인플루언서":"📱","유튜버":"📹","해시태그":"#️⃣","알림":"🔔","댓글":"💬","좋아요":"👍","이모티콘":"😊","비밀번호":"🔑","계정":"👤","앱":"📱","업데이트":"🔄","와이파이":"📶","데이터":"📊","라이브":"🔴","구독자":"👥","조회수":"👁️","개인정보":"🔒","로그인":"🔓","로그아웃":"🚪","회원가입":"📝","링크":"🔗","바이럴":"🔥","블로그":"✍️",
+  "재료":"🥕","레시피":"📜","냄비":"🍲","프라이팬":"🍳","칼":"🔪","도마":"🪵","볶다":"🍳","끓이다":"♨️","굽다":"🔥","튀기다":"🍤","찌다":"♨️","썰다":"🔪","다지다":"🔪","간을하다":"🧂","양념":"🥫","마늘":"🧄","생강":"🫚","파":"🌿","고춧가루":"🌶️","간장":"🍶","된장":"🍲","고추장":"🌶️","참기름":"🫙","식초":"🍶","후추":"⚫","밀가루":"🌾","반죽하다":"🍞","삶다":"♨️","식히다":"❄️","냉동하다":"🧊",
+  "아파트":"🏢","원룸":"🏠","월세":"💸","전세":"🏠","보증금":"💰","집주인":"🧑‍💼","세입자":"🧑","거실":"🛋️","침실":"🛏️","발코니":"🌇","전등":"💡","에어컨":"❄️","냉장고":"🧊","세탁기":"🌀","청소기":"🧹","전자레인지":"📦","이사하다":"🚚","인테리어":"🎨","소파":"🛋️","침대":"🛏️","책상":"🪑","옷장":"🚪","수납":"📦","분리수거":"♻️","수도세":"💧","전기세":"⚡","관리비":"🧾","아늑하다":"🕯️","쾌적하다":"🌿","방음":"🔇",
+  "과목":"📚","성적":"📊","장학금":"🎓","강의":"🎙️","과제":"📝","동아리":"🎭","학생증":"🪪","필기하다":"✍️","복습하다":"🔁","예습하다":"📖","졸업하다":"🎓","합격하다":"✅","불합격하다":"❌","입학하다":"🚪","학기":"📅","방학":"🏖️","교환학생":"🌍","유학생":"✈️","수강신청":"📝","출석":"✅","지각하다":"⏰","결석하다":"🚫","교과서":"📘","숙제":"📝","연필":"✏️","지우개":"🧼","가위":"✂️","풀":"🧴","칠판":"⬛","시험공부":"📖",
+  "헬스장":"🏋️","트레이너":"🧑‍🏫","운동복":"👕","스트레칭":"🤸","준비운동":"🤸","마라톤":"🏃","배드민턴":"🏸","탁구":"🏓","골프":"⛳","테니스":"🎾","볼링":"🎳","스키":"⛷️","서핑":"🏄","필라테스":"🧘","요가":"🧘","근육":"💪","유산소":"🏃","무산소":"🏋️","경기":"🏆","선수":"🏅","감독":"📋","응원하다":"📣","우승하다":"🥇","기록":"⏱️","훈련하다":"🏋️","부상":"🤕","회복하다":"💊","다이어트":"🥗","몸무게":"⚖️","칼로리":"🔥",
+};
+// Deck id -> fallback emoji for words not covered above.
+const DECK_EMOJI = {
+  "lv-초급1":"🌱","lv-초급2":"🌿","lv-중급1":"⭐","lv-중급2":"🏅",
+  "tp-식당/외식":"🍽️","tp-여행/관광":"✈️","tp-쇼핑/패션":"🛍️","tp-연애/관계":"💕","tp-K-pop/연예":"🎤",
+  "tp-인터넷/SNS":"📱","tp-요리/음식조리":"🍳","tp-집/생활":"🏠","tp-학교/교육":"🎓","tp-스포츠/운동":"⚽",
+};
+// A few words get a real illustration instead of an emoji.
+const IMAGE_MAP = {
+  "비빔밥":"https://d8j0ntlcm91z4.cloudfront.net/user_3ETH0P4LSrM55D8tiviADyp2adG/hf_20260720_032024_cf8e0adc-b0cb-4f18-b286-b7376e108dc1.png",
+  "김치":"https://d8j0ntlcm91z4.cloudfront.net/user_3ETH0P4LSrM55D8tiviADyp2adG/hf_20260720_032032_a36ca04e-a2e7-4794-856d-c6081f7cbfc0.png",
+  "떡볶이":"https://d8j0ntlcm91z4.cloudfront.net/user_3ETH0P4LSrM55D8tiviADyp2adG/hf_20260720_032035_d6264d66-9bcd-4e70-943a-7e4b12072b13.png",
+};
 const FLASH_DECKS = [
   ...AUTO_VOC.map(v=>({id:`lv-${v.name}`,name:v.name,words:v.words})),
   ...TOPIC_VOC.map(t=>({id:`tp-${t.topic}`,name:t.topic,words:t.words})),
@@ -1249,40 +1297,83 @@ function TeacherVoc({data,save}){
   );
 }
 
+const CardArt = ({word,deckId,size}) => {
+  const img = IMAGE_MAP[word];
+  if(img) return <img src={img} alt="" className={`${size} object-contain drop-shadow`}/>;
+  const emoji = EMOJI_MAP[word] || DECK_EMOJI[deckId] || "📌";
+  return <span className={size}>{emoji}</span>;
+};
+
 function TeacherFlash(){
-  const [sel,setSel]=useState(null);
+  const [multiMode,setMultiMode]=useState(false);
+  const [selectedIds,setSelectedIds]=useState([]);
+  const [session,setSession]=useState(null);
   const [idx,setIdx]=useState(0);
   const [flipped,setFlipped]=useState(false);
-  const open=d=>{setSel(d);setIdx(0);setFlipped(false);};
-  const back=()=>{setSel(null);setIdx(0);setFlipped(false);};
-  const go=dir=>{setFlipped(false);setIdx(i=>(i+dir+sel.words.length)%sel.words.length);};
-  if(!sel)return(
-    <div>
-      <SectionTitle ko="🎴 플래시카드" en="Flashcards"/>
-      <p className="text-xs text-slate-500 mb-3">단어장을 선택하고 카드를 넘기며 학습하세요. (선생님 전용)</p>
-      {FLASH_DECKS.map(d=>(
-        <div key={d.id} className="bg-white rounded-xl p-4 mb-2 border border-slate-200 flex items-center justify-between">
-          <div><p className="font-bold text-slate-800">{d.name}</p><p className="text-xs text-slate-500">{d.words.length}개 단어</p></div>
-          <button onClick={()=>open(d)} className="bg-indigo-500 text-white px-3 py-2 rounded-xl text-sm font-medium flex items-center gap-1"><Layers className="w-4 h-4"/>시작</button>
-        </div>
-      ))}
-    </div>
-  );
-  const w=sel.words[idx];
+  const toggleSel=id=>setSelectedIds(s=>s.includes(id)?s.filter(x=>x!==id):[...s,id]);
+  const openSingle=d=>{setSession({id:d.id,name:d.name,words:d.words});setIdx(0);setFlipped(false);};
+  const startMerged=()=>{
+    const decks=FLASH_DECKS.filter(d=>selectedIds.includes(d.id));
+    if(!decks.length)return;
+    const words=decks.flatMap(d=>d.words.map(w=>({...w,deckId:d.id})));
+    setSession({id:"merged",name:`선택한 ${decks.length}개 단어장`,words});
+    setIdx(0);setFlipped(false);
+  };
+  const back=()=>{setSession(null);setIdx(0);setFlipped(false);setMultiMode(false);setSelectedIds([]);};
+  const go=dir=>{setFlipped(false);setIdx(i=>(i+dir+session.words.length)%session.words.length);};
+
+  if(!session){
+    const selectedWordCount=FLASH_DECKS.filter(d=>selectedIds.includes(d.id)).reduce((s,d)=>s+d.words.length,0);
+    return(
+      <div className="pb-16">
+        <SectionTitle ko="🎴 플래시카드" en="Flashcards"/>
+        <p className="text-xs text-slate-500 mb-3">단어장을 선택하고 카드를 넘기며 학습하세요. (선생님 전용)</p>
+        <button onClick={()=>{setMultiMode(m=>!m);setSelectedIds([]);}} className={`mb-3 px-3 py-2 rounded-xl text-sm font-medium flex items-center gap-1 ${multiMode?"bg-indigo-500 text-white":"bg-indigo-50 text-indigo-600"}`}>
+          <Layers className="w-4 h-4"/>{multiMode?"덱 여러 개 선택 중 (탭하여 해제)":"여러 덱 합쳐서 길게 학습하기"}
+        </button>
+        {FLASH_DECKS.map(d=>{
+          const checked=selectedIds.includes(d.id);
+          return(
+            <div key={d.id} onClick={()=>multiMode&&toggleSel(d.id)} className={`bg-white rounded-xl p-4 mb-2 border flex items-center justify-between ${multiMode?`cursor-pointer ${checked?"border-indigo-400 ring-2 ring-indigo-100":"border-slate-200"}`:"border-slate-200"}`}>
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">{DECK_EMOJI[d.id]||"📌"}</span>
+                <div><p className="font-bold text-slate-800">{d.name}</p><p className="text-xs text-slate-500">{d.words.length}개 단어</p></div>
+              </div>
+              {multiMode?
+                <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 ${checked?"bg-indigo-500 border-indigo-500":"border-slate-300"}`}>{checked&&<CheckCircle className="w-4 h-4 text-white"/>}</div>
+              :<button onClick={()=>openSingle(d)} className="bg-indigo-500 text-white px-3 py-2 rounded-xl text-sm font-medium flex items-center gap-1"><Layers className="w-4 h-4"/>시작</button>}
+            </div>
+          );
+        })}
+        {multiMode&&selectedIds.length>0&&
+          <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-3 z-20">
+            <div className="max-w-2xl mx-auto flex items-center justify-between gap-3">
+              <span className="text-sm text-slate-600">선택 {selectedIds.length}개 · 총 {selectedWordCount}장</span>
+              <button onClick={startMerged} className="bg-indigo-500 text-white px-4 py-2.5 rounded-xl text-sm font-medium flex items-center gap-1"><Layers className="w-4 h-4"/>학습 시작</button>
+            </div>
+          </div>
+        }
+      </div>
+    );
+  }
+  const w=session.words[idx];
+  const deckId=w.deckId||session.id;
   return(
     <div>
       <button onClick={back} className="text-slate-500 text-sm mb-3 hover:underline">← 목록으로</button>
       <div className="flex items-center justify-between mb-3">
-        <h2 className="font-bold text-slate-800 text-lg">{sel.name}</h2>
-        <span className="text-xs text-slate-400">{idx+1} / {sel.words.length}</span>
+        <h2 className="font-bold text-slate-800 text-lg">{session.name}</h2>
+        <span className="text-xs text-slate-400">{idx+1} / {session.words.length}</span>
       </div>
       <div onClick={()=>setFlipped(f=>!f)} style={{perspective:"1000px"}} className="cursor-pointer select-none">
         <div style={{transformStyle:"preserve-3d",transition:"transform 0.5s",transform:flipped?"rotateY(180deg)":"none"}} className="relative h-64">
           <div style={{backfaceVisibility:"hidden"}} className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex flex-col items-center justify-center p-6 text-white shadow-lg">
+            <CardArt word={w.word} deckId={deckId} size="text-5xl mb-3"/>
             <span className="text-3xl font-bold text-center">{w.word}</span>
             <span className="text-xs mt-4 opacity-70">탭하여 뜻 보기 · Tap to flip</span>
           </div>
           <div style={{backfaceVisibility:"hidden",transform:"rotateY(180deg)"}} className="absolute inset-0 bg-white border-2 border-indigo-200 rounded-2xl flex flex-col items-center justify-center p-6 shadow-lg">
+            <CardArt word={w.word} deckId={deckId} size="text-4xl mb-2"/>
             <span className="text-sm text-slate-400 mb-2">{w.word}</span>
             <span className="text-2xl font-bold text-indigo-700 text-center">{w.meaning}</span>
           </div>
