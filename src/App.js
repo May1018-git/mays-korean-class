@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { db } from "./firebase";
 import { doc, getDoc, setDoc, onSnapshot } from "firebase/firestore";
-import { BookOpen, FileText, Bell, BarChart3, Plus, Trash2, Send, User, GraduationCap, LogOut, Sparkles, CheckCircle, XCircle, Loader2, Megaphone, Lock, Clock, UserCheck, UserX, BookMarked, Edit3, ExternalLink, ChevronDown, ChevronUp, Download, BookText, ArrowUp, ArrowDown } from "lucide-react";
+import { BookOpen, FileText, Bell, BarChart3, Plus, Trash2, Send, User, GraduationCap, LogOut, Sparkles, CheckCircle, XCircle, Loader2, Megaphone, Lock, Clock, UserCheck, UserX, BookMarked, Edit3, ExternalLink, ChevronDown, ChevronUp, Download, BookText, ArrowUp, ArrowDown, Layers, RotateCcw, ArrowLeft, ArrowRight } from "lucide-react";
 
 const DRIVE = "https://drive.google.com/drive/folders/1OL0qtkASaU_sj-VM0T79qXlef07zEseZ?usp=drive_link";
 const DEFAULT_TB = [
@@ -745,6 +745,141 @@ const TOPIC_VOC=[
     {word:"칼로리",meaning:"Calorie"},
   ]},
 ];
+// Flashcard decks, taken verbatim from the teacher's own uploaded vocab sets (text only, no art).
+const FLASH_DECKS = [
+  {id:"dating-relationships",name:"연애/관계 (Dating/Relationships)",words:[
+    {word:"소개팅",meaning:"Blind date"},{word:"데이트",meaning:"Date"},{word:"고백하다",meaning:"To confess feelings"},
+    {word:"사귀다",meaning:"To date / go out with"},{word:"헤어지다",meaning:"To break up"},{word:"짝사랑",meaning:"One-sided love / Crush"},
+    {word:"썸",meaning:"Romantic tension / 'Almost dating'"},{word:"두근거리다",meaning:"To have a racing heart"},{word:"설레다",meaning:"To feel excited / flutter"},
+    {word:"보고싶다",meaning:"To miss someone"},{word:"그리워하다",meaning:"To long for / miss"},{word:"질투하다",meaning:"To feel jealous"},
+    {word:"다투다",meaning:"To argue / quarrel"},{word:"화해하다",meaning:"To make up / reconcile"},{word:"커플",meaning:"Couple"},
+    {word:"연인",meaning:"Partner / Lover"},{word:"남자친구",meaning:"Boyfriend"},{word:"여자친구",meaning:"Girlfriend"},
+    {word:"프러포즈",meaning:"Proposal"},{word:"기념일",meaning:"Anniversary"},{word:"장거리연애",meaning:"Long-distance relationship"},
+    {word:"첫눈에반하다",meaning:"To fall in love at first sight"},{word:"밀당",meaning:"Push and pull (in dating)"},{word:"인연",meaning:"Fate / Connection"},
+    {word:"매력",meaning:"Charm / Appeal"},{word:"이상형",meaning:"Ideal type"},{word:"솔로",meaning:"Single"},
+    {word:"복잡하다",meaning:"To be complicated"},{word:"진지하다",meaning:"To be serious"},{word:"설레임",meaning:"Excitement / Flutter"},
+  ]},
+  {id:"travel-tourism",name:"여행/관광 (Travel/Tourism)",words:[
+    {word:"여권",meaning:"Passport"},{word:"비자",meaning:"Visa"},{word:"체크인",meaning:"Check-in"},
+    {word:"체크아웃",meaning:"Check-out"},{word:"숙소",meaning:"Accommodation"},{word:"관광지",meaning:"Tourist spot"},
+    {word:"여행사",meaning:"Travel agency"},{word:"지도",meaning:"Map"},{word:"환전",meaning:"Currency exchange"},
+    {word:"환율",meaning:"Exchange rate"},{word:"입국심사",meaning:"Immigration check"},{word:"수하물",meaning:"Baggage / Luggage"},
+    {word:"탑승권",meaning:"Boarding pass"},{word:"명소",meaning:"Famous attraction"},{word:"기념품",meaning:"Souvenir"},
+    {word:"사진찍다",meaning:"To take a photo"},{word:"구경하다",meaning:"To sightsee / look around"},{word:"안내소",meaning:"Information center"},
+    {word:"왕복",meaning:"Round trip"},{word:"편도",meaning:"One way"},{word:"투어",meaning:"Tour"},
+    {word:"현지인",meaning:"Local person"},{word:"자유여행",meaning:"Independent travel"},{word:"패키지",meaning:"Package tour"},
+    {word:"비수기",meaning:"Off-season"},{word:"성수기",meaning:"Peak season"},{word:"일출",meaning:"Sunrise"},
+    {word:"일몰",meaning:"Sunset"},{word:"야경",meaning:"Night view"},{word:"렌트카",meaning:"Rental car"},
+  ]},
+  {id:"level1-beginner",name:"초급1 (Level1 for Beginner)",words:[
+    {word:"하나 1",meaning:"One (native)"},{word:"둘 2",meaning:"Two (native)"},{word:"셋 3",meaning:"Three (native)"},
+    {word:"넷 4",meaning:"Four (native)"},{word:"다섯 5",meaning:"Five (native)"},{word:"여섯 6",meaning:"Six (native)"},
+    {word:"일곱 7",meaning:"Seven (native)"},{word:"여덟 8",meaning:"Eight (native)"},{word:"아홉 9",meaning:"Nine (native)"},
+    {word:"열 10",meaning:"Ten (native)"},{word:"백 100",meaning:"Hundred"},{word:"천 1000",meaning:"Thousand"},
+    {word:"만 10000",meaning:"Ten thousand"},{word:"색깔",meaning:"Color"},{word:"빨강",meaning:"Red"},
+    {word:"파랑",meaning:"Blue"},{word:"노랑",meaning:"Yellow"},{word:"초록",meaning:"Green"},
+    {word:"검정",meaning:"Black"},{word:"하양",meaning:"White"},{word:"머리",meaning:"Head / Hair"},
+    {word:"얼굴",meaning:"Face"},{word:"눈",meaning:"Eye"},{word:"코",meaning:"Nose"},
+    {word:"입",meaning:"Mouth"},{word:"귀",meaning:"Ear"},{word:"손",meaning:"Hand"},
+    {word:"발",meaning:"Foot"},{word:"팔",meaning:"Arm"},{word:"다리",meaning:"Leg"},
+    {word:"화요일",meaning:"Tuesday"},{word:"수요일",meaning:"Wednesday"},{word:"목요일",meaning:"Thursday"},
+    {word:"주",meaning:"Week"},{word:"년",meaning:"Year"},{word:"오전",meaning:"AM / Morning"},
+    {word:"오후",meaning:"PM / Afternoon"},{word:"주말",meaning:"Weekend"},{word:"평일",meaning:"Weekday"},
+    {word:"작년",meaning:"Last year"},{word:"올해",meaning:"This year"},{word:"내년",meaning:"Next year"},
+    {word:"새벽",meaning:"Dawn"},{word:"빵",meaning:"Bread"},{word:"우유",meaning:"Milk"},
+    {word:"사과",meaning:"Apple"},{word:"바나나",meaning:"Banana"},{word:"딸기",meaning:"Strawberry"},
+    {word:"김치",meaning:"Kimchi"},{word:"라면",meaning:"Ramen"},{word:"치킨",meaning:"Chicken (dish)"},
+    {word:"피자",meaning:"Pizza"},{word:"과일",meaning:"Fruit"},{word:"야채",meaning:"Vegetable"},
+    {word:"고기",meaning:"Meat"},{word:"계란",meaning:"Egg"},{word:"설탕",meaning:"Sugar"},
+    {word:"소금",meaning:"Salt"},{word:"차",meaning:"Tea"},{word:"주스",meaning:"Juice"},
+    {word:"카페",meaning:"Cafe"},{word:"식당",meaning:"Restaurant"},{word:"공원",meaning:"Park"},
+    {word:"도서관",meaning:"Library"},{word:"영화관",meaning:"Movie theater"},{word:"은행",meaning:"Bank"},
+    {word:"우체국",meaning:"Post office"},{word:"호텔",meaning:"Hotel"},{word:"공항",meaning:"Airport"},
+    {word:"버스",meaning:"Bus"},{word:"택시",meaning:"Taxi"},{word:"자전거",meaning:"Bicycle"},
+    {word:"비행기",meaning:"Airplane"},{word:"기차",meaning:"Train"},{word:"배",meaning:"Boat / Ship"},
+    {word:"길",meaning:"Road / Street"},{word:"신호등",meaning:"Traffic light"},{word:"쓰다",meaning:"To write / use"},
+    {word:"읽다",meaning:"To read"},{word:"주다",meaning:"To give"},{word:"받다",meaning:"To receive"},
+    {word:"보내다",meaning:"To send"},{word:"열다",meaning:"To open"},{word:"닫다",meaning:"To close"},
+    {word:"앉다",meaning:"To sit"},{word:"서다",meaning:"To stand"},{word:"걷다",meaning:"To walk"},
+    {word:"뛰다",meaning:"To run / jump"},{word:"입다",meaning:"To wear"},{word:"벗다",meaning:"To take off"},
+    {word:"씻다",meaning:"To wash"},{word:"쉬다",meaning:"To rest"},{word:"길다",meaning:"To be long"},
+    {word:"짧다",meaning:"To be short"},{word:"높다",meaning:"To be high / tall"},{word:"낮다",meaning:"To be low"},
+    {word:"빠르다",meaning:"To be fast"},{word:"느리다",meaning:"To be slow"},{word:"뜨겁다",meaning:"To be hot (touch)"},
+    {word:"차갑다",meaning:"To be cold (touch)"},{word:"덥다",meaning:"To be hot (weather)"},{word:"춥다",meaning:"To be cold (weather)"},
+  ]},
+  {id:"level2-beginner",name:"초급2 (Level2 for Beginner)",words:[
+    {word:"날씨",meaning:"Weather"},{word:"비",meaning:"Rain"},{word:"눈",meaning:"Snow"},
+    {word:"바람",meaning:"Wind"},{word:"구름",meaning:"Cloud"},{word:"해",meaning:"Sun"},
+    {word:"달",meaning:"Moon"},{word:"별",meaning:"Star"},{word:"하늘",meaning:"Sky"},
+    {word:"산",meaning:"Mountain"},{word:"바다",meaning:"Sea / Ocean"},{word:"강",meaning:"River"},
+    {word:"호수",meaning:"Lake"},{word:"나무",meaning:"Tree"},{word:"꽃",meaning:"Flower"},
+    {word:"풀",meaning:"Grass"},{word:"잎",meaning:"Leaf"},{word:"동물",meaning:"Animal"},
+    {word:"개",meaning:"Dog"},{word:"고양이",meaning:"Cat"},{word:"새",meaning:"Bird"},
+    {word:"물고기",meaning:"Fish"},{word:"닭",meaning:"Chicken (animal)"},{word:"소",meaning:"Cow"},
+    {word:"돼지",meaning:"Pig"},{word:"말",meaning:"Horse / Speech"},{word:"토끼",meaning:"Rabbit"},
+    {word:"곰",meaning:"Bear"},{word:"사자",meaning:"Lion"},{word:"호랑이",meaning:"Tiger"},
+    {word:"형제",meaning:"Brothers"},{word:"자매",meaning:"Sisters"},{word:"부부",meaning:"Couple"},
+    {word:"남편",meaning:"Husband"},{word:"아내",meaning:"Wife"},{word:"아들",meaning:"Son"},
+    {word:"딸",meaning:"Daughter"},{word:"할아버지",meaning:"Grandfather"},{word:"할머니",meaning:"Grandmother"},
+    {word:"손자",meaning:"Grandson"},{word:"손녀",meaning:"Granddaughter"},{word:"삼촌",meaning:"Uncle"},
+    {word:"이모",meaning:"Aunt (mother's side)"},{word:"고모",meaning:"Aunt (father's side)"},{word:"사촌",meaning:"Cousin"},
+    {word:"남자",meaning:"Man"},{word:"여자",meaning:"Woman"},{word:"아저씨",meaning:"Mister / middle-aged man"},
+    {word:"아주머니",meaning:"Mrs. / middle-aged woman"},{word:"청년",meaning:"Young person"},{word:"노인",meaning:"Elderly person"},
+    {word:"취미",meaning:"Hobby"},{word:"운동",meaning:"Exercise / Sports"},{word:"축구",meaning:"Soccer"},
+    {word:"야구",meaning:"Baseball"},{word:"농구",meaning:"Basketball"},{word:"수영",meaning:"Swimming"},
+    {word:"등산",meaning:"Hiking"},{word:"여행",meaning:"Travel"},{word:"영화",meaning:"Movie"},
+    {word:"음악",meaning:"Music"},{word:"노래",meaning:"Song"},{word:"춤",meaning:"Dance"},
+    {word:"그림",meaning:"Picture / Drawing"},{word:"사진",meaning:"Photo"},{word:"게임",meaning:"Game"},
+    {word:"운전",meaning:"Driving"},{word:"요리",meaning:"Cooking"},{word:"청소",meaning:"Cleaning"},
+    {word:"빨래",meaning:"Laundry"},{word:"쇼핑",meaning:"Shopping"},{word:"산책",meaning:"Walk / Stroll"},
+    {word:"휴가",meaning:"Vacation"},{word:"생일",meaning:"Birthday"},{word:"파티",meaning:"Party"},
+    {word:"선물",meaning:"Gift"},{word:"결혼",meaning:"Marriage"},{word:"사랑",meaning:"Love"},
+    {word:"행복",meaning:"Happiness"},{word:"슬픔",meaning:"Sadness"},{word:"기쁨",meaning:"Joy"},
+    {word:"걱정",meaning:"Worry"},{word:"두려움",meaning:"Fear"},{word:"화",meaning:"Anger"},
+    {word:"마음",meaning:"Heart / Mind"},{word:"생각",meaning:"Thought"},{word:"꿈",meaning:"Dream"},
+    {word:"희망",meaning:"Hope"},{word:"추억",meaning:"Memory"},{word:"약속",meaning:"Promise / Appointment"},
+    {word:"부탁",meaning:"Favor / Request"},{word:"도움",meaning:"Help"},{word:"칭찬",meaning:"Praise"},
+    {word:"인사",meaning:"Greeting"},{word:"대답",meaning:"Answer"},{word:"질문",meaning:"Question"},
+    {word:"이야기",meaning:"Story"},{word:"소리",meaning:"Sound"},{word:"목소리",meaning:"Voice"},
+    {word:"노력",meaning:"Effort"},
+  ]},
+  {id:"level1-intermediate",name:"중급1 (Level1 for Intermediate)",words:[
+    {word:"직업",meaning:"Job / Occupation"},{word:"회의",meaning:"Meeting"},{word:"발표",meaning:"Presentation"},
+    {word:"보고서",meaning:"Report"},{word:"계획",meaning:"Plan"},{word:"일정",meaning:"Schedule"},
+    {word:"마감",meaning:"Deadline"},{word:"출장",meaning:"Business trip"},{word:"면접",meaning:"Job interview"},
+    {word:"월급",meaning:"Salary"},{word:"직장",meaning:"Workplace"},{word:"동료",meaning:"Colleague"},
+    {word:"사장",meaning:"Boss / President of company"},{word:"부장",meaning:"Manager (department head)"},{word:"과장",meaning:"Section chief"},
+    {word:"정부",meaning:"Government"},{word:"대통령",meaning:"President (of country)"},{word:"법",meaning:"Law"},
+    {word:"경찰",meaning:"Police"},{word:"군인",meaning:"Soldier"},{word:"변호사",meaning:"Lawyer"},
+    {word:"교수",meaning:"Professor"},{word:"기자",meaning:"Reporter"},{word:"작가",meaning:"Writer"},
+    {word:"가수",meaning:"Singer"},{word:"배우",meaning:"Actor"},{word:"사회",meaning:"Society"},
+    {word:"문화",meaning:"Culture"},{word:"역사",meaning:"History"},{word:"전통",meaning:"Tradition"},
+    {word:"종교",meaning:"Religion"},{word:"정치",meaning:"Politics"},{word:"경제",meaning:"Economy"},
+    {word:"환경",meaning:"Environment"},{word:"자연",meaning:"Nature"},{word:"세계",meaning:"World"},
+    {word:"나라",meaning:"Country"},{word:"도시",meaning:"City"},{word:"시골",meaning:"Countryside"},
+    {word:"마을",meaning:"Village"},{word:"거리",meaning:"Street / Distance"},{word:"광장",meaning:"Plaza / Square"},
+    {word:"건물",meaning:"Building"},{word:"시설",meaning:"Facility"},{word:"박물관",meaning:"Museum"},
+    {word:"미술관",meaning:"Art gallery"},{word:"극장",meaning:"Theater"},{word:"교회",meaning:"Church"},
+    {word:"절",meaning:"Buddhist temple"},{word:"성당",meaning:"Catholic church"},{word:"결정",meaning:"Decision"},
+    {word:"선택",meaning:"Choice"},{word:"의견",meaning:"Opinion"},{word:"주장",meaning:"Argument / Claim"},
+    {word:"토론",meaning:"Discussion"},{word:"회비",meaning:"Membership fee"},{word:"가격",meaning:"Price"},
+    {word:"할인",meaning:"Discount"},{word:"세금",meaning:"Tax"},{word:"영수증",meaning:"Receipt"},
+    {word:"계산",meaning:"Calculation / Payment"},{word:"카드",meaning:"Card"},{word:"현금",meaning:"Cash"},
+    {word:"통장",meaning:"Bankbook"},{word:"저축",meaning:"Savings"},{word:"투자",meaning:"Investment"},
+    {word:"빚",meaning:"Debt"},{word:"부자",meaning:"Rich person"},{word:"가난",meaning:"Poverty"},
+    {word:"성공",meaning:"Success"},{word:"실패",meaning:"Failure"},{word:"기회",meaning:"Opportunity"},
+    {word:"도전",meaning:"Challenge"},{word:"노력하다",meaning:"To make an effort"},{word:"성장하다",meaning:"To grow"},
+    {word:"발전하다",meaning:"To develop"},{word:"변하다",meaning:"To change"},{word:"결정하다",meaning:"To decide"},
+    {word:"선택하다",meaning:"To choose"},{word:"설명하다",meaning:"To explain"},{word:"이해하다",meaning:"To understand"},
+    {word:"기억하다",meaning:"To remember"},{word:"잊다",meaning:"To forget"},{word:"느끼다",meaning:"To feel"},
+    {word:"생각하다",meaning:"To think"},{word:"걱정하다",meaning:"To worry"},{word:"사랑하다",meaning:"To love"},
+    {word:"미워하다",meaning:"To hate"},{word:"좋아하다",meaning:"To like"},{word:"싫어하다",meaning:"To dislike"},
+    {word:"필요하다",meaning:"To be necessary"},{word:"가능하다",meaning:"To be possible"},{word:"불가능하다",meaning:"To be impossible"},
+    {word:"중요하다",meaning:"To be important"},{word:"특별하다",meaning:"To be special"},{word:"평범하다",meaning:"To be ordinary"},
+    {word:"친절하다",meaning:"To be kind"},{word:"정직하다",meaning:"To be honest"},{word:"똑똑하다",meaning:"To be smart"},
+    {word:"게으르다",meaning:"To be lazy"},
+  ]},
+];
 const TEACHER_PASSWORD = process.env.REACT_APP_TEACHER_PASSWORD || "may2024";
 
 // Firestore helpers
@@ -912,7 +1047,7 @@ function PendingScreen({user,data,onApproved,onRejected,onCancel}){
 function TeacherApp({user,data,save,onLogout}){
   const [tab,setTab]=useState("students");
   const pending=data.stu.filter(s=>s.status==="pending").length;
-  const tabs=[["students",BarChart3,`학생${pending>0?`(${pending})`:""}`, "Students"],["mat",FileText,"학습자료","Materials"],["tb",BookMarked,"수업교재","Textbook"],["voc",BookText,"단어장","Vocab"],["ann",Megaphone,"공지","Notice"]];
+  const tabs=[["students",BarChart3,`학생${pending>0?`(${pending})`:""}`, "Students"],["mat",FileText,"학습자료","Materials"],["tb",BookMarked,"수업교재","Textbook"],["voc",BookText,"단어장","Vocab"],["flash",Layers,"플래시카드","Flashcards"],["ann",Megaphone,"공지","Notice"]];
   return(
     <div className="min-h-screen bg-slate-50">
       <Hdr user={user} onLogout={onLogout} tc/>
@@ -922,6 +1057,7 @@ function TeacherApp({user,data,save,onLogout}){
         {tab==="mat"&&<TeacherMat data={data} save={save}/>}
         {tab==="tb"&&<TeacherTB data={data} save={save}/>}
         {tab==="voc"&&<TeacherVoc data={data} save={save}/>}
+        {tab==="flash"&&<TeacherFlash/>}
         {tab==="ann"&&<TeacherAnn data={data} save={save}/>}
       </Wrap>
     </div>
@@ -1238,6 +1374,125 @@ function TeacherVoc({data,save}){
           </div>
         </div>
       </div>}
+    </div>
+  );
+}
+
+const wordKey = w => `${w.word}|${w.meaning}`;
+
+function TeacherFlash(){
+  const [multiMode,setMultiMode]=useState(false);
+  const [selectedIds,setSelectedIds]=useState([]);
+  const [session,setSession]=useState(null);
+  const [idx,setIdx]=useState(0);
+  const [flipped,setFlipped]=useState(false);
+  const [checked,setChecked]=useState(()=>new Set());
+  const [done,setDone]=useState(false);
+  const toggleSel=id=>setSelectedIds(s=>s.includes(id)?s.filter(x=>x!==id):[...s,id]);
+  const openSingle=d=>{setSession({id:d.id,name:d.name,words:d.words});setIdx(0);setFlipped(false);setChecked(new Set());setDone(false);};
+  const startMerged=()=>{
+    const decks=FLASH_DECKS.filter(d=>selectedIds.includes(d.id));
+    if(!decks.length)return;
+    const words=decks.flatMap(d=>d.words);
+    setSession({id:"merged",name:`선택한 ${decks.length}개 단어장`,words});
+    setIdx(0);setFlipped(false);setChecked(new Set());setDone(false);
+  };
+  const back=()=>{setSession(null);setIdx(0);setFlipped(false);setMultiMode(false);setSelectedIds([]);setChecked(new Set());setDone(false);};
+  const go=dir=>{
+    if(dir===1&&idx===session.words.length-1){setDone(true);return;}
+    setFlipped(false);
+    setIdx(i=>(i+dir+session.words.length)%session.words.length);
+  };
+  const toggleCheck=w=>setChecked(prev=>{
+    const next=new Set(prev);
+    const key=wordKey(w);
+    next.has(key)?next.delete(key):next.add(key);
+    return next;
+  });
+  const reviewChecked=()=>{
+    const words=session.words.filter(w=>checked.has(wordKey(w)));
+    setSession(s=>({...s,words}));
+    setIdx(0);setFlipped(false);setChecked(new Set());setDone(false);
+  };
+  const restart=()=>{setIdx(0);setFlipped(false);setChecked(new Set());setDone(false);};
+
+  if(!session){
+    const selectedWordCount=FLASH_DECKS.filter(d=>selectedIds.includes(d.id)).reduce((s,d)=>s+d.words.length,0);
+    return(
+      <div className="pb-16">
+        <SectionTitle ko="🎴 플래시카드" en="Flashcards"/>
+        <p className="text-xs text-slate-500 mb-3">단어장을 선택하고 카드를 넘기며 학습하세요. (선생님 전용)</p>
+        <button onClick={()=>{setMultiMode(m=>!m);setSelectedIds([]);}} className={`mb-3 px-3 py-2 rounded-xl text-sm font-medium flex items-center gap-1 ${multiMode?"bg-indigo-500 text-white":"bg-indigo-50 text-indigo-600"}`}>
+          <Layers className="w-4 h-4"/>{multiMode?"덱 여러 개 선택 중 (탭하여 해제)":"여러 덱 합쳐서 길게 학습하기"}
+        </button>
+        {FLASH_DECKS.map(d=>{
+          const checked=selectedIds.includes(d.id);
+          return(
+            <div key={d.id} onClick={()=>multiMode&&toggleSel(d.id)} className={`bg-white rounded-xl p-4 mb-2 border flex items-center justify-between ${multiMode?`cursor-pointer ${checked?"border-indigo-400 ring-2 ring-indigo-100":"border-slate-200"}`:"border-slate-200"}`}>
+              <div><p className="font-bold text-slate-800">{d.name}</p><p className="text-xs text-slate-500">{d.words.length}개 단어</p></div>
+              {multiMode?
+                <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 ${checked?"bg-indigo-500 border-indigo-500":"border-slate-300"}`}>{checked&&<CheckCircle className="w-4 h-4 text-white"/>}</div>
+              :<button onClick={()=>openSingle(d)} className="bg-indigo-500 text-white px-3 py-2 rounded-xl text-sm font-medium flex items-center gap-1"><Layers className="w-4 h-4"/>시작</button>}
+            </div>
+          );
+        })}
+        {multiMode&&selectedIds.length>0&&
+          <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-3 z-20">
+            <div className="max-w-2xl mx-auto flex items-center justify-between gap-3">
+              <span className="text-sm text-slate-600">선택 {selectedIds.length}개 · 총 {selectedWordCount}장</span>
+              <button onClick={startMerged} className="bg-indigo-500 text-white px-4 py-2.5 rounded-xl text-sm font-medium flex items-center gap-1"><Layers className="w-4 h-4"/>학습 시작</button>
+            </div>
+          </div>
+        }
+      </div>
+    );
+  }
+  if(done){
+    const checkedCount=session.words.filter(w=>checked.has(wordKey(w))).length;
+    return(
+      <div>
+        <button onClick={back} className="text-slate-500 text-sm mb-3 hover:underline">← 목록으로</button>
+        <div className="bg-white rounded-2xl p-6 border border-slate-200 text-center">
+          <p className="text-lg font-bold text-slate-800 mb-1">학습 완료! 🎉</p>
+          <p className="text-sm text-slate-500 mb-5">{session.name} · 총 {session.words.length}장 중 체크 {checkedCount}개</p>
+          <div className="flex flex-col gap-2">
+            {checkedCount>0&&<button onClick={reviewChecked} className="bg-indigo-500 text-white py-2.5 rounded-xl text-sm font-medium flex items-center justify-center gap-1"><CheckCircle className="w-4 h-4"/>체크한 {checkedCount}개 다시 보기</button>}
+            <button onClick={restart} className="bg-indigo-50 text-indigo-600 py-2.5 rounded-xl text-sm font-medium flex items-center justify-center gap-1"><RotateCcw className="w-4 h-4"/>처음부터 다시</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  const w=session.words[idx];
+  const isChecked=checked.has(wordKey(w));
+  return(
+    <div>
+      <button onClick={back} className="text-slate-500 text-sm mb-3 hover:underline">← 목록으로</button>
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="font-bold text-slate-800 text-lg">{session.name}</h2>
+        <span className="text-xs text-slate-400">{idx+1} / {session.words.length}{checked.size>0&&` · 체크 ${checked.size}개`}</span>
+      </div>
+      <div className="relative">
+        <button onClick={()=>toggleCheck(w)} aria-label="체크" className={`absolute top-2 right-2 z-10 w-8 h-8 rounded-full border-2 flex items-center justify-center transition ${isChecked?"bg-emerald-500 border-emerald-500 text-white":"bg-white/90 border-slate-200 text-slate-300"}`}>
+          <CheckCircle className="w-4 h-4"/>
+        </button>
+        <div onClick={()=>setFlipped(f=>!f)} style={{perspective:"1000px"}} className="cursor-pointer select-none">
+          <div style={{transformStyle:"preserve-3d",transition:"transform 0.5s",transform:flipped?"rotateY(180deg)":"none"}} className="relative h-64">
+            <div style={{backfaceVisibility:"hidden"}} className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex flex-col items-center justify-center p-6 text-white shadow-lg">
+              <span className="text-3xl font-bold text-center">{w.meaning}</span>
+              <span className="text-xs mt-4 opacity-70">탭하여 한국어 보기 · Tap to flip</span>
+            </div>
+            <div style={{backfaceVisibility:"hidden",transform:"rotateY(180deg)"}} className="absolute inset-0 bg-white border-2 border-indigo-200 rounded-2xl flex flex-col items-center justify-center p-6 shadow-lg">
+              <span className="text-3xl font-bold text-indigo-700 text-center">{w.word}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="flex items-center justify-center gap-3 mt-5">
+        <button onClick={()=>go(-1)} className="w-11 h-11 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-600 shadow-sm"><ArrowLeft className="w-5 h-5"/></button>
+        <button onClick={()=>setFlipped(f=>!f)} className="px-4 py-2.5 rounded-xl bg-indigo-50 text-indigo-600 text-sm font-medium flex items-center gap-1"><RotateCcw className="w-4 h-4"/>뒤집기</button>
+        <button onClick={()=>go(1)} className="w-11 h-11 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-600 shadow-sm"><ArrowRight className="w-5 h-5"/></button>
+      </div>
     </div>
   );
 }
