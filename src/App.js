@@ -745,57 +745,140 @@ const TOPIC_VOC=[
     {word:"칼로리",meaning:"Calorie"},
   ]},
 ];
-// Word -> emoji lookup so flashcards have a visual even without custom artwork.
-const EMOJI_MAP = {
-  "하나":"1️⃣","둘":"2️⃣","셋":"3️⃣","넷":"4️⃣","다섯":"5️⃣","여섯":"6️⃣","일곱":"7️⃣","여덟":"8️⃣","아홉":"9️⃣","열":"🔟","백":"💯","천":"🔢","만":"🔢",
-  "색깔":"🎨","빨강":"🔴","파랑":"🔵","노랑":"🟡","초록":"🟢","검정":"⚫","하양":"⚪",
-  "머리":"💇","얼굴":"😊","눈":"❄️","코":"👃","입":"👄","귀":"👂","손":"✋","발":"🦶","팔":"💪","다리":"🦵",
-  "화요일":"📅","수요일":"📅","목요일":"📅","주":"🗓️","년":"📆","오전":"🌅","오후":"🌇","주말":"🎉","평일":"🗓️","작년":"📅","올해":"📍","내년":"📆","새벽":"🌌",
-  "빵":"🍞","우유":"🥛","사과":"🍎","바나나":"🍌","딸기":"🍓","김치":"🥬","라면":"🍜","치킨":"🍗","피자":"🍕","과일":"🍇","야채":"🥦","고기":"🥩","계란":"🥚","설탕":"🍬","소금":"🧂","차":"🍵","주스":"🧃",
-  "카페":"☕","식당":"🍽️","공원":"🌳","도서관":"📚","영화관":"🎬","은행":"🏦","우체국":"📮","호텔":"🏨","공항":"✈️","버스":"🚌","택시":"🚕","자전거":"🚲","비행기":"✈️","기차":"🚆","배":"🚢","길":"🛣️","신호등":"🚦",
-  "쓰다":"✍️","읽다":"📖","주다":"🎁","받다":"🤲","보내다":"📤","열다":"🔓","닫다":"🔒","앉다":"🪑","서다":"🧍","걷다":"🚶","뛰다":"🏃","입다":"👕","벗다":"🧥","씻다":"🚿","쉬다":"😌",
-  "길다":"📏","짧다":"✂️","높다":"⬆️","낮다":"⬇️","빠르다":"⚡","느리다":"🐢","뜨겁다":"🔥","차갑다":"🧊","덥다":"🥵","춥다":"🥶",
-  "날씨":"🌤️","비":"🌧️","바람":"💨","구름":"☁️","해":"☀️","달":"🌙","별":"⭐","하늘":"🌌","산":"⛰️","바다":"🌊","강":"🏞️","호수":"🏞️","나무":"🌳","꽃":"🌸","풀":"🌿","잎":"🍃",
-  "동물":"🐾","개":"🐶","고양이":"🐱","새":"🐦","물고기":"🐟","닭":"🐔","소":"🐮","돼지":"🐷","말":"🐴","토끼":"🐰","곰":"🐻","사자":"🦁","호랑이":"🐯",
-  "형제":"👬","자매":"👭","부부":"💑","남편":"🤵","아내":"👰","아들":"👦","딸":"👧","할아버지":"👴","할머니":"👵","손자":"👶","손녀":"👶","삼촌":"👨","이모":"👩","고모":"👩","사촌":"🧑","남자":"👨","여자":"👩","아저씨":"👨","아주머니":"👩","청년":"🧑","노인":"👴",
-  "취미":"🎯","운동":"🏋️","축구":"⚽","야구":"⚾","농구":"🏀","수영":"🏊","등산":"🥾","여행":"🧳","영화":"🎬","음악":"🎵","노래":"🎤","춤":"💃","그림":"🎨","사진":"📷","게임":"🎮","운전":"🚗","요리":"🍳","청소":"🧹","빨래":"🧺","쇼핑":"🛍️","산책":"🚶","휴가":"🏖️","생일":"🎂","파티":"🎉","선물":"🎁","결혼":"💍",
-  "사랑":"❤️","행복":"😊","슬픔":"😢","기쁨":"😄","걱정":"😟","두려움":"😨","화":"😠","마음":"💗","생각":"💭","꿈":"💤","희망":"🌈","추억":"📸","약속":"🤝","부탁":"🙏","도움":"🤝","칭찬":"👏","인사":"👋","대답":"💬","질문":"❓","이야기":"📖","소리":"🔊","목소리":"🗣️","노력":"💪",
-  "직업":"💼","회의":"🗣️","발표":"📊","보고서":"📄","계획":"📝","일정":"🗓️","마감":"⏰","출장":"🧳","면접":"🤝","월급":"💰","직장":"🏢","동료":"🧑‍🤝‍🧑","사장":"👔","부장":"👔","과장":"👔",
-  "정부":"🏛️","대통령":"🎖️","법":"⚖️","경찰":"👮","군인":"🎖️","변호사":"👨‍⚖️","교수":"🎓","기자":"📰","작가":"✍️","가수":"🎤","배우":"🎭",
-  "사회":"🌐","문화":"🎭","역사":"📜","전통":"🏮","종교":"🙏","정치":"🏛️","경제":"📈","환경":"🌱","자연":"🍃","세계":"🌍","나라":"🏳️","도시":"🏙️","시골":"🌾","마을":"🏘️","거리":"🛣️","광장":"🏛️","건물":"🏢","시설":"🏗️","박물관":"🏛️","미술관":"🖼️","극장":"🎭","교회":"⛪","절":"🛕","성당":"⛪",
-  "결정":"✅","선택":"🤔","의견":"💭","주장":"📢","토론":"🗣️","회비":"💵","가격":"🏷️","할인":"💸","세금":"🧾","영수증":"🧾","계산":"🧮","카드":"💳","현금":"💵","통장":"📔","저축":"🐖","투자":"📈","빚":"📉","부자":"🤑","가난":"😔","성공":"🏆","실패":"❌","기회":"🌟","도전":"🔥",
-  "노력하다":"💪","성장하다":"🌱","발전하다":"📈","변하다":"🔄","결정하다":"✅","선택하다":"☑️","설명하다":"💬","이해하다":"💡","기억하다":"🧠","잊다":"🌀","느끼다":"❤️","생각하다":"💭","걱정하다":"😟","사랑하다":"❤️","미워하다":"💔","좋아하다":"👍","싫어하다":"👎","필요하다":"🙏","가능하다":"✅","불가능하다":"🚫","중요하다":"⭐","특별하다":"✨","평범하다":"😐","친절하다":"😊","정직하다":"🤝","똑똑하다":"🧠","게으르다":"🦥",
-  "건강":"💪","병":"🤒","감기":"🤧","두통":"🤕","치료":"🩺","수술":"🏥","약":"💊","주사":"💉","환자":"🛌","간호사":"👩‍⚕️","응급실":"🚑",
-  "교통":"🚦","사고":"💥","위험":"⚠️","안전":"🛡️","보호":"🛡️","규칙":"📏","질서":"🔢","평화":"☮️","전쟁":"⚔️","자유":"🕊️","권리":"📜","의무":"📋","책임":"🎯",
-  "약속하다":"🤝","지키다":"🛡️","잃다":"💔","찾다":"🔍","얻다":"🎁","만들다":"🛠️","짓다":"🏗️","부수다":"💥","고치다":"🔧","깨다":"💥","사용하다":"🔧","준비하다":"📋","시작하다":"▶️","끝나다":"⏹️","계속하다":"🔁","멈추다":"⏸️","시도하다":"🎯","포기하다":"🏳️","도착하다":"🛬","출발하다":"🛫","떠나다":"🚪","돌아오다":"🔙","머무르다":"🏠","방문하다":"🚪","초대하다":"💌","환영하다":"🤗","감사하다":"🙏","미안하다":"😔",
-  "부끄럽다":"😳","자랑스럽다":"😌","두렵다":"😨","외롭다":"😔","그립다":"🥺","즐겁다":"😄","답답하다":"😤","시원하다":"🍃","부드럽다":"🧴","딱딱하다":"🪨","깨끗하다":"✨","더럽다":"🧹","조용하다":"🤫","시끄럽다":"📢","가볍다":"🪶","무겁다":"🏋️","두껍다":"📚","얇다":"📃","넓다":"↔️","좁다":"🤏","깊다":"🕳️","얕다":"🏖️","가깝다":"📍","멀다":"🛰️","같다":"🟰","다르다":"🔀","비슷하다":"👥",
-  "예술":"🎨","과학":"🔬","기술":"⚙️","발명":"💡","연구":"🔬","실험":"🧪","자료":"🗂️","정보":"ℹ️","지식":"📚","경험":"🧭","능력":"💪","재능":"🌟","성격":"🧬","태도":"🙆","습관":"🔁","행동":"🏃","표정":"😐","모양":"🔷","종류":"📦","부분":"🧩",
-  "메뉴판":"📋","주문하다":"🙋","계산서":"🧾","반찬":"🥗","국물":"🍲","젓가락":"🥢","숟가락":"🥄","포장하다":"🥡","예약하다":"📅","맵다":"🌶️","달다":"🍯","짜다":"🧂","싱겁다":"💧","불고기":"🥩","갈비":"🍖","삼겹살":"🥓","된장찌개":"🍲","순두부찌개":"🍲","냉면":"🍜","잡채":"🍝","1인분":"🍽️","서비스":"🎁","맛있다":"😋","맛없다":"😖","배부르다":"🤰","배고프다":"😋","음료":"🥤",
-  "여권":"🛂","비자":"📇","체크인":"🏨","체크아웃":"🚪","숙소":"🏨","관광지":"🗺️","여행사":"🏢","지도":"🗺️","환전":"💱","환율":"💹","입국심사":"🛃","수하물":"🧳","탑승권":"🎫","명소":"📍","기념품":"🎁","사진찍다":"📸","구경하다":"👀","안내소":"ℹ️","왕복":"🔄","편도":"➡️","투어":"🚌","현지인":"🧑‍🤝‍🧑","자유여행":"🎒","패키지":"📦","비수기":"📉","성수기":"📈","일출":"🌅","일몰":"🌇","야경":"🌃","렌트카":"🚙",
-  "백화점":"🏬","세일":"🏷️","사이즈":"📏","교환하다":"🔄","환불하다":"💸","포인트":"⭐","브랜드":"™️","유행":"👗","트렌드":"📈","탈의실":"🚪","바지":"👖","치마":"👗","원피스":"👗","자켓":"🧥","신발":"👟","가방":"👜","악세서리":"💍","목걸이":"📿","귀걸이":"💎","반지":"💍","무료배송":"🚚","한정판":"🌟","품절":"🚫","재고":"📦","코디":"👔","캐주얼":"👕","정장":"🤵","어울리다":"✨","착용하다":"👕","핏":"📐",
-  "소개팅":"🍽️","데이트":"💑","고백하다":"💌","사귀다":"💞","헤어지다":"💔","짝사랑":"🥺","썸":"😳","두근거리다":"💓","설레다":"🦋","보고싶다":"🥺","그리워하다":"🥹","질투하다":"😤","다투다":"😠","화해하다":"🤝","커플":"👫","연인":"💑","남자친구":"🧑","여자친구":"👩","프러포즈":"💍","기념일":"🎉","장거리연애":"✈️","첫눈에반하다":"⚡","밀당":"🔄","인연":"🧵","매력":"✨","이상형":"🌟","솔로":"1️⃣","복잡하다":"🌀","진지하다":"😐","설레임":"🦋",
-  "아이돌":"🌟","팬클럽":"👥","콘서트":"🎤","앨범":"💿","음원":"🎵","뮤직비디오":"🎬","안무":"💃","데뷔":"🎉","활동하다":"📢","예능":"📺","시청률":"📊","오디션":"🎤","연습생":"🎓","팬미팅":"🤝","굿즈":"🛍️","포토카드":"🃏","스트리밍":"📡","차트":"📈","입덕하다":"💘","탈덕하다":"👋","최애":"⭐","직캠":"📹","응원봉":"🔦","한류":"🌊","OST":"🎼","그룹":"👥","리더":"👑","메인보컬":"🎤","래퍼":"🎤","컴백":"🔁",
-  "검색하다":"🔍","다운로드":"⬇️","업로드":"⬆️","공유하다":"🔗","팔로우":"➕","팔로워":"👥","게시물":"📝","인플루언서":"📱","유튜버":"📹","해시태그":"#️⃣","알림":"🔔","댓글":"💬","좋아요":"👍","이모티콘":"😊","비밀번호":"🔑","계정":"👤","앱":"📱","업데이트":"🔄","와이파이":"📶","데이터":"📊","라이브":"🔴","구독자":"👥","조회수":"👁️","개인정보":"🔒","로그인":"🔓","로그아웃":"🚪","회원가입":"📝","링크":"🔗","바이럴":"🔥","블로그":"✍️",
-  "재료":"🥕","레시피":"📜","냄비":"🍲","프라이팬":"🍳","칼":"🔪","도마":"🪵","볶다":"🍳","끓이다":"♨️","굽다":"🔥","튀기다":"🍤","찌다":"♨️","썰다":"🔪","다지다":"🔪","간을하다":"🧂","양념":"🥫","마늘":"🧄","생강":"🫚","파":"🌿","고춧가루":"🌶️","간장":"🍶","된장":"🍲","고추장":"🌶️","참기름":"🫙","식초":"🍶","후추":"⚫","밀가루":"🌾","반죽하다":"🍞","삶다":"♨️","식히다":"❄️","냉동하다":"🧊",
-  "아파트":"🏢","원룸":"🏠","월세":"💸","전세":"🏠","보증금":"💰","집주인":"🧑‍💼","세입자":"🧑","거실":"🛋️","침실":"🛏️","발코니":"🌇","전등":"💡","에어컨":"❄️","냉장고":"🧊","세탁기":"🌀","청소기":"🧹","전자레인지":"📦","이사하다":"🚚","인테리어":"🎨","소파":"🛋️","침대":"🛏️","책상":"🪑","옷장":"🚪","수납":"📦","분리수거":"♻️","수도세":"💧","전기세":"⚡","관리비":"🧾","아늑하다":"🕯️","쾌적하다":"🌿","방음":"🔇",
-  "과목":"📚","성적":"📊","장학금":"🎓","강의":"🎙️","과제":"📝","동아리":"🎭","학생증":"🪪","필기하다":"✍️","복습하다":"🔁","예습하다":"📖","졸업하다":"🎓","합격하다":"✅","불합격하다":"❌","입학하다":"🚪","학기":"📅","방학":"🏖️","교환학생":"🌍","유학생":"✈️","수강신청":"📝","출석":"✅","지각하다":"⏰","결석하다":"🚫","교과서":"📘","숙제":"📝","연필":"✏️","지우개":"🧼","가위":"✂️","풀":"🧴","칠판":"⬛","시험공부":"📖",
-  "헬스장":"🏋️","트레이너":"🧑‍🏫","운동복":"👕","스트레칭":"🤸","준비운동":"🤸","마라톤":"🏃","배드민턴":"🏸","탁구":"🏓","골프":"⛳","테니스":"🎾","볼링":"🎳","스키":"⛷️","서핑":"🏄","필라테스":"🧘","요가":"🧘","근육":"💪","유산소":"🏃","무산소":"🏋️","경기":"🏆","선수":"🏅","감독":"📋","응원하다":"📣","우승하다":"🥇","기록":"⏱️","훈련하다":"🏋️","부상":"🤕","회복하다":"💊","다이어트":"🥗","몸무게":"⚖️","칼로리":"🔥",
-};
-// Deck id -> fallback emoji for words not covered above.
-const DECK_EMOJI = {
-  "lv-초급1":"🌱","lv-초급2":"🌿","lv-중급1":"⭐","lv-중급2":"🏅",
-  "tp-식당/외식":"🍽️","tp-여행/관광":"✈️","tp-쇼핑/패션":"🛍️","tp-연애/관계":"💕","tp-K-pop/연예":"🎤",
-  "tp-인터넷/SNS":"📱","tp-요리/음식조리":"🍳","tp-집/생활":"🏠","tp-학교/교육":"🎓","tp-스포츠/운동":"⚽",
-};
-// A few words get a real illustration instead of an emoji.
-const IMAGE_MAP = {
-  "비빔밥":"https://d8j0ntlcm91z4.cloudfront.net/user_3ETH0P4LSrM55D8tiviADyp2adG/hf_20260720_032024_cf8e0adc-b0cb-4f18-b286-b7376e108dc1.png",
-  "김치":"https://d8j0ntlcm91z4.cloudfront.net/user_3ETH0P4LSrM55D8tiviADyp2adG/hf_20260720_032032_a36ca04e-a2e7-4794-856d-c6081f7cbfc0.png",
-  "떡볶이":"https://d8j0ntlcm91z4.cloudfront.net/user_3ETH0P4LSrM55D8tiviADyp2adG/hf_20260720_032035_d6264d66-9bcd-4e70-943a-7e4b12072b13.png",
-};
+// Flashcard decks, taken verbatim from the teacher's own uploaded vocab sets (text only, no art).
 const FLASH_DECKS = [
-  ...AUTO_VOC.map(v=>({id:`lv-${v.name}`,name:v.name,words:v.words})),
-  ...TOPIC_VOC.map(t=>({id:`tp-${t.topic}`,name:t.topic,words:t.words})),
+  {id:"dating-relationships",name:"연애/관계 (Dating/Relationships)",words:[
+    {word:"소개팅",meaning:"Blind date"},{word:"데이트",meaning:"Date"},{word:"고백하다",meaning:"To confess feelings"},
+    {word:"사귀다",meaning:"To date / go out with"},{word:"헤어지다",meaning:"To break up"},{word:"짝사랑",meaning:"One-sided love / Crush"},
+    {word:"썸",meaning:"Romantic tension / 'Almost dating'"},{word:"두근거리다",meaning:"To have a racing heart"},{word:"설레다",meaning:"To feel excited / flutter"},
+    {word:"보고싶다",meaning:"To miss someone"},{word:"그리워하다",meaning:"To long for / miss"},{word:"질투하다",meaning:"To feel jealous"},
+    {word:"다투다",meaning:"To argue / quarrel"},{word:"화해하다",meaning:"To make up / reconcile"},{word:"커플",meaning:"Couple"},
+    {word:"연인",meaning:"Partner / Lover"},{word:"남자친구",meaning:"Boyfriend"},{word:"여자친구",meaning:"Girlfriend"},
+    {word:"프러포즈",meaning:"Proposal"},{word:"기념일",meaning:"Anniversary"},{word:"장거리연애",meaning:"Long-distance relationship"},
+    {word:"첫눈에반하다",meaning:"To fall in love at first sight"},{word:"밀당",meaning:"Push and pull (in dating)"},{word:"인연",meaning:"Fate / Connection"},
+    {word:"매력",meaning:"Charm / Appeal"},{word:"이상형",meaning:"Ideal type"},{word:"솔로",meaning:"Single"},
+    {word:"복잡하다",meaning:"To be complicated"},{word:"진지하다",meaning:"To be serious"},{word:"설레임",meaning:"Excitement / Flutter"},
+  ]},
+  {id:"travel-tourism",name:"여행/관광 (Travel/Tourism)",words:[
+    {word:"여권",meaning:"Passport"},{word:"비자",meaning:"Visa"},{word:"체크인",meaning:"Check-in"},
+    {word:"체크아웃",meaning:"Check-out"},{word:"숙소",meaning:"Accommodation"},{word:"관광지",meaning:"Tourist spot"},
+    {word:"여행사",meaning:"Travel agency"},{word:"지도",meaning:"Map"},{word:"환전",meaning:"Currency exchange"},
+    {word:"환율",meaning:"Exchange rate"},{word:"입국심사",meaning:"Immigration check"},{word:"수하물",meaning:"Baggage / Luggage"},
+    {word:"탑승권",meaning:"Boarding pass"},{word:"명소",meaning:"Famous attraction"},{word:"기념품",meaning:"Souvenir"},
+    {word:"사진찍다",meaning:"To take a photo"},{word:"구경하다",meaning:"To sightsee / look around"},{word:"안내소",meaning:"Information center"},
+    {word:"왕복",meaning:"Round trip"},{word:"편도",meaning:"One way"},{word:"투어",meaning:"Tour"},
+    {word:"현지인",meaning:"Local person"},{word:"자유여행",meaning:"Independent travel"},{word:"패키지",meaning:"Package tour"},
+    {word:"비수기",meaning:"Off-season"},{word:"성수기",meaning:"Peak season"},{word:"일출",meaning:"Sunrise"},
+    {word:"일몰",meaning:"Sunset"},{word:"야경",meaning:"Night view"},{word:"렌트카",meaning:"Rental car"},
+  ]},
+  {id:"level1-beginner",name:"초급1 (Level1 for Beginner)",words:[
+    {word:"하나 1",meaning:"One (native)"},{word:"둘 2",meaning:"Two (native)"},{word:"셋 3",meaning:"Three (native)"},
+    {word:"넷 4",meaning:"Four (native)"},{word:"다섯 5",meaning:"Five (native)"},{word:"여섯 6",meaning:"Six (native)"},
+    {word:"일곱 7",meaning:"Seven (native)"},{word:"여덟 8",meaning:"Eight (native)"},{word:"아홉 9",meaning:"Nine (native)"},
+    {word:"열 10",meaning:"Ten (native)"},{word:"백 100",meaning:"Hundred"},{word:"천 1000",meaning:"Thousand"},
+    {word:"만 10000",meaning:"Ten thousand"},{word:"색깔",meaning:"Color"},{word:"빨강",meaning:"Red"},
+    {word:"파랑",meaning:"Blue"},{word:"노랑",meaning:"Yellow"},{word:"초록",meaning:"Green"},
+    {word:"검정",meaning:"Black"},{word:"하양",meaning:"White"},{word:"머리",meaning:"Head / Hair"},
+    {word:"얼굴",meaning:"Face"},{word:"눈",meaning:"Eye"},{word:"코",meaning:"Nose"},
+    {word:"입",meaning:"Mouth"},{word:"귀",meaning:"Ear"},{word:"손",meaning:"Hand"},
+    {word:"발",meaning:"Foot"},{word:"팔",meaning:"Arm"},{word:"다리",meaning:"Leg"},
+    {word:"화요일",meaning:"Tuesday"},{word:"수요일",meaning:"Wednesday"},{word:"목요일",meaning:"Thursday"},
+    {word:"주",meaning:"Week"},{word:"년",meaning:"Year"},{word:"오전",meaning:"AM / Morning"},
+    {word:"오후",meaning:"PM / Afternoon"},{word:"주말",meaning:"Weekend"},{word:"평일",meaning:"Weekday"},
+    {word:"작년",meaning:"Last year"},{word:"올해",meaning:"This year"},{word:"내년",meaning:"Next year"},
+    {word:"새벽",meaning:"Dawn"},{word:"빵",meaning:"Bread"},{word:"우유",meaning:"Milk"},
+    {word:"사과",meaning:"Apple"},{word:"바나나",meaning:"Banana"},{word:"딸기",meaning:"Strawberry"},
+    {word:"김치",meaning:"Kimchi"},{word:"라면",meaning:"Ramen"},{word:"치킨",meaning:"Chicken (dish)"},
+    {word:"피자",meaning:"Pizza"},{word:"과일",meaning:"Fruit"},{word:"야채",meaning:"Vegetable"},
+    {word:"고기",meaning:"Meat"},{word:"계란",meaning:"Egg"},{word:"설탕",meaning:"Sugar"},
+    {word:"소금",meaning:"Salt"},{word:"차",meaning:"Tea"},{word:"주스",meaning:"Juice"},
+    {word:"카페",meaning:"Cafe"},{word:"식당",meaning:"Restaurant"},{word:"공원",meaning:"Park"},
+    {word:"도서관",meaning:"Library"},{word:"영화관",meaning:"Movie theater"},{word:"은행",meaning:"Bank"},
+    {word:"우체국",meaning:"Post office"},{word:"호텔",meaning:"Hotel"},{word:"공항",meaning:"Airport"},
+    {word:"버스",meaning:"Bus"},{word:"택시",meaning:"Taxi"},{word:"자전거",meaning:"Bicycle"},
+    {word:"비행기",meaning:"Airplane"},{word:"기차",meaning:"Train"},{word:"배",meaning:"Boat / Ship"},
+    {word:"길",meaning:"Road / Street"},{word:"신호등",meaning:"Traffic light"},{word:"쓰다",meaning:"To write / use"},
+    {word:"읽다",meaning:"To read"},{word:"주다",meaning:"To give"},{word:"받다",meaning:"To receive"},
+    {word:"보내다",meaning:"To send"},{word:"열다",meaning:"To open"},{word:"닫다",meaning:"To close"},
+    {word:"앉다",meaning:"To sit"},{word:"서다",meaning:"To stand"},{word:"걷다",meaning:"To walk"},
+    {word:"뛰다",meaning:"To run / jump"},{word:"입다",meaning:"To wear"},{word:"벗다",meaning:"To take off"},
+    {word:"씻다",meaning:"To wash"},{word:"쉬다",meaning:"To rest"},{word:"길다",meaning:"To be long"},
+    {word:"짧다",meaning:"To be short"},{word:"높다",meaning:"To be high / tall"},{word:"낮다",meaning:"To be low"},
+    {word:"빠르다",meaning:"To be fast"},{word:"느리다",meaning:"To be slow"},{word:"뜨겁다",meaning:"To be hot (touch)"},
+    {word:"차갑다",meaning:"To be cold (touch)"},{word:"덥다",meaning:"To be hot (weather)"},{word:"춥다",meaning:"To be cold (weather)"},
+  ]},
+  {id:"level2-beginner",name:"초급2 (Level2 for Beginner)",words:[
+    {word:"날씨",meaning:"Weather"},{word:"비",meaning:"Rain"},{word:"눈",meaning:"Snow"},
+    {word:"바람",meaning:"Wind"},{word:"구름",meaning:"Cloud"},{word:"해",meaning:"Sun"},
+    {word:"달",meaning:"Moon"},{word:"별",meaning:"Star"},{word:"하늘",meaning:"Sky"},
+    {word:"산",meaning:"Mountain"},{word:"바다",meaning:"Sea / Ocean"},{word:"강",meaning:"River"},
+    {word:"호수",meaning:"Lake"},{word:"나무",meaning:"Tree"},{word:"꽃",meaning:"Flower"},
+    {word:"풀",meaning:"Grass"},{word:"잎",meaning:"Leaf"},{word:"동물",meaning:"Animal"},
+    {word:"개",meaning:"Dog"},{word:"고양이",meaning:"Cat"},{word:"새",meaning:"Bird"},
+    {word:"물고기",meaning:"Fish"},{word:"닭",meaning:"Chicken (animal)"},{word:"소",meaning:"Cow"},
+    {word:"돼지",meaning:"Pig"},{word:"말",meaning:"Horse / Speech"},{word:"토끼",meaning:"Rabbit"},
+    {word:"곰",meaning:"Bear"},{word:"사자",meaning:"Lion"},{word:"호랑이",meaning:"Tiger"},
+    {word:"형제",meaning:"Brothers"},{word:"자매",meaning:"Sisters"},{word:"부부",meaning:"Couple"},
+    {word:"남편",meaning:"Husband"},{word:"아내",meaning:"Wife"},{word:"아들",meaning:"Son"},
+    {word:"딸",meaning:"Daughter"},{word:"할아버지",meaning:"Grandfather"},{word:"할머니",meaning:"Grandmother"},
+    {word:"손자",meaning:"Grandson"},{word:"손녀",meaning:"Granddaughter"},{word:"삼촌",meaning:"Uncle"},
+    {word:"이모",meaning:"Aunt (mother's side)"},{word:"고모",meaning:"Aunt (father's side)"},{word:"사촌",meaning:"Cousin"},
+    {word:"남자",meaning:"Man"},{word:"여자",meaning:"Woman"},{word:"아저씨",meaning:"Mister / middle-aged man"},
+    {word:"아주머니",meaning:"Mrs. / middle-aged woman"},{word:"청년",meaning:"Young person"},{word:"노인",meaning:"Elderly person"},
+    {word:"취미",meaning:"Hobby"},{word:"운동",meaning:"Exercise / Sports"},{word:"축구",meaning:"Soccer"},
+    {word:"야구",meaning:"Baseball"},{word:"농구",meaning:"Basketball"},{word:"수영",meaning:"Swimming"},
+    {word:"등산",meaning:"Hiking"},{word:"여행",meaning:"Travel"},{word:"영화",meaning:"Movie"},
+    {word:"음악",meaning:"Music"},{word:"노래",meaning:"Song"},{word:"춤",meaning:"Dance"},
+    {word:"그림",meaning:"Picture / Drawing"},{word:"사진",meaning:"Photo"},{word:"게임",meaning:"Game"},
+    {word:"운전",meaning:"Driving"},{word:"요리",meaning:"Cooking"},{word:"청소",meaning:"Cleaning"},
+    {word:"빨래",meaning:"Laundry"},{word:"쇼핑",meaning:"Shopping"},{word:"산책",meaning:"Walk / Stroll"},
+    {word:"휴가",meaning:"Vacation"},{word:"생일",meaning:"Birthday"},{word:"파티",meaning:"Party"},
+    {word:"선물",meaning:"Gift"},{word:"결혼",meaning:"Marriage"},{word:"사랑",meaning:"Love"},
+    {word:"행복",meaning:"Happiness"},{word:"슬픔",meaning:"Sadness"},{word:"기쁨",meaning:"Joy"},
+    {word:"걱정",meaning:"Worry"},{word:"두려움",meaning:"Fear"},{word:"화",meaning:"Anger"},
+    {word:"마음",meaning:"Heart / Mind"},{word:"생각",meaning:"Thought"},{word:"꿈",meaning:"Dream"},
+    {word:"희망",meaning:"Hope"},{word:"추억",meaning:"Memory"},{word:"약속",meaning:"Promise / Appointment"},
+    {word:"부탁",meaning:"Favor / Request"},{word:"도움",meaning:"Help"},{word:"칭찬",meaning:"Praise"},
+    {word:"인사",meaning:"Greeting"},{word:"대답",meaning:"Answer"},{word:"질문",meaning:"Question"},
+    {word:"이야기",meaning:"Story"},{word:"소리",meaning:"Sound"},{word:"목소리",meaning:"Voice"},
+    {word:"노력",meaning:"Effort"},
+  ]},
+  {id:"level1-intermediate",name:"중급1 (Level1 for Intermediate)",words:[
+    {word:"직업",meaning:"Job / Occupation"},{word:"회의",meaning:"Meeting"},{word:"발표",meaning:"Presentation"},
+    {word:"보고서",meaning:"Report"},{word:"계획",meaning:"Plan"},{word:"일정",meaning:"Schedule"},
+    {word:"마감",meaning:"Deadline"},{word:"출장",meaning:"Business trip"},{word:"면접",meaning:"Job interview"},
+    {word:"월급",meaning:"Salary"},{word:"직장",meaning:"Workplace"},{word:"동료",meaning:"Colleague"},
+    {word:"사장",meaning:"Boss / President of company"},{word:"부장",meaning:"Manager (department head)"},{word:"과장",meaning:"Section chief"},
+    {word:"정부",meaning:"Government"},{word:"대통령",meaning:"President (of country)"},{word:"법",meaning:"Law"},
+    {word:"경찰",meaning:"Police"},{word:"군인",meaning:"Soldier"},{word:"변호사",meaning:"Lawyer"},
+    {word:"교수",meaning:"Professor"},{word:"기자",meaning:"Reporter"},{word:"작가",meaning:"Writer"},
+    {word:"가수",meaning:"Singer"},{word:"배우",meaning:"Actor"},{word:"사회",meaning:"Society"},
+    {word:"문화",meaning:"Culture"},{word:"역사",meaning:"History"},{word:"전통",meaning:"Tradition"},
+    {word:"종교",meaning:"Religion"},{word:"정치",meaning:"Politics"},{word:"경제",meaning:"Economy"},
+    {word:"환경",meaning:"Environment"},{word:"자연",meaning:"Nature"},{word:"세계",meaning:"World"},
+    {word:"나라",meaning:"Country"},{word:"도시",meaning:"City"},{word:"시골",meaning:"Countryside"},
+    {word:"마을",meaning:"Village"},{word:"거리",meaning:"Street / Distance"},{word:"광장",meaning:"Plaza / Square"},
+    {word:"건물",meaning:"Building"},{word:"시설",meaning:"Facility"},{word:"박물관",meaning:"Museum"},
+    {word:"미술관",meaning:"Art gallery"},{word:"극장",meaning:"Theater"},{word:"교회",meaning:"Church"},
+    {word:"절",meaning:"Buddhist temple"},{word:"성당",meaning:"Catholic church"},{word:"결정",meaning:"Decision"},
+    {word:"선택",meaning:"Choice"},{word:"의견",meaning:"Opinion"},{word:"주장",meaning:"Argument / Claim"},
+    {word:"토론",meaning:"Discussion"},{word:"회비",meaning:"Membership fee"},{word:"가격",meaning:"Price"},
+    {word:"할인",meaning:"Discount"},{word:"세금",meaning:"Tax"},{word:"영수증",meaning:"Receipt"},
+    {word:"계산",meaning:"Calculation / Payment"},{word:"카드",meaning:"Card"},{word:"현금",meaning:"Cash"},
+    {word:"통장",meaning:"Bankbook"},{word:"저축",meaning:"Savings"},{word:"투자",meaning:"Investment"},
+    {word:"빚",meaning:"Debt"},{word:"부자",meaning:"Rich person"},{word:"가난",meaning:"Poverty"},
+    {word:"성공",meaning:"Success"},{word:"실패",meaning:"Failure"},{word:"기회",meaning:"Opportunity"},
+    {word:"도전",meaning:"Challenge"},{word:"노력하다",meaning:"To make an effort"},{word:"성장하다",meaning:"To grow"},
+    {word:"발전하다",meaning:"To develop"},{word:"변하다",meaning:"To change"},{word:"결정하다",meaning:"To decide"},
+    {word:"선택하다",meaning:"To choose"},{word:"설명하다",meaning:"To explain"},{word:"이해하다",meaning:"To understand"},
+    {word:"기억하다",meaning:"To remember"},{word:"잊다",meaning:"To forget"},{word:"느끼다",meaning:"To feel"},
+    {word:"생각하다",meaning:"To think"},{word:"걱정하다",meaning:"To worry"},{word:"사랑하다",meaning:"To love"},
+    {word:"미워하다",meaning:"To hate"},{word:"좋아하다",meaning:"To like"},{word:"싫어하다",meaning:"To dislike"},
+    {word:"필요하다",meaning:"To be necessary"},{word:"가능하다",meaning:"To be possible"},{word:"불가능하다",meaning:"To be impossible"},
+    {word:"중요하다",meaning:"To be important"},{word:"특별하다",meaning:"To be special"},{word:"평범하다",meaning:"To be ordinary"},
+    {word:"친절하다",meaning:"To be kind"},{word:"정직하다",meaning:"To be honest"},{word:"똑똑하다",meaning:"To be smart"},
+    {word:"게으르다",meaning:"To be lazy"},
+  ]},
 ];
 const TEACHER_PASSWORD = process.env.REACT_APP_TEACHER_PASSWORD || "may2024";
 
@@ -1297,13 +1380,6 @@ function TeacherVoc({data,save}){
   );
 }
 
-const CardArt = ({word,size}) => {
-  const img = IMAGE_MAP[word];
-  if(img) return <img src={img} alt="" className={`${size} object-contain drop-shadow`}/>;
-  const emoji = EMOJI_MAP[word];
-  return emoji ? <span className={size}>{emoji}</span> : null;
-};
-
 function TeacherFlash(){
   const [multiMode,setMultiMode]=useState(false);
   const [selectedIds,setSelectedIds]=useState([]);
@@ -1335,10 +1411,7 @@ function TeacherFlash(){
           const checked=selectedIds.includes(d.id);
           return(
             <div key={d.id} onClick={()=>multiMode&&toggleSel(d.id)} className={`bg-white rounded-xl p-4 mb-2 border flex items-center justify-between ${multiMode?`cursor-pointer ${checked?"border-indigo-400 ring-2 ring-indigo-100":"border-slate-200"}`:"border-slate-200"}`}>
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">{DECK_EMOJI[d.id]||"📌"}</span>
-                <div><p className="font-bold text-slate-800">{d.name}</p><p className="text-xs text-slate-500">{d.words.length}개 단어</p></div>
-              </div>
+              <div><p className="font-bold text-slate-800">{d.name}</p><p className="text-xs text-slate-500">{d.words.length}개 단어</p></div>
               {multiMode?
                 <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 ${checked?"bg-indigo-500 border-indigo-500":"border-slate-300"}`}>{checked&&<CheckCircle className="w-4 h-4 text-white"/>}</div>
               :<button onClick={()=>openSingle(d)} className="bg-indigo-500 text-white px-3 py-2 rounded-xl text-sm font-medium flex items-center gap-1"><Layers className="w-4 h-4"/>시작</button>}
@@ -1357,7 +1430,6 @@ function TeacherFlash(){
     );
   }
   const w=session.words[idx];
-  const hasArt=!!(IMAGE_MAP[w.word]||EMOJI_MAP[w.word]);
   return(
     <div>
       <button onClick={back} className="text-slate-500 text-sm mb-3 hover:underline">← 목록으로</button>
@@ -1368,13 +1440,11 @@ function TeacherFlash(){
       <div onClick={()=>setFlipped(f=>!f)} style={{perspective:"1000px"}} className="cursor-pointer select-none">
         <div style={{transformStyle:"preserve-3d",transition:"transform 0.5s",transform:flipped?"rotateY(180deg)":"none"}} className="relative h-64">
           <div style={{backfaceVisibility:"hidden"}} className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex flex-col items-center justify-center p-6 text-white shadow-lg">
-            <CardArt word={w.word} size="text-5xl mb-3"/>
-            <span className={`font-bold text-center ${hasArt?"text-2xl":"text-3xl"}`}>{w.meaning}</span>
+            <span className="text-3xl font-bold text-center">{w.meaning}</span>
             <span className="text-xs mt-4 opacity-70">탭하여 한국어 보기 · Tap to flip</span>
           </div>
           <div style={{backfaceVisibility:"hidden",transform:"rotateY(180deg)"}} className="absolute inset-0 bg-white border-2 border-indigo-200 rounded-2xl flex flex-col items-center justify-center p-6 shadow-lg">
-            <CardArt word={w.word} size="text-4xl mb-2"/>
-            <span className={`font-bold text-indigo-700 text-center ${hasArt?"text-2xl":"text-3xl"}`}>{w.word}</span>
+            <span className="text-3xl font-bold text-indigo-700 text-center">{w.word}</span>
           </div>
         </div>
       </div>
