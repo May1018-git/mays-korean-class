@@ -1251,6 +1251,8 @@ function TeacherTB({data,save}){
     await save("tb",u);setForm(null);
   };
   const del=async id=>{await save("tb",tb.filter(t=>t.id!==id));};
+  const moveUp=async oi=>{if(oi===0)return;const a=[...tb];[a[oi-1],a[oi]]=[a[oi],a[oi-1]];await save("tb",a);};
+  const moveDown=async oi=>{if(oi>=tb.length-1)return;const a=[...tb];[a[oi],a[oi+1]]=[a[oi+1],a[oi]];await save("tb",a);};
   return(
     <div>
       <div className="flex justify-between items-center mb-3">
@@ -1271,7 +1273,9 @@ function TeacherTB({data,save}){
         <input placeholder="🇺🇸 English URL (선택)" value={form.en} onChange={e=>upd({en:e.target.value})} className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none"/>
         <div className="flex gap-2"><button onClick={saveForm} className="bg-purple-500 text-white px-4 py-2 rounded-lg text-sm">저장</button><button onClick={()=>setForm(null)} className="bg-slate-100 text-slate-600 px-4 py-2 rounded-lg text-sm">취소</button></div>
       </div>}
-      {tb.filter(t=>t.id!==form?.id).map(t=>(
+      {tb.filter(t=>t.id!==form?.id).map((t,fi,fa)=>{
+        const oi=tb.findIndex(x=>x.id===t.id);
+        return(
         <div key={t.id} className="bg-white rounded-xl p-4 mb-2 border border-slate-200">
           <div className="flex justify-between items-start gap-2">
             <div className="flex-1 min-w-0">
@@ -1283,13 +1287,16 @@ function TeacherTB({data,save}){
                 {t.en&&<a href={t.en} target="_blank" rel="noopener noreferrer" className="text-xs text-indigo-600 flex items-center gap-1">🇺🇸 English<ExternalLink className="w-3 h-3"/></a>}
               </div>
             </div>
-            <div className="flex gap-1">
+            <div className="flex gap-0.5">
+              <button onClick={()=>moveUp(oi)} disabled={fi===0} className="text-slate-300 hover:text-indigo-500 p-1.5 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed"><ArrowUp className="w-3.5 h-3.5"/></button>
+              <button onClick={()=>moveDown(oi)} disabled={fi===fa.length-1} className="text-slate-300 hover:text-indigo-500 p-1.5 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed"><ArrowDown className="w-3.5 h-3.5"/></button>
               <button onClick={()=>setForm({id:t.id,title:t.title,sl:t.sl,lv:t.lv,desc:t.desc,ko:t.ko,en:t.en})} className="text-slate-400 hover:text-indigo-500 p-1.5 rounded-lg"><Edit3 className="w-4 h-4"/></button>
               <button onClick={()=>del(t.id)} className="text-slate-400 hover:text-red-500 p-1.5 rounded-lg"><Trash2 className="w-4 h-4"/></button>
             </div>
           </div>
         </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -1312,6 +1319,8 @@ function TeacherVoc({data,save}){
     await save("voc",u);setForm(null);
   };
   const del=async id=>{await save("voc",voc.filter(v=>v.id!==id));};
+  const moveUp=async oi=>{if(oi===0)return;const a=[...voc];[a[oi-1],a[oi]]=[a[oi],a[oi-1]];await save("voc",a);};
+  const moveDown=async oi=>{if(oi>=voc.length-1)return;const a=[...voc];[a[oi],a[oi+1]]=[a[oi+1],a[oi]];await save("voc",a);};
   const doAutoGen=async()=>{
     if(!genName.trim())return;
     const lower=genName.toLowerCase();
@@ -1356,12 +1365,20 @@ function TeacherVoc({data,save}){
         <button onClick={()=>setRows([...rows,{word:"",meaning:""}])} className="text-purple-600 text-sm hover:underline">+ 단어 추가</button>
         <div className="flex gap-2"><button onClick={saveForm} className="bg-purple-500 text-white px-4 py-2 rounded-lg text-sm">저장</button><button onClick={()=>setForm(null)} className="bg-slate-100 text-slate-600 px-4 py-2 rounded-lg text-sm">취소</button></div>
       </div>}
-      {voc.length===0&&!form?<Empty ko="단어장이 없습니다" en="No vocabulary sets yet"/>:voc.map(s=>(
+      {voc.length===0&&!form?<Empty ko="단어장이 없습니다" en="No vocabulary sets yet"/>:voc.map((s,fi,fa)=>{
+        const oi=voc.findIndex(x=>x.id===s.id);
+        return(
         <div key={s.id} className="bg-white rounded-xl p-4 mb-2 border border-slate-200 flex justify-between items-center">
           <div><p className="font-bold text-slate-800">{s.name}</p><p className="text-xs text-slate-500">{s.words.length}개 단어</p></div>
-          <div className="flex gap-1"><button onClick={()=>openEdit(s)} className="text-slate-400 hover:text-indigo-500 p-1.5 rounded-lg"><Edit3 className="w-4 h-4"/></button><button onClick={()=>del(s.id)} className="text-slate-400 hover:text-red-500 p-1.5 rounded-lg"><Trash2 className="w-4 h-4"/></button></div>
+          <div className="flex gap-0.5">
+            <button onClick={()=>moveUp(oi)} disabled={fi===0} className="text-slate-300 hover:text-indigo-500 p-1.5 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed"><ArrowUp className="w-3.5 h-3.5"/></button>
+            <button onClick={()=>moveDown(oi)} disabled={fi===fa.length-1} className="text-slate-300 hover:text-indigo-500 p-1.5 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed"><ArrowDown className="w-3.5 h-3.5"/></button>
+            <button onClick={()=>openEdit(s)} className="text-slate-400 hover:text-indigo-500 p-1.5 rounded-lg"><Edit3 className="w-4 h-4"/></button>
+            <button onClick={()=>del(s.id)} className="text-slate-400 hover:text-red-500 p-1.5 rounded-lg"><Trash2 className="w-4 h-4"/></button>
+          </div>
         </div>
-      ))}
+        );
+      })}
       {genModal&&<div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={()=>setGenModal(false)}>
         <div className="bg-white rounded-2xl p-6 w-full max-w-sm" onClick={e=>e.stopPropagation()}>
           <h3 className="font-bold text-slate-800 mb-1 flex items-center gap-2"><Sparkles className="w-5 h-5 text-indigo-500"/>단어장 자동생성</h3>
