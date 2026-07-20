@@ -1297,11 +1297,11 @@ function TeacherVoc({data,save}){
   );
 }
 
-const CardArt = ({word,deckId,size}) => {
+const CardArt = ({word,size}) => {
   const img = IMAGE_MAP[word];
   if(img) return <img src={img} alt="" className={`${size} object-contain drop-shadow`}/>;
-  const emoji = EMOJI_MAP[word] || DECK_EMOJI[deckId] || "📌";
-  return <span className={size}>{emoji}</span>;
+  const emoji = EMOJI_MAP[word];
+  return emoji ? <span className={size}>{emoji}</span> : null;
 };
 
 function TeacherFlash(){
@@ -1315,7 +1315,7 @@ function TeacherFlash(){
   const startMerged=()=>{
     const decks=FLASH_DECKS.filter(d=>selectedIds.includes(d.id));
     if(!decks.length)return;
-    const words=decks.flatMap(d=>d.words.map(w=>({...w,deckId:d.id})));
+    const words=decks.flatMap(d=>d.words);
     setSession({id:"merged",name:`선택한 ${decks.length}개 단어장`,words});
     setIdx(0);setFlipped(false);
   };
@@ -1357,7 +1357,7 @@ function TeacherFlash(){
     );
   }
   const w=session.words[idx];
-  const deckId=w.deckId||session.id;
+  const hasArt=!!(IMAGE_MAP[w.word]||EMOJI_MAP[w.word]);
   return(
     <div>
       <button onClick={back} className="text-slate-500 text-sm mb-3 hover:underline">← 목록으로</button>
@@ -1368,14 +1368,13 @@ function TeacherFlash(){
       <div onClick={()=>setFlipped(f=>!f)} style={{perspective:"1000px"}} className="cursor-pointer select-none">
         <div style={{transformStyle:"preserve-3d",transition:"transform 0.5s",transform:flipped?"rotateY(180deg)":"none"}} className="relative h-64">
           <div style={{backfaceVisibility:"hidden"}} className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex flex-col items-center justify-center p-6 text-white shadow-lg">
-            <CardArt word={w.word} deckId={deckId} size="text-5xl mb-3"/>
-            <span className="text-3xl font-bold text-center">{w.word}</span>
-            <span className="text-xs mt-4 opacity-70">탭하여 뜻 보기 · Tap to flip</span>
+            <CardArt word={w.word} size="text-5xl mb-3"/>
+            <span className={`font-bold text-center ${hasArt?"text-2xl":"text-3xl"}`}>{w.meaning}</span>
+            <span className="text-xs mt-4 opacity-70">탭하여 한국어 보기 · Tap to flip</span>
           </div>
           <div style={{backfaceVisibility:"hidden",transform:"rotateY(180deg)"}} className="absolute inset-0 bg-white border-2 border-indigo-200 rounded-2xl flex flex-col items-center justify-center p-6 shadow-lg">
-            <CardArt word={w.word} deckId={deckId} size="text-4xl mb-2"/>
-            <span className="text-sm text-slate-400 mb-2">{w.word}</span>
-            <span className="text-2xl font-bold text-indigo-700 text-center">{w.meaning}</span>
+            <CardArt word={w.word} size="text-4xl mb-2"/>
+            <span className={`font-bold text-indigo-700 text-center ${hasArt?"text-2xl":"text-3xl"}`}>{w.word}</span>
           </div>
         </div>
       </div>
