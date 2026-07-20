@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { db } from "./firebase";
 import { doc, getDoc, setDoc, onSnapshot } from "firebase/firestore";
-import { BookOpen, FileText, Bell, BarChart3, Plus, Trash2, Send, User, GraduationCap, LogOut, Sparkles, CheckCircle, XCircle, Loader2, Megaphone, Lock, Clock, UserCheck, UserX, BookMarked, Edit3, ExternalLink, ChevronDown, ChevronUp, Download, BookText, ArrowUp, ArrowDown, Layers, RotateCcw, ArrowLeft, ArrowRight } from "lucide-react";
+import { BookOpen, FileText, Bell, BarChart3, Plus, Trash2, Send, User, GraduationCap, LogOut, Sparkles, CheckCircle, XCircle, Loader2, Megaphone, Lock, Clock, UserCheck, UserX, BookMarked, Edit3, ExternalLink, ChevronDown, ChevronUp, Download, BookText, ArrowUp, ArrowDown, Layers, RotateCcw, ArrowLeft, ArrowRight, Shuffle, FlagTriangleRight } from "lucide-react";
 
 const DRIVE = "https://drive.google.com/drive/folders/1OL0qtkASaU_sj-VM0T79qXlef07zEseZ?usp=drive_link";
 const DEFAULT_TB = [
@@ -1379,6 +1379,14 @@ function TeacherVoc({data,save}){
 }
 
 const wordKey = w => `${w.word}|${w.meaning}`;
+const shuffleArr = arr => {
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+};
 
 function TeacherFlash(){
   const [multiMode,setMultiMode]=useState(false);
@@ -1415,6 +1423,8 @@ function TeacherFlash(){
     setIdx(0);setFlipped(false);setChecked(new Set());setDone(false);
   };
   const restart=()=>{setIdx(0);setFlipped(false);setChecked(new Set());setDone(false);};
+  const shuffle=()=>{setSession(s=>({...s,words:shuffleArr(s.words)}));setIdx(0);setFlipped(false);};
+  const stopHere=()=>setDone(true);
 
   if(!session){
     const selectedWordCount=FLASH_DECKS.filter(d=>selectedIds.includes(d.id)).reduce((s,d)=>s+d.words.length,0);
@@ -1449,12 +1459,13 @@ function TeacherFlash(){
   }
   if(done){
     const checkedCount=session.words.filter(w=>checked.has(wordKey(w))).length;
+    const reviewed=idx+1;
     return(
       <div>
         <button onClick={back} className="text-slate-500 text-sm mb-3 hover:underline">← 목록으로</button>
         <div className="bg-white rounded-2xl p-6 border border-slate-200 text-center">
           <p className="text-lg font-bold text-slate-800 mb-1">학습 완료! 🎉</p>
-          <p className="text-sm text-slate-500 mb-5">{session.name} · 총 {session.words.length}장 중 체크 {checkedCount}개</p>
+          <p className="text-sm text-slate-500 mb-5">{session.name} · {session.words.length}장 중 {reviewed}장 학습 · 체크 {checkedCount}개</p>
           <div className="flex flex-col gap-2">
             {checkedCount>0&&<button onClick={reviewChecked} className="bg-indigo-500 text-white py-2.5 rounded-xl text-sm font-medium flex items-center justify-center gap-1"><CheckCircle className="w-4 h-4"/>체크한 {checkedCount}개 다시 보기</button>}
             <button onClick={restart} className="bg-indigo-50 text-indigo-600 py-2.5 rounded-xl text-sm font-medium flex items-center justify-center gap-1"><RotateCcw className="w-4 h-4"/>처음부터 다시</button>
@@ -1492,6 +1503,10 @@ function TeacherFlash(){
         <button onClick={()=>go(-1)} className="w-11 h-11 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-600 shadow-sm"><ArrowLeft className="w-5 h-5"/></button>
         <button onClick={()=>setFlipped(f=>!f)} className="px-4 py-2.5 rounded-xl bg-indigo-50 text-indigo-600 text-sm font-medium flex items-center gap-1"><RotateCcw className="w-4 h-4"/>뒤집기</button>
         <button onClick={()=>go(1)} className="w-11 h-11 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-600 shadow-sm"><ArrowRight className="w-5 h-5"/></button>
+      </div>
+      <div className="flex items-center justify-center gap-4 mt-3">
+        <button onClick={shuffle} className="text-xs text-slate-500 hover:text-indigo-600 flex items-center gap-1"><Shuffle className="w-3.5 h-3.5"/>섞기</button>
+        <button onClick={stopHere} className="text-xs text-slate-500 hover:text-indigo-600 flex items-center gap-1"><FlagTriangleRight className="w-3.5 h-3.5"/>여기까지 하기</button>
       </div>
     </div>
   );
