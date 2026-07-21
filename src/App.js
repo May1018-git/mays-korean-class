@@ -930,6 +930,21 @@ const normStudents = a => Array.isArray(a)?a.map(s=>typeof s==="string"?{name:s,
 const LvBadge = ({lv}) => { const l=LV[lv]||LV.beginner; return <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${l.b}`}>{l.e} {l.n}</span>; };
 const Empty = ({ko,en}) => <div className="bg-white rounded-xl p-8 text-center text-slate-400 border border-dashed border-slate-300"><p>{ko}</p><p className="text-xs italic mt-1">{en}</p></div>;
 const SectionTitle = ({ko,en}) => <h2 className="text-lg font-bold text-slate-800 mb-3">{ko} <span className="text-sm text-slate-400 font-normal">/ {en}</span></h2>;
+function ConfirmDelete({label,onConfirm,onCancel}){
+  return(
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={onCancel}>
+      <div className="bg-white rounded-2xl p-6 w-full max-w-xs text-center" onClick={e=>e.stopPropagation()}>
+        <Trash2 className="w-10 h-10 text-red-400 mx-auto mb-3"/>
+        <p className="font-bold text-slate-800 mb-1">정말 삭제할까요?</p>
+        {label&&<p className="text-sm text-slate-500 mb-4 truncate px-2">{label}</p>}
+        <div className="flex gap-2">
+          <button onClick={onCancel} className="flex-1 bg-slate-100 text-slate-700 py-2.5 rounded-xl text-sm font-medium">취소</button>
+          <button onClick={onConfirm} className="flex-1 bg-red-500 text-white py-2.5 rounded-xl text-sm font-medium">삭제</button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 const Hdr = ({user,onLogout,tc}) => (
   <div className="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-10">
@@ -1206,6 +1221,7 @@ function TeacherMat({data,save}){
   const mat=data.mat;
   const [form,setForm]=useState(null);
   const [open,setOpen]=useState(null);
+  const [delTarget,setDelTarget]=useState(null);
   const E={id:null,title:"",content:"",link:"",images:[],embed:""};
   const upd=f=>setForm(p=>({...p,...f}));
   const saveForm=async()=>{
@@ -1265,13 +1281,14 @@ function TeacherMat({data,save}){
               <button onClick={()=>moveUp(oi)} disabled={fi===0} className="text-slate-300 hover:text-indigo-500 p-1.5 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed"><ArrowUp className="w-3.5 h-3.5"/></button>
               <button onClick={()=>moveDown(oi)} disabled={fi===fa.length-1} className="text-slate-300 hover:text-indigo-500 p-1.5 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed"><ArrowDown className="w-3.5 h-3.5"/></button>
               <button onClick={()=>setForm({id:m.id,title:m.title,content:m.content||"",link:m.link||"",images:m.images||[],embed:m.embed||""})} className="text-slate-400 hover:text-indigo-500 p-1.5 rounded-lg"><Edit3 className="w-4 h-4"/></button>
-              <button onClick={()=>del(m.id)} className="text-slate-400 hover:text-red-500 p-1.5 rounded-lg"><Trash2 className="w-4 h-4"/></button>
+              <button onClick={()=>setDelTarget(m)} className="text-slate-400 hover:text-red-500 p-1.5 rounded-lg"><Trash2 className="w-4 h-4"/></button>
             </div>
           </div>
           {open===m.id&&<div className="px-3 pb-3 border-t border-slate-100 pt-3"><MatContent m={m}/></div>}
         </div>
         );
       })}
+      {delTarget&&<ConfirmDelete label={delTarget.title} onConfirm={async()=>{await del(delTarget.id);setDelTarget(null);}} onCancel={()=>setDelTarget(null)}/>}
     </div>
   );
 }
@@ -1280,6 +1297,7 @@ function TeacherTB({data,save}){
   const tb=data.tb;
   const E={id:null,title:"",sl:"",lv:"beginner",desc:"",ko:"",en:""};
   const [form,setForm]=useState(null);
+  const [delTarget,setDelTarget]=useState(null);
   const upd=f=>setForm(p=>({...p,...f}));
   const saveForm=async()=>{
     if(!form.title.trim())return;
@@ -1327,12 +1345,13 @@ function TeacherTB({data,save}){
               <button onClick={()=>moveUp(oi)} disabled={fi===0} className="text-slate-300 hover:text-indigo-500 p-1.5 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed"><ArrowUp className="w-3.5 h-3.5"/></button>
               <button onClick={()=>moveDown(oi)} disabled={fi===fa.length-1} className="text-slate-300 hover:text-indigo-500 p-1.5 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed"><ArrowDown className="w-3.5 h-3.5"/></button>
               <button onClick={()=>setForm({id:t.id,title:t.title,sl:t.sl,lv:t.lv,desc:t.desc,ko:t.ko,en:t.en})} className="text-slate-400 hover:text-indigo-500 p-1.5 rounded-lg"><Edit3 className="w-4 h-4"/></button>
-              <button onClick={()=>del(t.id)} className="text-slate-400 hover:text-red-500 p-1.5 rounded-lg"><Trash2 className="w-4 h-4"/></button>
+              <button onClick={()=>setDelTarget(t)} className="text-slate-400 hover:text-red-500 p-1.5 rounded-lg"><Trash2 className="w-4 h-4"/></button>
             </div>
           </div>
         </div>
         );
       })}
+      {delTarget&&<ConfirmDelete label={delTarget.title} onConfirm={async()=>{await del(delTarget.id);setDelTarget(null);}} onCancel={()=>setDelTarget(null)}/>}
     </div>
   );
 }
@@ -1343,6 +1362,7 @@ function TeacherVoc({data,save}){
   const [rows,setRows]=useState([{word:"",meaning:""}]);
   const [genModal,setGenModal]=useState(false);
   const [genName,setGenName]=useState("");
+  const [delTarget,setDelTarget]=useState(null);
   const openAdd=()=>{setForm({id:null,name:""});setRows([{word:"",meaning:""}]);};
   const openEdit=s=>{setForm({id:s.id,name:s.name});setRows([...s.words.map(w=>({...w})),{word:"",meaning:""}]);};
   const updRow=(i,f,v)=>{const r=[...rows];r[i][f]=v;setRows(r);};
@@ -1410,7 +1430,7 @@ function TeacherVoc({data,save}){
             <button onClick={()=>moveUp(oi)} disabled={fi===0} className="text-slate-300 hover:text-indigo-500 p-1.5 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed"><ArrowUp className="w-3.5 h-3.5"/></button>
             <button onClick={()=>moveDown(oi)} disabled={fi===fa.length-1} className="text-slate-300 hover:text-indigo-500 p-1.5 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed"><ArrowDown className="w-3.5 h-3.5"/></button>
             <button onClick={()=>openEdit(s)} className="text-slate-400 hover:text-indigo-500 p-1.5 rounded-lg"><Edit3 className="w-4 h-4"/></button>
-            <button onClick={()=>del(s.id)} className="text-slate-400 hover:text-red-500 p-1.5 rounded-lg"><Trash2 className="w-4 h-4"/></button>
+            <button onClick={()=>setDelTarget(s)} className="text-slate-400 hover:text-red-500 p-1.5 rounded-lg"><Trash2 className="w-4 h-4"/></button>
           </div>
         </div>
         );
@@ -1427,6 +1447,7 @@ function TeacherVoc({data,save}){
           </div>
         </div>
       </div>}
+      {delTarget&&<ConfirmDelete label={delTarget.name} onConfirm={async()=>{await del(delTarget.id);setDelTarget(null);}} onCancel={()=>setDelTarget(null)}/>}
     </div>
   );
 }
@@ -1575,7 +1596,7 @@ function TeacherFlash({data,save}){
 }
 
 function TeacherAnn({data,save}){
-  const ann=data.ann;const[text,setText]=useState("");
+  const ann=data.ann;const[text,setText]=useState("");const[delTarget,setDelTarget]=useState(null);
   const post=async()=>{if(!text.trim())return;await save("ann",[{id:Date.now()+"",text:text.trim(),createdAt:new Date().toISOString()},...ann]);setText("");};
   const del=async id=>{await save("ann",ann.filter(a=>a.id!==id));};
   return(
@@ -1587,10 +1608,11 @@ function TeacherAnn({data,save}){
       </div>
       {ann.length===0?<Empty ko="아직 공지가 없습니다" en="No announcements yet"/>:ann.map(a=>(
         <div key={a.id} className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-2">
-          <div className="flex justify-between gap-2"><p className="text-sm text-slate-700 whitespace-pre-wrap flex-1">{a.text}</p><button onClick={()=>del(a.id)} className="text-red-400 hover:text-red-600"><Trash2 className="w-4 h-4"/></button></div>
+          <div className="flex justify-between gap-2"><p className="text-sm text-slate-700 whitespace-pre-wrap flex-1">{a.text}</p><button onClick={()=>setDelTarget(a)} className="text-red-400 hover:text-red-600 flex-shrink-0"><Trash2 className="w-4 h-4"/></button></div>
           <p className="text-xs text-slate-400 mt-2">{new Date(a.createdAt).toLocaleString("ko-KR")}</p>
         </div>
       ))}
+      {delTarget&&<ConfirmDelete label={delTarget.text.slice(0,40)+(delTarget.text.length>40?"…":"")} onConfirm={async()=>{await del(delTarget.id);setDelTarget(null);}} onCancel={()=>setDelTarget(null)}/>}
     </div>
   );
 }
