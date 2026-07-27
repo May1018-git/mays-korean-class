@@ -1117,7 +1117,7 @@ function TeacherApp({user,data,save,onLogout}){
 
 function StudentApp({user,data,onLogout}){
   const [tab,setTab]=useState("ann");
-  const tabs=[["ann",Bell,"공지","Notice"],["mat",FileText,"학습자료","Materials"],["tb",BookMarked,"수업교재","Textbook"],["voc",BookText,"단어장","Vocab"]];
+  const tabs=[["ann",Bell,"공지","Notice"],["mat",FileText,"학습자료","Materials"],["tb",BookMarked,"수업교재","Textbook"],["voc",BookText,"단어장","Vocab"],["flash",Layers,"플래시카드","Flashcards"]];
   return(
     <div className="min-h-screen bg-slate-50">
       <Hdr user={user} onLogout={onLogout} tc={false}/>
@@ -1127,6 +1127,7 @@ function StudentApp({user,data,onLogout}){
         {tab==="mat"&&<StudentMat mat={data.mat}/>}
         {tab==="tb"&&<StudentTB tb={data.tb}/>}
         {tab==="voc"&&<StudentVoc voc={data.voc}/>}
+        {tab==="flash"&&<StudentFlash data={data}/>}
       </Wrap>
     </div>
   );
@@ -1758,6 +1759,120 @@ function StudentVoc({voc}){
       </div>
     }
   </div>);
+}
+
+function StudentFlash({data}){
+  const decks=data?.voc?.length?data.voc:FLASH_DECKS;
+  const [multiMode,setMultiMode]=useState(false);
+  const [selectedIds,setSelectedIds]=useState([]);
+  const [session,setSession]=useState(null);
+  const [idx,setIdx]=useState(0);
+  const [flipped,setFlipped]=useState(false);
+  const [checked,setChecked]=useState(()=>new Set());
+  const [done,setDone]=useState(false);
+  const toggleSel=id=>setSelectedIds(s=>s.includes(id)?s.filter(x=>x!==id):[...s,id]);
+  const openSingle=d=>{setSession({id:d.id,name:d.name,words:d.words});setIdx(0);setFlipped(false);setChecked(new Set());setDone(false);};
+  const startMerged=()=>{
+    const sel=decks.filter(d=>selectedIds.includes(d.id));
+    if(!sel.length)return;
+    setSession({id:"merged",name:`선택한 ${sel.length}개 단어장`,words:sel.flatMap(d=>d.words)});
+    setIdx(0);setFlipped(false);setChecked(new Set());setDone(false);
+  };
+  const back=()=>{setSession(null);setIdx(0);setFlipped(false);setMultiMode(false);setSelectedIds([]);setChecked(new Set());setDone(false);};
+  const go=dir=>{
+    if(dir===1&&idx===session.words.length-1){setDone(true);return;}
+    setFlipped(false);
+    setIdx(i=>(i+dir+session.words.length)%session.words.length);
+  };
+  const toggleCheck=w=>setChecked(prev=>{const next=new Set(prev);const key=wordKey(w);next.has(key)?next.delete(key):next.add(key);return next;});
+  const reviewChecked=()=>{setSession(s=>({...s,words:s.words.filter(w=>checked.has(wordKey(w)))}));setIdx(0);setFlipped(false);setChecked(new Set());setDone(false);};
+  const restart=()=>{setIdx(0);setFlipped(false);setChecked(new Set());setDone(false);};
+  const shuffle=()=>{setSession(s=>({...s,words:shuffleArr(s.words)}));setIdx(0);setFlipped(false);};
+  const stopHere=()=>setDone(true);
+
+  if(!session){
+    const selWordCount=decks.filter(d=>selectedIds.includes(d.id)).reduce((s,d)=>s+d.words.length,0);
+    return(
+      <div className="pb-16">
+        <SectionTitle ko="🎴 플래시카드" en="Flashcards"/>
+        <button onClick={()=>{setMultiMode(m=>!m);setSelectedIds([]);}} className={`mb-3 px-3 py-2 rounded-xl text-sm font-medium flex items-center gap-1 ${multiMode?"bg-indigo-500 text-white":"bg-indigo-50 text-indigo-600"}`}>
+          <Layers className="w-4 h-4"/>{multiMode?"덱 여러 개 선택 중 (탭하여 해제)":"여러 덱 합쳐서 길게 학습하기"}
+        </button>
+        {decks.map(d=>{
+          const isSel=selectedIds.includes(d.id);
+          return(
+            <div key={d.id} onClick={()=>multiMode&&toggleSel(d.id)} className={`bg-white rounded-xl p-4 mb-2 border flex items-center justify-between ${multiMode?`cursor-pointer ${isSel?"border-indigo-400 ring-2 ring-indigo-100":"border-slate-200"}`:"border-slate-200"}`}>
+              <div className="flex-1 min-w-0 mr-2"><p className="font-bold text-slate-800 truncate">{d.name}</p><p className="text-xs text-slate-500">{d.words.length}개 단어</p></div>
+              {multiMode
+                ?<div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 ${isSel?"bg-indigo-500 border-indigo-500":"border-slate-300"}`}>{isSel&&<CheckCircle className="w-4 h-4 text-white"/>}</div>
+                :<button onClick={()=>openSingle(d)} className="bg-indigo-500 text-white px-3 py-2 rounded-xl text-sm font-medium flex items-center gap-1 ml-1"><Layers className="w-4 h-4"/>시작</button>
+              }
+            </div>
+          );
+        })}
+        {multiMode&&selectedIds.length>0&&
+          <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-3 z-20">
+            <div className="max-w-2xl mx-auto flex items-center justify-between gap-3">
+              <span className="text-sm text-slate-600">선택 {selectedIds.length}개 · 총 {selWordCount}장</span>
+              <button onClick={startMerged} className="bg-indigo-500 text-white px-4 py-2.5 rounded-xl text-sm font-medium flex items-center gap-1"><Layers className="w-4 h-4"/>학습 시작</button>
+            </div>
+          </div>
+        }
+      </div>
+    );
+  }
+  if(done){
+    const checkedCount=session.words.filter(w=>checked.has(wordKey(w))).length;
+    return(
+      <div>
+        <button onClick={back} className="text-slate-500 text-sm mb-3 hover:underline">← 목록으로</button>
+        <div className="bg-white rounded-2xl p-6 border border-slate-200 text-center">
+          <p className="text-lg font-bold text-slate-800 mb-1">학습 완료! 🎉</p>
+          <p className="text-sm text-slate-500 mb-5">{session.name} · {session.words.length}장 중 {idx+1}장 학습 · 체크 {checkedCount}개</p>
+          <div className="flex flex-col gap-2">
+            {checkedCount>0&&<button onClick={reviewChecked} className="bg-indigo-500 text-white py-2.5 rounded-xl text-sm font-medium flex items-center justify-center gap-1"><CheckCircle className="w-4 h-4"/>체크한 {checkedCount}개 다시 보기</button>}
+            <button onClick={restart} className="bg-indigo-50 text-indigo-600 py-2.5 rounded-xl text-sm font-medium flex items-center justify-center gap-1"><RotateCcw className="w-4 h-4"/>처음부터 다시</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  const w=session.words[idx];
+  const isChecked=checked.has(wordKey(w));
+  return(
+    <div>
+      <button onClick={back} className="text-slate-500 text-sm mb-3 hover:underline">← 목록으로</button>
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="font-bold text-slate-800 text-lg">{session.name}</h2>
+        <span className="text-xs text-slate-400">{idx+1} / {session.words.length}{checked.size>0&&` · 체크 ${checked.size}개`}</span>
+      </div>
+      <div className="relative">
+        <button onClick={()=>toggleCheck(w)} aria-label="체크" className={`absolute top-2 right-2 z-10 w-8 h-8 rounded-full border-2 flex items-center justify-center transition ${isChecked?"bg-emerald-500 border-emerald-500 text-white":"bg-white/90 border-slate-200 text-slate-300"}`}>
+          <CheckCircle className="w-4 h-4"/>
+        </button>
+        <div onClick={()=>setFlipped(f=>!f)} style={{perspective:"1000px"}} className="cursor-pointer select-none">
+          <div style={{transformStyle:"preserve-3d",transition:"transform 0.5s",transform:flipped?"rotateY(180deg)":"none"}} className="relative h-64">
+            <div style={{backfaceVisibility:"hidden"}} className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex flex-col items-center justify-center p-6 text-white shadow-lg">
+              <span className="text-3xl font-bold text-center">{w.meaning}</span>
+              <span className="text-xs mt-4 opacity-70">탭하여 한국어 보기 · Tap to flip</span>
+            </div>
+            <div style={{backfaceVisibility:"hidden",transform:"rotateY(180deg)"}} className="absolute inset-0 bg-white border-2 border-indigo-200 rounded-2xl flex flex-col items-center justify-center p-6 shadow-lg">
+              <span className="text-3xl font-bold text-indigo-700 text-center">{w.word}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="flex items-center justify-center gap-3 mt-5">
+        <button onClick={()=>go(-1)} className="w-11 h-11 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-600 shadow-sm"><ArrowLeft className="w-5 h-5"/></button>
+        <button onClick={()=>setFlipped(f=>!f)} className="px-4 py-2.5 rounded-xl bg-indigo-50 text-indigo-600 text-sm font-medium flex items-center gap-1"><RotateCcw className="w-4 h-4"/>뒤집기</button>
+        <button onClick={()=>go(1)} className="w-11 h-11 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-600 shadow-sm"><ArrowRight className="w-5 h-5"/></button>
+      </div>
+      <div className="flex items-center justify-center gap-4 mt-3">
+        <button onClick={shuffle} className="text-xs text-slate-500 hover:text-indigo-600 flex items-center gap-1"><Shuffle className="w-3.5 h-3.5"/>섞기</button>
+        <button onClick={stopHere} className="text-xs text-slate-500 hover:text-indigo-600 flex items-center gap-1"><FlagTriangleRight className="w-3.5 h-3.5"/>여기까지 하기</button>
+      </div>
+    </div>
+  );
 }
 
 function AITutor(){
