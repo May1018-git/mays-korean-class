@@ -1512,7 +1512,7 @@ function TeacherFlash({data,save}){
         <SectionTitle ko="🎴 플래시카드" en="Flashcards"/>
         <p className="text-xs text-slate-500 mb-3">단어장을 선택하고 카드를 넘기며 학습하세요. (선생님 전용)</p>
         <button onClick={()=>{setMultiMode(m=>!m);setSelectedIds([]);}} className={`mb-3 px-3 py-2 rounded-xl text-sm font-medium flex items-center gap-1 ${multiMode?"bg-indigo-500 text-white":"bg-indigo-50 text-indigo-600"}`}>
-          <Layers className="w-4 h-4"/>{multiMode?"덱 여러 개 선택 중 (탭하여 해제)":"여러 덱 합쳐서 길게 학습하기"}
+          <Layers className="w-4 h-4"/>{multiMode?"덱 여러 개 선택 중 · Tap to cancel":"여러 덱 합쳐서 학습 · Merge decks"}
         </button>
         {decks.map((d,fi,fa)=>{
           const isSel=selectedIds.includes(d.id);
@@ -1525,7 +1525,7 @@ function TeacherFlash({data,save}){
               :<div className="flex gap-0.5 items-center">
                 {usingVoc&&<><button onClick={e=>{e.stopPropagation();moveUp(oi);}} disabled={fi===0} className="text-slate-300 hover:text-indigo-500 p-1.5 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed"><ArrowUp className="w-3.5 h-3.5"/></button>
                 <button onClick={e=>{e.stopPropagation();moveDown(oi);}} disabled={fi===fa.length-1} className="text-slate-300 hover:text-indigo-500 p-1.5 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed"><ArrowDown className="w-3.5 h-3.5"/></button></>}
-                <button onClick={()=>openSingle(d)} className="bg-indigo-500 text-white px-3 py-2 rounded-xl text-sm font-medium flex items-center gap-1 ml-1"><Layers className="w-4 h-4"/>시작</button>
+                <button onClick={()=>openSingle(d)} className="bg-indigo-500 text-white px-3 py-2 rounded-xl text-sm font-medium flex items-center gap-1 ml-1"><Layers className="w-4 h-4"/>시작<span className="text-xs font-normal opacity-70"> · Start</span></button>
               </div>}
             </div>
           );
@@ -1534,7 +1534,7 @@ function TeacherFlash({data,save}){
           <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-3 z-20">
             <div className="max-w-2xl mx-auto flex items-center justify-between gap-3">
               <span className="text-sm text-slate-600">선택 {selectedIds.length}개 · 총 {selectedWordCount}장</span>
-              <button onClick={startMerged} className="bg-indigo-500 text-white px-4 py-2.5 rounded-xl text-sm font-medium flex items-center gap-1"><Layers className="w-4 h-4"/>학습 시작</button>
+              <button onClick={startMerged} className="bg-indigo-500 text-white px-4 py-2.5 rounded-xl text-sm font-medium flex items-center gap-1"><Layers className="w-4 h-4"/>학습 시작<span className="text-xs font-normal opacity-70"> · Start</span></button>
             </div>
           </div>
         }
@@ -1546,13 +1546,13 @@ function TeacherFlash({data,save}){
     const reviewed=idx+1;
     return(
       <div>
-        <button onClick={back} className="text-slate-500 text-sm mb-3 hover:underline">← 목록으로</button>
+        <button onClick={back} className="text-slate-500 text-sm mb-3 hover:underline">← 목록으로<span className="opacity-70"> · Back</span></button>
         <div className="bg-white rounded-2xl p-6 border border-slate-200 text-center">
           <p className="text-lg font-bold text-slate-800 mb-1">학습 완료! 🎉</p>
           <p className="text-sm text-slate-500 mb-5">{session.name} · {session.words.length}장 중 {reviewed}장 학습 · 체크 {checkedCount}개</p>
           <div className="flex flex-col gap-2">
-            {checkedCount>0&&<button onClick={reviewChecked} className="bg-indigo-500 text-white py-2.5 rounded-xl text-sm font-medium flex items-center justify-center gap-1"><CheckCircle className="w-4 h-4"/>체크한 {checkedCount}개 다시 보기</button>}
-            <button onClick={restart} className="bg-indigo-50 text-indigo-600 py-2.5 rounded-xl text-sm font-medium flex items-center justify-center gap-1"><RotateCcw className="w-4 h-4"/>처음부터 다시</button>
+            {checkedCount>0&&<button onClick={reviewChecked} className="bg-indigo-500 text-white py-2.5 rounded-xl text-sm font-medium flex items-center justify-center gap-1"><CheckCircle className="w-4 h-4"/>체크한 {checkedCount}개 다시 보기<span className="text-xs font-normal opacity-70"> · Review</span></button>}
+            <button onClick={restart} className="bg-indigo-50 text-indigo-600 py-2.5 rounded-xl text-sm font-medium flex items-center justify-center gap-1"><RotateCcw className="w-4 h-4"/>처음부터 다시<span className="text-xs font-normal opacity-70"> · Start over</span></button>
           </div>
         </div>
       </div>
@@ -1562,7 +1562,7 @@ function TeacherFlash({data,save}){
   const isChecked=checked.has(wordKey(w));
   return(
     <div>
-      <button onClick={back} className="text-slate-500 text-sm mb-3 hover:underline">← 목록으로</button>
+      <button onClick={back} className="text-slate-500 text-sm mb-3 hover:underline">← 목록으로<span className="opacity-70"> · Back</span></button>
       <div className="flex items-center justify-between mb-3">
         <h2 className="font-bold text-slate-800 text-lg">{session.name}</h2>
         <span className="text-xs text-slate-400">{idx+1} / {session.words.length}{checked.size>0&&` · 체크 ${checked.size}개`}</span>
@@ -1585,12 +1585,12 @@ function TeacherFlash({data,save}){
       </div>
       <div className="flex items-center justify-center gap-3 mt-5">
         <button onClick={()=>go(-1)} className="w-11 h-11 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-600 shadow-sm"><ArrowLeft className="w-5 h-5"/></button>
-        <button onClick={()=>setFlipped(f=>!f)} className="px-4 py-2.5 rounded-xl bg-indigo-50 text-indigo-600 text-sm font-medium flex items-center gap-1"><RotateCcw className="w-4 h-4"/>뒤집기</button>
+        <button onClick={()=>setFlipped(f=>!f)} className="px-4 py-2.5 rounded-xl bg-indigo-50 text-indigo-600 text-sm font-medium flex items-center gap-1"><RotateCcw className="w-4 h-4"/>뒤집기 · Flip</button>
         <button onClick={()=>go(1)} className="w-11 h-11 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-600 shadow-sm"><ArrowRight className="w-5 h-5"/></button>
       </div>
       <div className="flex items-center justify-center gap-4 mt-3">
-        <button onClick={shuffle} className="text-xs text-slate-500 hover:text-indigo-600 flex items-center gap-1"><Shuffle className="w-3.5 h-3.5"/>섞기</button>
-        <button onClick={stopHere} className="text-xs text-slate-500 hover:text-indigo-600 flex items-center gap-1"><FlagTriangleRight className="w-3.5 h-3.5"/>여기까지 하기</button>
+        <button onClick={shuffle} className="text-xs text-slate-500 hover:text-indigo-600 flex items-center gap-1"><Shuffle className="w-3.5 h-3.5"/>섞기 · Shuffle</button>
+        <button onClick={stopHere} className="text-xs text-slate-500 hover:text-indigo-600 flex items-center gap-1"><FlagTriangleRight className="w-3.5 h-3.5"/>여기까지 · Stop here</button>
       </div>
     </div>
   );
@@ -1696,7 +1696,7 @@ function StudentVoc({voc}){
     ))}
   </div>);
   if(mode==="view")return(<div>
-    <button onClick={back} className="text-slate-500 text-sm mb-3 hover:underline">← 목록으로</button>
+    <button onClick={back} className="text-slate-500 text-sm mb-3 hover:underline">← 목록으로<span className="opacity-70"> · Back</span></button>
     <div className="flex justify-between items-center mb-3">
       <h2 className="font-bold text-slate-800 text-lg">📖 {sel.name}</h2>
       <button onClick={()=>printPDF(sel)} className="bg-white border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg text-xs flex items-center gap-1 shadow-sm"><Download className="w-3.5 h-3.5"/>PDF 다운로드</button>
@@ -1720,7 +1720,7 @@ function StudentVoc({voc}){
   </div>);
   const score=checked?sel.words.filter((w,i)=>ans[i]?.trim().toLowerCase()===w.meaning.trim().toLowerCase()).length:0;
   return(<div>
-    <button onClick={back} className="text-slate-500 text-sm mb-3 hover:underline">← 목록으로</button>
+    <button onClick={back} className="text-slate-500 text-sm mb-3 hover:underline">← 목록으로<span className="opacity-70"> · Back</span></button>
     <div className="flex justify-between items-center mb-1">
       <h2 className="font-bold text-slate-800 text-lg">✏️ {sel.name}</h2>
       <button onClick={()=>printPDF(sel,true)} className="bg-white border border-slate-200 text-slate-600 px-3 py-1.5 rounded-lg text-xs flex items-center gap-1 shadow-sm"><Download className="w-3.5 h-3.5"/>PDF 다운로드</button>
@@ -1796,7 +1796,7 @@ function StudentFlash({data}){
       <div className="pb-16">
         <SectionTitle ko="🎴 플래시카드" en="Flashcards"/>
         <button onClick={()=>{setMultiMode(m=>!m);setSelectedIds([]);}} className={`mb-3 px-3 py-2 rounded-xl text-sm font-medium flex items-center gap-1 ${multiMode?"bg-indigo-500 text-white":"bg-indigo-50 text-indigo-600"}`}>
-          <Layers className="w-4 h-4"/>{multiMode?"덱 여러 개 선택 중 (탭하여 해제)":"여러 덱 합쳐서 길게 학습하기"}
+          <Layers className="w-4 h-4"/>{multiMode?"덱 여러 개 선택 중 · Tap to cancel":"여러 덱 합쳐서 학습 · Merge decks"}
         </button>
         {decks.map(d=>{
           const isSel=selectedIds.includes(d.id);
@@ -1805,7 +1805,7 @@ function StudentFlash({data}){
               <div className="flex-1 min-w-0 mr-2"><p className="font-bold text-slate-800 truncate">{d.name}</p><p className="text-xs text-slate-500">{d.words.length}개 단어</p></div>
               {multiMode
                 ?<div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 ${isSel?"bg-indigo-500 border-indigo-500":"border-slate-300"}`}>{isSel&&<CheckCircle className="w-4 h-4 text-white"/>}</div>
-                :<button onClick={()=>openSingle(d)} className="bg-indigo-500 text-white px-3 py-2 rounded-xl text-sm font-medium flex items-center gap-1 ml-1"><Layers className="w-4 h-4"/>시작</button>
+                :<button onClick={()=>openSingle(d)} className="bg-indigo-500 text-white px-3 py-2 rounded-xl text-sm font-medium flex items-center gap-1 ml-1"><Layers className="w-4 h-4"/>시작<span className="text-xs font-normal opacity-70"> · Start</span></button>
               }
             </div>
           );
@@ -1814,7 +1814,7 @@ function StudentFlash({data}){
           <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-3 z-20">
             <div className="max-w-2xl mx-auto flex items-center justify-between gap-3">
               <span className="text-sm text-slate-600">선택 {selectedIds.length}개 · 총 {selWordCount}장</span>
-              <button onClick={startMerged} className="bg-indigo-500 text-white px-4 py-2.5 rounded-xl text-sm font-medium flex items-center gap-1"><Layers className="w-4 h-4"/>학습 시작</button>
+              <button onClick={startMerged} className="bg-indigo-500 text-white px-4 py-2.5 rounded-xl text-sm font-medium flex items-center gap-1"><Layers className="w-4 h-4"/>학습 시작<span className="text-xs font-normal opacity-70"> · Start</span></button>
             </div>
           </div>
         }
@@ -1825,13 +1825,13 @@ function StudentFlash({data}){
     const checkedCount=session.words.filter(w=>checked.has(wordKey(w))).length;
     return(
       <div>
-        <button onClick={back} className="text-slate-500 text-sm mb-3 hover:underline">← 목록으로</button>
+        <button onClick={back} className="text-slate-500 text-sm mb-3 hover:underline">← 목록으로<span className="opacity-70"> · Back</span></button>
         <div className="bg-white rounded-2xl p-6 border border-slate-200 text-center">
           <p className="text-lg font-bold text-slate-800 mb-1">학습 완료! 🎉</p>
           <p className="text-sm text-slate-500 mb-5">{session.name} · {session.words.length}장 중 {idx+1}장 학습 · 체크 {checkedCount}개</p>
           <div className="flex flex-col gap-2">
-            {checkedCount>0&&<button onClick={reviewChecked} className="bg-indigo-500 text-white py-2.5 rounded-xl text-sm font-medium flex items-center justify-center gap-1"><CheckCircle className="w-4 h-4"/>체크한 {checkedCount}개 다시 보기</button>}
-            <button onClick={restart} className="bg-indigo-50 text-indigo-600 py-2.5 rounded-xl text-sm font-medium flex items-center justify-center gap-1"><RotateCcw className="w-4 h-4"/>처음부터 다시</button>
+            {checkedCount>0&&<button onClick={reviewChecked} className="bg-indigo-500 text-white py-2.5 rounded-xl text-sm font-medium flex items-center justify-center gap-1"><CheckCircle className="w-4 h-4"/>체크한 {checkedCount}개 다시 보기<span className="text-xs font-normal opacity-70"> · Review</span></button>}
+            <button onClick={restart} className="bg-indigo-50 text-indigo-600 py-2.5 rounded-xl text-sm font-medium flex items-center justify-center gap-1"><RotateCcw className="w-4 h-4"/>처음부터 다시<span className="text-xs font-normal opacity-70"> · Start over</span></button>
           </div>
         </div>
       </div>
@@ -1841,7 +1841,7 @@ function StudentFlash({data}){
   const isChecked=checked.has(wordKey(w));
   return(
     <div>
-      <button onClick={back} className="text-slate-500 text-sm mb-3 hover:underline">← 목록으로</button>
+      <button onClick={back} className="text-slate-500 text-sm mb-3 hover:underline">← 목록으로<span className="opacity-70"> · Back</span></button>
       <div className="flex items-center justify-between mb-3">
         <h2 className="font-bold text-slate-800 text-lg">{session.name}</h2>
         <span className="text-xs text-slate-400">{idx+1} / {session.words.length}{checked.size>0&&` · 체크 ${checked.size}개`}</span>
@@ -1864,12 +1864,12 @@ function StudentFlash({data}){
       </div>
       <div className="flex items-center justify-center gap-3 mt-5">
         <button onClick={()=>go(-1)} className="w-11 h-11 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-600 shadow-sm"><ArrowLeft className="w-5 h-5"/></button>
-        <button onClick={()=>setFlipped(f=>!f)} className="px-4 py-2.5 rounded-xl bg-indigo-50 text-indigo-600 text-sm font-medium flex items-center gap-1"><RotateCcw className="w-4 h-4"/>뒤집기</button>
+        <button onClick={()=>setFlipped(f=>!f)} className="px-4 py-2.5 rounded-xl bg-indigo-50 text-indigo-600 text-sm font-medium flex items-center gap-1"><RotateCcw className="w-4 h-4"/>뒤집기 · Flip</button>
         <button onClick={()=>go(1)} className="w-11 h-11 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-600 shadow-sm"><ArrowRight className="w-5 h-5"/></button>
       </div>
       <div className="flex items-center justify-center gap-4 mt-3">
-        <button onClick={shuffle} className="text-xs text-slate-500 hover:text-indigo-600 flex items-center gap-1"><Shuffle className="w-3.5 h-3.5"/>섞기</button>
-        <button onClick={stopHere} className="text-xs text-slate-500 hover:text-indigo-600 flex items-center gap-1"><FlagTriangleRight className="w-3.5 h-3.5"/>여기까지 하기</button>
+        <button onClick={shuffle} className="text-xs text-slate-500 hover:text-indigo-600 flex items-center gap-1"><Shuffle className="w-3.5 h-3.5"/>섞기 · Shuffle</button>
+        <button onClick={stopHere} className="text-xs text-slate-500 hover:text-indigo-600 flex items-center gap-1"><FlagTriangleRight className="w-3.5 h-3.5"/>여기까지 · Stop here</button>
       </div>
     </div>
   );
