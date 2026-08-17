@@ -1154,7 +1154,7 @@ function TeacherApp({user,data,save,onLogout}){
         </div>
       </main>
       <nav className="db-mob-nav">
-        {navItems.slice(0,5).map(item=>(
+        {navItems.map(item=>(
           <button key={item.id} onClick={()=>setTab(item.id)} className={`db-mob-ni${tab===item.id?" active":""}`}>
             <span className="db-mob-ni-icon">{item.icon}</span>
             <span className="db-mob-ni-label">{item.ko}</span>

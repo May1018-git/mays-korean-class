@@ -432,9 +432,9 @@
 
 /* ── MOBILE ──────────────────────────────────────────────────────── */
 @media (max-width: 700px) {
-  .db-sidebar { display: none; }
-  .db-main { margin-left: 0; padding-bottom: 68px; }
-  .db-content { padding: 14px; }
+  .db-sidebar { display: none !important; }
+  .db-main { margin-left: 0 !important; padding-bottom: 72px; overflow-x: hidden; }
+  .db-content { padding: 14px; overflow-x: hidden; }
   .db-stats { grid-template-columns: repeat(2, 1fr); gap: 10px; }
   .db-tile-grid { grid-template-columns: repeat(2, 1fr); }
   .db-table-head,
@@ -444,26 +444,33 @@
   .db-qa { flex-direction: column; }
   .db-welcome { flex-direction: column; align-items: flex-start; }
   .db-w-date { text-align: left; }
+  .db-w-hi { font-size: 18px; }
 }
 @media (min-width: 701px) { .db-mob-nav { display: none !important; } }
+
+/* prevent horizontal overflow on mobile */
+.db-app { overflow-x: hidden; }
 
 .db-mob-nav {
   display: flex;
   position: fixed; bottom: 0; left: 0; right: 0;
   background: var(--db-card);
   border-top: 1px solid var(--db-bdr2);
-  padding: 6px 0 10px;
+  padding: 4px 0 env(safe-area-inset-bottom, 8px);
   z-index: 30;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 .db-mob-ni {
-  flex: 1;
+  flex: 0 0 auto;
+  min-width: 56px;
   display: flex; flex-direction: column;
-  align-items: center; gap: 3px;
+  align-items: center; gap: 2px;
   cursor: pointer;
-  color: var(--db-tm); padding: 4px 0;
+  color: var(--db-tm); padding: 4px 6px;
   transition: color .12s;
   background: none; border: none; font-family: inherit;
 }
 .db-mob-ni.active { color: var(--db-v); }
-.db-mob-ni-icon  { font-size: 20px; }
-.db-mob-ni-label { font-size: 9px; font-weight: 600; }
+.db-mob-ni-icon  { font-size: 18px; }
+.db-mob-ni-label { font-size: 8px; font-weight: 600; white-space: nowrap; }
