@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import "./dashboard.css";
 import { db } from "./firebase";
 import { doc, getDoc, setDoc, onSnapshot } from "firebase/firestore";
 import { BookOpen, FileText, Bell, BarChart3, Plus, Trash2, Send, User, GraduationCap, LogOut, Sparkles, CheckCircle, XCircle, Loader2, Megaphone, Lock, Clock, UserCheck, UserX, BookMarked, Edit3, ExternalLink, ChevronDown, ChevronUp, Download, BookText, ArrowUp, ArrowDown, Layers, RotateCcw, ArrowLeft, ArrowRight, Shuffle, FlagTriangleRight } from "lucide-react";
@@ -1096,39 +1097,258 @@ function PendingScreen({user,data,onApproved,onRejected,onCancel}){
 }
 
 function TeacherApp({user,data,save,onLogout}){
-  const [tab,setTab]=useState("students");
+  const [tab,setTab]=useState("home");
   const pending=data.stu.filter(s=>s.status==="pending").length;
-  const tabs=[["students",BarChart3,`학생${pending>0?`(${pending})`:""}`, "Students"],["mat",FileText,"학습자료","Materials"],["tb",BookMarked,"수업교재","Textbook"],["voc",BookText,"단어장","Vocab"],["flash",Layers,"플래시카드","Flashcards"],["ann",Megaphone,"공지","Notice"]];
+  const navItems=[
+    {id:"home",    icon:"📊", ko:"대시보드",   en:"Dashboard"},
+    {id:"students",icon:"👥", ko:"학생 관리",   en:"Students",   badge:pending||null},
+    {id:"mat",     icon:"📁", ko:"학습자료",    en:"Materials"},
+    {id:"tb",      icon:"📚", ko:"수업교재",    en:"Textbook"},
+    {id:"voc",     icon:"📝", ko:"단어장",      en:"Vocab"},
+    {id:"flash",   icon:"🃏", ko:"플래시카드",  en:"Flashcards"},
+    {id:"ann",     icon:"📢", ko:"공지",        en:"Notice"},
+  ];
+  const cur=navItems.find(i=>i.id===tab)||navItems[0];
   return(
-    <div className="min-h-screen bg-slate-50">
-      <Hdr user={user} onLogout={onLogout} tc/>
-      <Tabs tabs={tabs} active={tab} setActive={setTab}/>
-      <Wrap>
-        {tab==="students"&&<TeacherStudents data={data} save={save}/>}
-        {tab==="mat"&&<TeacherMat data={data} save={save}/>}
-        {tab==="tb"&&<TeacherTB data={data} save={save}/>}
-        {tab==="voc"&&<TeacherVoc data={data} save={save}/>}
-        {tab==="flash"&&<TeacherFlash data={data} save={save}/>}
-        {tab==="ann"&&<TeacherAnn data={data} save={save}/>}
-      </Wrap>
+    <div className="db-app">
+      <aside className="db-sidebar">
+        <div className="db-brand">
+          <div className="db-logo">🎓</div>
+          <div className="db-brand-name">May's Korean Class</div>
+          <div className="db-brand-sub">메이의 한국어 수업</div>
+        </div>
+        <nav className="db-nav">
+          <div className="db-nav-section">메뉴</div>
+          {navItems.map(item=>(
+            <button key={item.id} onClick={()=>setTab(item.id)} className={`db-nav-item${tab===item.id?" active":""}`}>
+              <span className="db-nav-icon">{item.icon}</span>
+              <span className="db-nav-ko">{item.ko}</span>
+              {item.badge?<span className="db-nav-badge">{item.badge}</span>:<span className="db-nav-en">{item.en}</span>}
+            </button>
+          ))}
+        </nav>
+        <div className="db-sidebar-footer">
+          <div className="db-user-card">
+            <div className="db-av">M</div>
+            <div style={{flex:1,minWidth:0}}>
+              <div className="db-uname">{user.name}</div>
+              <div className="db-urole">선생님 · Teacher</div>
+            </div>
+            <button className="db-logout-btn" onClick={onLogout}><LogOut size={14}/></button>
+          </div>
+        </div>
+      </aside>
+      <main className="db-main">
+        <header className="db-topbar">
+          <span className="db-tb-title">{cur.ko}</span>
+          <span className="db-tb-sub">/ {cur.en}</span>
+        </header>
+        <div className="db-content">
+          {tab==="home"     &&<TeacherHome data={data} setTab={setTab}/>}
+          {tab==="students" &&<TeacherStudents data={data} save={save}/>}
+          {tab==="mat"      &&<TeacherMat data={data} save={save}/>}
+          {tab==="tb"       &&<TeacherTB data={data} save={save}/>}
+          {tab==="voc"      &&<TeacherVoc data={data} save={save}/>}
+          {tab==="flash"    &&<TeacherFlash data={data} save={save}/>}
+          {tab==="ann"      &&<TeacherAnn data={data} save={save}/>}
+        </div>
+      </main>
+      <nav className="db-mob-nav">
+        {navItems.slice(0,5).map(item=>(
+          <button key={item.id} onClick={()=>setTab(item.id)} className={`db-mob-ni${tab===item.id?" active":""}`}>
+            <span className="db-mob-ni-icon">{item.icon}</span>
+            <span className="db-mob-ni-label">{item.ko}</span>
+          </button>
+        ))}
+      </nav>
     </div>
   );
 }
 
 function StudentApp({user,data,onLogout}){
-  const [tab,setTab]=useState("ann");
-  const tabs=[["ann",Bell,"공지","Notice"],["mat",FileText,"학습자료","Materials"],["tb",BookMarked,"수업교재","Textbook"],["voc",BookText,"단어장","Vocab"],["flash",Layers,"플래시카드","Flashcards"]];
+  const [tab,setTab]=useState("home");
+  const navItems=[
+    {id:"home",  icon:"🏠", ko:"홈",         en:"Home"},
+    {id:"ann",   icon:"📢", ko:"공지",       en:"Notice"},
+    {id:"mat",   icon:"📁", ko:"학습자료",   en:"Materials"},
+    {id:"tb",    icon:"📚", ko:"수업교재",   en:"Textbook"},
+    {id:"voc",   icon:"📝", ko:"단어장",     en:"Vocab"},
+    {id:"flash", icon:"🃏", ko:"플래시카드", en:"Flashcards"},
+  ];
+  const cur=navItems.find(i=>i.id===tab)||navItems[0];
   return(
-    <div className="min-h-screen bg-slate-50">
-      <Hdr user={user} onLogout={onLogout} tc={false}/>
-      <Tabs tabs={tabs} active={tab} setActive={setTab}/>
-      <Wrap>
-        {tab==="ann"&&<StudentAnn ann={data.ann}/>}
-        {tab==="mat"&&<StudentMat mat={data.mat}/>}
-        {tab==="tb"&&<StudentTB tb={data.tb}/>}
-        {tab==="voc"&&<StudentVoc voc={data.voc}/>}
-        {tab==="flash"&&<StudentFlash data={data}/>}
-      </Wrap>
+    <div className="db-app">
+      <aside className="db-sidebar">
+        <div className="db-brand">
+          <div className="db-logo">🎓</div>
+          <div className="db-brand-name">May's Korean Class</div>
+          <div className="db-brand-sub">메이의 한국어 수업</div>
+        </div>
+        <nav className="db-nav">
+          <div className="db-nav-section">메뉴</div>
+          {navItems.map(item=>(
+            <button key={item.id} onClick={()=>setTab(item.id)} className={`db-nav-item${tab===item.id?" active":""}`}>
+              <span className="db-nav-icon">{item.icon}</span>
+              <span className="db-nav-ko">{item.ko}</span>
+              <span className="db-nav-en">{item.en}</span>
+            </button>
+          ))}
+        </nav>
+        <div className="db-sidebar-footer">
+          <div className="db-user-card">
+            <div className="db-av">{user.name[0]}</div>
+            <div style={{flex:1,minWidth:0}}>
+              <div className="db-uname">{user.name}</div>
+              <div className="db-urole">학생 · Student</div>
+            </div>
+            <button className="db-logout-btn" onClick={onLogout}><LogOut size={14}/></button>
+          </div>
+        </div>
+      </aside>
+      <main className="db-main">
+        <header className="db-topbar">
+          <span className="db-tb-title">{cur.ko}</span>
+          <span className="db-tb-sub">/ {cur.en}</span>
+        </header>
+        <div className="db-content">
+          {tab==="home"  &&<StudentHome user={user} data={data} setTab={setTab}/>}
+          {tab==="ann"   &&<StudentAnn ann={data.ann}/>}
+          {tab==="mat"   &&<StudentMat mat={data.mat}/>}
+          {tab==="tb"    &&<StudentTB tb={data.tb}/>}
+          {tab==="voc"   &&<StudentVoc voc={data.voc}/>}
+          {tab==="flash" &&<StudentFlash data={data}/>}
+        </div>
+      </main>
+      <nav className="db-mob-nav">
+        {navItems.map(item=>(
+          <button key={item.id} onClick={()=>setTab(item.id)} className={`db-mob-ni${tab===item.id?" active":""}`}>
+            <span className="db-mob-ni-icon">{item.icon}</span>
+            <span className="db-mob-ni-label">{item.ko}</span>
+          </button>
+        ))}
+      </nav>
+    </div>
+  );
+}
+
+function TeacherHome({data,setTab}){
+  const pending=data.stu.filter(s=>s.status==="pending");
+  const approved=data.stu.filter(s=>s.status==="approved");
+  const now=new Date();
+  const days=["일요일","월요일","화요일","수요일","목요일","금요일","토요일"];
+  const dateStr=`${now.getFullYear()}년 ${now.getMonth()+1}월 ${now.getDate()}일`;
+  const dayStr=days[now.getDay()];
+  const recentMat=data.mat.slice(-4).reverse();
+  return(
+    <div>
+      <div className="db-welcome">
+        <div>
+          <div className="db-w-hi">안녕하세요, May 선생님 👋</div>
+          <div className="db-w-sub">오늘도 수업 준비 완료! · All set for today's class</div>
+        </div>
+        <div className="db-w-date">{dateStr}<br/>{dayStr}</div>
+      </div>
+      <div className="db-stats">
+        <div className="db-stat s1" onClick={()=>setTab("students")}>
+          <div className="db-stat-icon">👥</div>
+          <div className="db-stat-num">{approved.length}</div>
+          <div className="db-stat-ko">학생</div>
+          <div className="db-stat-en">Students</div>
+          {pending.length>0&&<div className="db-stat-tag">⚠️ {pending.length}명 승인 대기</div>}
+        </div>
+        <div className="db-stat s2" onClick={()=>setTab("mat")}>
+          <div className="db-stat-icon">📁</div>
+          <div className="db-stat-num">{data.mat.length}</div>
+          <div className="db-stat-ko">학습자료</div>
+          <div className="db-stat-en">Materials</div>
+        </div>
+        <div className="db-stat s3" onClick={()=>setTab("voc")}>
+          <div className="db-stat-icon">📝</div>
+          <div className="db-stat-num">{data.voc.length}</div>
+          <div className="db-stat-ko">단어장</div>
+          <div className="db-stat-en">Vocabulary</div>
+        </div>
+        <div className="db-stat s4" onClick={()=>setTab("ann")}>
+          <div className="db-stat-icon">📢</div>
+          <div className="db-stat-num">{data.ann.length}</div>
+          <div className="db-stat-ko">공지</div>
+          <div className="db-stat-en">Notices</div>
+        </div>
+      </div>
+      {pending.length>0&&<div className="db-alert">
+        <span className="db-alert-icon">⚠️</span>
+        <div className="db-alert-body">
+          <div className="db-alert-title">{pending.length}명 승인 대기중 · Students awaiting approval</div>
+          <div className="db-alert-desc">{pending.map(s=>s.name).join(", ")} · 가입 요청 · New join requests</div>
+        </div>
+        <button className="db-alert-btn" onClick={()=>setTab("students")}>학생 관리 →</button>
+      </div>}
+      <div className="db-sec-hd"><div className="db-sec-title">빠른 작업 · Quick Actions</div></div>
+      <div className="db-qa">
+        <button className="db-qa-btn prim" onClick={()=>setTab("mat")}>📁 학습자료 추가</button>
+        <button className="db-qa-btn warm" onClick={()=>setTab("voc")}>📝 단어장 추가</button>
+        <button className="db-qa-btn ghost" onClick={()=>setTab("ann")}>📢 공지 올리기</button>
+      </div>
+      {recentMat.length>0&&<div className="db-section">
+        <div className="db-sec-hd">
+          <div className="db-sec-title">최근 학습자료 · Recent Materials</div>
+          <div className="db-sec-count">{data.mat.length}개</div>
+          <button className="db-sec-link" onClick={()=>setTab("mat")}>전체 보기 →</button>
+        </div>
+        <div className="db-table">
+          <div className="db-table-head"><span>자료명</span><span>유형</span><span>날짜</span></div>
+          {recentMat.map((m,i)=>(
+            <div key={m.id||i} className="db-table-row">
+              <div className="db-cell-name">{m.title}</div>
+              <div><span className={`db-chip ${m.embed?"db-chip-v":m.link?"db-chip-a":"db-chip-g"}`}>{m.embed?"영상":m.link?"링크":"자료"}</span></div>
+              <div className="db-cell-date">{m.date||""}</div>
+            </div>
+          ))}
+        </div>
+      </div>}
+    </div>
+  );
+}
+
+function StudentHome({user,data,setTab}){
+  const latest=data.ann[data.ann.length-1];
+  const tiles=[
+    {icon:"🃏",ko:"플래시카드",en:"FLASHCARDS",tab:"flash"},
+    {icon:"📝",ko:"단어장",    en:"VOCABULARY",tab:"voc"},
+    {icon:"📢",ko:"공지",      en:"NOTICE",    tab:"ann"},
+    {icon:"📁",ko:"학습자료",  en:"MATERIALS", tab:"mat"},
+    {icon:"📚",ko:"수업교재",  en:"TEXTBOOK",  tab:"tb"},
+  ];
+  return(
+    <div>
+      <div className="db-sw-card">
+        <div className="db-sw-hi">안녕하세요, {user.name}! 👋</div>
+        <div className="db-sw-sub">오늘도 화이팅! · Keep up the great work!</div>
+        <div className="db-sw-tag">🎓 May's Korean Class</div>
+      </div>
+      <div className="db-sec-hd"><div className="db-sec-title">바로가기 · Quick Study</div></div>
+      <div className="db-tile-grid">
+        {tiles.map(t=>(
+          <button key={t.tab} className="db-tile" onClick={()=>setTab(t.tab)}>
+            <div className="db-tile-icon">{t.icon}</div>
+            <div className="db-tile-ko">{t.ko}</div>
+            <div className="db-tile-en">{t.en}</div>
+          </button>
+        ))}
+      </div>
+      {latest&&<div className="db-section">
+        <div className="db-sec-hd">
+          <div className="db-sec-title">최신 공지 · Latest Announcement</div>
+          <button className="db-sec-link" onClick={()=>setTab("ann")}>전체 보기 →</button>
+        </div>
+        <div className="db-ann-card">
+          <div className="db-ann-dot"></div>
+          <div>
+            {latest.date&&<div className="db-ann-date">{latest.date}</div>}
+            <div className="db-ann-text">{latest.text||latest.title||latest.content||"공지"}</div>
+          </div>
+        </div>
+      </div>}
     </div>
   );
 }
