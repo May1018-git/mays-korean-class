@@ -1050,8 +1050,8 @@ function LoginScreen({onLogin}){
       <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-sm">
         <div className="text-center mb-6">
 <div className="w-14 h-14 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg"><BookOpen className="w-7 h-7 text-white"/></div>
-            <h1 className="text-2xl font-bold text-slate-800">Korean Class</h1>
-            <p className="text-slate-600 text-sm mt-2">✨ 함께하는 한국어 학습 공간 ✨</p>
+            <h1 className="text-2xl font-bold text-slate-800" style={{fontFamily:"'Jua',inherit"}}>May's Korean Class</h1>
+            <p className="text-slate-600 text-sm mt-2" style={{fontFamily:"'Jua',inherit"}}>✨ 함께하는 한국어 학습 공간 ✨</p>
             <p className="text-xs text-slate-400 italic">A cozy Korean learning space with May</p>
         </div>
         <div className="space-y-3">
@@ -1791,14 +1791,14 @@ function TeacherFlash({data,save}){
         <button onClick={()=>toggleCheck(w)} aria-label="체크" className={`absolute top-2 right-2 z-10 w-8 h-8 rounded-full border-2 flex items-center justify-center transition ${isChecked?"bg-emerald-500 border-emerald-500 text-white":"bg-white/90 border-slate-200 text-slate-300"}`}>
           <CheckCircle className="w-4 h-4"/>
         </button>
-        <div onClick={()=>setFlipped(f=>!f)} style={{perspective:"1000px"}} className="cursor-pointer select-none">
-          <div style={{transformStyle:"preserve-3d",transition:"transform 0.5s",transform:flipped?"rotateY(180deg)":"none"}} className="relative h-64">
+        <div onClick={()=>setFlipped(f=>!f)} style={{perspective:"1000px",overflow:"hidden",borderRadius:"1rem",maxWidth:"480px",margin:"0 auto"}} className="cursor-pointer select-none">
+          <div style={{transformStyle:"preserve-3d",transition:"transform 0.5s",transform:flipped?"rotateY(180deg)":"none",willChange:"transform"}} className="relative h-96">
             <div style={{backfaceVisibility:"hidden"}} className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex flex-col items-center justify-center p-6 text-white shadow-lg">
-              <span className="text-3xl font-bold text-center">{w.meaning}</span>
+              <span className="text-5xl font-bold text-center leading-tight">{w.meaning}</span>
               <span className="text-xs mt-4 opacity-70">탭하여 한국어 보기 · Tap to flip</span>
             </div>
             <div style={{backfaceVisibility:"hidden",transform:"rotateY(180deg)"}} className="absolute inset-0 bg-white border-2 border-indigo-200 rounded-2xl flex flex-col items-center justify-center p-6 shadow-lg">
-              <span className="text-3xl font-bold text-indigo-700 text-center">{w.word}</span>
+              <span className="text-5xl font-bold text-indigo-700 text-center leading-tight">{w.word}</span>
             </div>
           </div>
         </div>
@@ -2070,14 +2070,14 @@ function StudentFlash({data}){
         <button onClick={()=>toggleCheck(w)} aria-label="체크" className={`absolute top-2 right-2 z-10 w-8 h-8 rounded-full border-2 flex items-center justify-center transition ${isChecked?"bg-emerald-500 border-emerald-500 text-white":"bg-white/90 border-slate-200 text-slate-300"}`}>
           <CheckCircle className="w-4 h-4"/>
         </button>
-        <div onClick={()=>setFlipped(f=>!f)} style={{perspective:"1000px"}} className="cursor-pointer select-none">
-          <div style={{transformStyle:"preserve-3d",transition:"transform 0.5s",transform:flipped?"rotateY(180deg)":"none"}} className="relative h-64">
+        <div onClick={()=>setFlipped(f=>!f)} style={{perspective:"1000px",overflow:"hidden",borderRadius:"1rem",maxWidth:"480px",margin:"0 auto"}} className="cursor-pointer select-none">
+          <div style={{transformStyle:"preserve-3d",transition:"transform 0.5s",transform:flipped?"rotateY(180deg)":"none",willChange:"transform"}} className="relative h-96">
             <div style={{backfaceVisibility:"hidden"}} className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex flex-col items-center justify-center p-6 text-white shadow-lg">
-              <span className="text-3xl font-bold text-center">{w.meaning}</span>
+              <span className="text-5xl font-bold text-center leading-tight">{w.meaning}</span>
               <span className="text-xs mt-4 opacity-70">탭하여 한국어 보기 · Tap to flip</span>
             </div>
             <div style={{backfaceVisibility:"hidden",transform:"rotateY(180deg)"}} className="absolute inset-0 bg-white border-2 border-indigo-200 rounded-2xl flex flex-col items-center justify-center p-6 shadow-lg">
-              <span className="text-3xl font-bold text-indigo-700 text-center">{w.word}</span>
+              <span className="text-5xl font-bold text-indigo-700 text-center leading-tight">{w.word}</span>
             </div>
           </div>
         </div>
