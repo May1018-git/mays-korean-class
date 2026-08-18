@@ -1,53 +1,53 @@
 /* ── DESIGN TOKENS ───────────────────────────────────────────────── */
 :root {
-  --db-v:    #4F3EE8;
-  --db-vd:   #1B1544;
-  --db-vl:   #F2F1FF;
-  --db-c:    #FF5C5C;
-  --db-g:    #16A34A;
-  --db-am:   #D97706;
+  --db-v:    #5B4CF5;
+  --db-vd:   #2D1B69;
+  --db-vl:   #F5F3FF;
+  --db-c:    #FF6B9D;
+  --db-g:    #10B981;
+  --db-am:   #F59E0B;
 
-  --db-bg:   #F2F1FF;
+  --db-bg:   #FBF8FF;
   --db-card: #FFFFFF;
-  --db-bdr:  rgba(79,62,232,0.09);
-  --db-bdr2: #E5E3FA;
+  --db-bdr:  rgba(91,76,245,0.08);
+  --db-bdr2: #EDE9FE;
 
-  --db-t:    #18163A;
-  --db-t2:   #6B6892;
-  --db-tm:   #9F9CBF;
+  --db-t:    #1E1540;
+  --db-t2:   #6D5FA0;
+  --db-tm:   #A89FCC;
 
-  --db-sh:   0 1px 2px rgba(24,22,58,.06), 0 3px 12px rgba(24,22,58,.04);
-  --db-sh2:  0 2px 12px rgba(79,62,232,.12), 0 8px 32px rgba(79,62,232,.07);
+  --db-sh:   0 1px 3px rgba(30,21,64,.05), 0 4px 16px rgba(30,21,64,.06);
+  --db-sh2:  0 4px 16px rgba(91,76,245,.15), 0 12px 40px rgba(91,76,245,.10);
 
-  --db-sb:   #1B1544;
-  --db-sbt:  #7A76A5;
-  --db-sb-w: 232px;
+  --db-sb:   #2D1B69;
+  --db-sbt:  #8B7FC0;
+  --db-sb-w: 224px;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --db-bg:   #0C0B1E;
-    --db-card: #141228;
-    --db-bdr:  rgba(255,255,255,.07);
-    --db-bdr2: #1E1C38;
-    --db-t:    #E8E5FF;
-    --db-t2:   #8B88AB;
-    --db-tm:   #4A4766;
-    --db-sh:   0 1px 2px rgba(0,0,0,.3), 0 3px 12px rgba(0,0,0,.2);
-    --db-sh2:  0 2px 12px rgba(0,0,0,.3), 0 8px 32px rgba(0,0,0,.2);
-    --db-sb:   #100F20;
+    --db-bg:   #0E0A1F;
+    --db-card: #1A1336;
+    --db-bdr:  rgba(255,255,255,.06);
+    --db-bdr2: #2A2050;
+    --db-t:    #EDE9FF;
+    --db-t2:   #9B8FCC;
+    --db-tm:   #5A4E8A;
+    --db-sh:   0 1px 3px rgba(0,0,0,.4), 0 4px 16px rgba(0,0,0,.25);
+    --db-sh2:  0 4px 16px rgba(0,0,0,.35), 0 12px 40px rgba(0,0,0,.25);
+    --db-sb:   #130D2E;
   }
 }
 :root[data-theme="dark"] {
-  --db-bg:   #0C0B1E;
-  --db-card: #141228;
-  --db-bdr:  rgba(255,255,255,.07);
-  --db-bdr2: #1E1C38;
-  --db-t:    #E8E5FF;
-  --db-t2:   #8B88AB;
-  --db-tm:   #4A4766;
-  --db-sh:   0 1px 2px rgba(0,0,0,.3), 0 3px 12px rgba(0,0,0,.2);
-  --db-sh2:  0 2px 12px rgba(0,0,0,.3), 0 8px 32px rgba(0,0,0,.2);
-  --db-sb:   #100F20;
+  --db-bg:   #0E0A1F;
+  --db-card: #1A1336;
+  --db-bdr:  rgba(255,255,255,.06);
+  --db-bdr2: #2A2050;
+  --db-t:    #EDE9FF;
+  --db-t2:   #9B8FCC;
+  --db-tm:   #5A4E8A;
+  --db-sh:   0 1px 3px rgba(0,0,0,.4), 0 4px 16px rgba(0,0,0,.25);
+  --db-sh2:  0 4px 16px rgba(0,0,0,.35), 0 12px 40px rgba(0,0,0,.25);
+  --db-sb:   #130D2E;
 }
 
 /* ── APP SHELL ───────────────────────────────────────────────────── */
@@ -63,7 +63,7 @@
 .db-sidebar {
   width: var(--db-sb-w);
   flex-shrink: 0;
-  background: var(--db-sb);
+  background: linear-gradient(175deg, #3D2080 0%, var(--db-sb) 60%);
   position: fixed;
   inset: 0 auto 0 0;
   display: flex;
@@ -135,8 +135,8 @@
   background: none; border: none; width: 100%; text-align: left;
   transition: background .12s, color .12s;
 }
-.db-nav-item:hover  { background: rgba(255,255,255,.06); color: #C5C0F0; }
-.db-nav-item.active { background: rgba(79,62,232,.35);   color: #ffffff; }
+.db-nav-item:hover  { background: rgba(255,255,255,.08); color: #D4CEFF; }
+.db-nav-item.active { background: rgba(255,255,255,.15); color: #ffffff; border-left: 2px solid rgba(255,255,255,.6); }
 .db-nav-icon { font-size: 15px; flex-shrink: 0; opacity: .75; }
 .db-nav-item.active .db-nav-icon { opacity: 1; }
 .db-nav-ko   { flex: 1; }
@@ -233,7 +233,7 @@
   background: var(--db-card);
   border: 1px solid var(--db-bdr);
   border-left: 3px solid;
-  border-radius: 14px;
+  border-radius: 18px;
   padding: 18px 18px 15px;
   box-shadow: var(--db-sh);
   cursor: pointer;
@@ -249,8 +249,11 @@
   font-size: 36px; font-weight: 800;
   letter-spacing: -.04em; line-height: 1;
   font-variant-numeric: tabular-nums;
-  color: var(--db-t);
+  color: var(--db-v);
 }
+.db-stat.s2 .db-stat-num { color: var(--db-c); }
+.db-stat.s3 .db-stat-num { color: var(--db-g); }
+.db-stat.s4 .db-stat-num { color: var(--db-am); }
 .db-stat-ko { font-size: 12px; font-weight: 600; color: var(--db-t2); margin-top: 5px; }
 .db-stat-en { font-size: 9px; text-transform: uppercase; letter-spacing: .08em; color: var(--db-tm); margin-top: 1px; }
 .db-stat-tag {
@@ -359,8 +362,8 @@
 
 /* ── STUDENT HOME ────────────────────────────────────────────────── */
 .db-sw-card {
-  background: var(--db-v);
-  border-radius: 16px;
+  background: linear-gradient(135deg, #6C3EE8 0%, #FF6B9D 100%);
+  border-radius: 20px;
   padding: 22px 24px;
   color: #fff;
   margin-bottom: 20px;
@@ -432,9 +435,9 @@
 
 /* ── MOBILE ──────────────────────────────────────────────────────── */
 @media (max-width: 700px) {
-  .db-sidebar { display: none; }
-  .db-main { margin-left: 0; padding-bottom: 68px; }
-  .db-content { padding: 14px; }
+  .db-sidebar { display: none !important; }
+  .db-main { margin-left: 0 !important; padding-bottom: 72px; overflow-x: hidden; }
+  .db-content { padding: 14px; overflow-x: hidden; }
   .db-stats { grid-template-columns: repeat(2, 1fr); gap: 10px; }
   .db-tile-grid { grid-template-columns: repeat(2, 1fr); }
   .db-table-head,
@@ -444,26 +447,33 @@
   .db-qa { flex-direction: column; }
   .db-welcome { flex-direction: column; align-items: flex-start; }
   .db-w-date { text-align: left; }
+  .db-w-hi { font-size: 18px; }
 }
 @media (min-width: 701px) { .db-mob-nav { display: none !important; } }
+
+/* prevent horizontal overflow on mobile */
+.db-app { overflow-x: hidden; }
 
 .db-mob-nav {
   display: flex;
   position: fixed; bottom: 0; left: 0; right: 0;
   background: var(--db-card);
   border-top: 1px solid var(--db-bdr2);
-  padding: 6px 0 10px;
+  padding: 4px 0 env(safe-area-inset-bottom, 8px);
   z-index: 30;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 .db-mob-ni {
-  flex: 1;
+  flex: 0 0 auto;
+  min-width: 56px;
   display: flex; flex-direction: column;
-  align-items: center; gap: 3px;
+  align-items: center; gap: 2px;
   cursor: pointer;
-  color: var(--db-tm); padding: 4px 0;
+  color: var(--db-tm); padding: 4px 6px;
   transition: color .12s;
   background: none; border: none; font-family: inherit;
 }
 .db-mob-ni.active { color: var(--db-v); }
-.db-mob-ni-icon  { font-size: 20px; }
-.db-mob-ni-label { font-size: 9px; font-weight: 600; }
+.db-mob-ni-icon  { font-size: 18px; }
+.db-mob-ni-label { font-size: 8px; font-weight: 600; white-space: nowrap; }
