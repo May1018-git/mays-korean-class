@@ -1312,6 +1312,7 @@ function TeacherHome({data,setTab}){
 
 function StudentHome({user,data,setTab}){
   const latest=data.ann[data.ann.length-1];
+  const preview=s=>s&&s.length>80?s.slice(0,80)+"…":s||"";
   const tiles=[
     {icon:"🃏",ko:"플래시카드",en:"FLASHCARDS",tab:"flash"},
     {icon:"📝",ko:"단어장",    en:"VOCABULARY",tab:"voc"},
@@ -1345,8 +1346,11 @@ function StudentHome({user,data,setTab}){
           <div className="db-ann-dot"></div>
           <div>
             {latest.date&&<div className="db-ann-date">{latest.date}</div>}
-            {latest.title&&<div className="db-ann-title">{latest.title}</div>}
-            <div className="db-ann-text">{latest.text||latest.content||latest.title||"공지"}</div>
+            {latest.title
+              ?<div className="db-ann-title">{latest.title}</div>
+              :<div className="db-ann-text">{preview(latest.text||latest.content||"공지")}</div>}
+            {latest.title&&(latest.text||latest.content)&&
+              <div className="db-ann-text">{preview(latest.text||latest.content)}</div>}
           </div>
         </div>
       </div>}
