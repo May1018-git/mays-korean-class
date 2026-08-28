@@ -978,15 +978,15 @@ const Wrap = ({children}) => <div className="max-w-2xl mx-auto px-3 py-4">{child
 export default function App() {
   const [view,setView]=useState("loading");
   const [user,setUser]=useState(null);
-  const [data,setData]=useState({mat:[],tb:DEFAULT_TB,voc:[],ann:[],stu:[]});
+  const [data,setData]=useState({mat:[],tb:DEFAULT_TB,voc:[],ann:[],stu:[],icsUrl:''});
 
   useEffect(()=>{
     setView("login"); // show login immediately; data loads in background
     (async()=>{
-      const [mat,tb,voc,ann,stuRaw]=await Promise.all([
-        fget("materials"),fget("textbooks"),fget("vocab"),fget("announcements"),fget("students"),
+      const [mat,tb,voc,ann,stuRaw,icsUrl]=await Promise.all([
+        fget("materials"),fget("textbooks"),fget("vocab"),fget("announcements"),fget("students"),fget("icsUrl"),
       ]);
-      setData({mat:mat||[],tb:tb||DEFAULT_TB,voc:voc||[],ann:ann||[],stu:normStudents(stuRaw||[])});
+      setData({mat:mat||[],tb:tb||DEFAULT_TB,voc:voc||[],ann:ann||[],stu:normStudents(stuRaw||[]),icsUrl:icsUrl||''});
     })();
   },[]);
 
@@ -1003,7 +1003,7 @@ export default function App() {
   },[view]);
 
   const save = useCallback(async (key,val)=>{
-    const keyMap={mat:"materials",tb:"textbooks",voc:"vocab",ann:"announcements",stu:"students"};
+    const keyMap={mat:"materials",tb:"textbooks",voc:"vocab",ann:"announcements",stu:"students",icsUrl:"icsUrl"};
     await fset(keyMap[key],val);
     setData(d=>({...d,[key]:val}));
   },[]);
@@ -1152,7 +1152,7 @@ function TeacherApp({user,data,save,onLogout}){
           {tab==="voc"      &&<TeacherVoc data={data} save={save}/>}
           {tab==="flash"    &&<TeacherFlash data={data} save={save}/>}
           {tab==="ann"      &&<TeacherAnn data={data} save={save}/>}
-          {tab==="preply"   &&<TeacherPreply/>}
+          {tab==="preply"   &&<TeacherPreply data={data} save={save}/>}
         </div>
       </main>
       <nav className="db-mob-nav">
@@ -1382,9 +1382,10 @@ function parseICS(text){
     .sort((a,b)=>a.date-b.date)
     .slice(0,10);
 }
-function TeacherPreply(){
-  const [icsUrl,setIcsUrl]=useState(()=>localStorage.getItem('preply_ics')||'');
-  const [input,setInput]=useState(()=>localStorage.getItem('preply_ics')||'');
+function TeacherPreply({data,save:persist}){
+  const saved=data.icsUrl||'';
+  const [icsUrl,setIcsUrl]=useState(saved);
+  const [input,setInput]=useState(saved);
   const [events,setEvents]=useState([]);
   const [loading,setLoading]=useState(false);
   const [err,setErr]=useState('');
@@ -1401,8 +1402,8 @@ function TeacherPreply(){
       .then(text=>{setEvents(parseICS(text));setLoading(false);})
       .catch(()=>{setErr('캘린더를 불러오지 못했어요. URL을 확인해주세요.');setLoading(false);});
   },[icsUrl]);
-  const save=()=>{localStorage.setItem('preply_ics',input);setIcsUrl(input);};
-  const clear=()=>{localStorage.removeItem('preply_ics');setIcsUrl('');setInput('');setEvents([]);};
+  const save=()=>{persist("icsUrl",input);setIcsUrl(input);};
+  const clear=()=>{persist("icsUrl",'');setIcsUrl('');setInput('');setEvents([]);};
   const fmt=d=>{if(!d)return'';const days=['일','월','화','수','목','금','토'];return`${d.getMonth()+1}/${d.getDate()}(${days[d.getDay()]}) ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;};
   return(
     <div>
