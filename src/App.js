@@ -1362,18 +1362,87 @@ function StudentHome({user,data,setTab}){
   );
 }
 
+function parseICSDate(s){
+  if(!s)return null;
+  const isUTC=s.endsWith('Z');
+  const clean=s.replace(/Z$/,'');
+  if(clean.includes('T')){
+    const d=clean.slice(0,8),t=clean.slice(9)||clean.slice(8);
+    return new Date(`${d.slice(0,4)}-${d.slice(4,6)}-${d.slice(6,8)}T${t.slice(0,2)}:${t.slice(2,4)}:${t.slice(4,6)}${isUTC?'Z':''}`);
+  }
+  return new Date(`${clean.slice(0,4)}-${clean.slice(4,6)}-${clean.slice(6,8)}`);
+}
+function parseICS(text){
+  const now=new Date();
+  return text.split('BEGIN:VEVENT').slice(1).map(block=>{
+    const get=k=>{const m=block.match(new RegExp(k+'(?:;[^:]+)?:([^\r\n]+)'));return m?m[1].trim():'';};
+    const dtstart=get('DTSTART'),summary=get('SUMMARY');
+    return{summary,dtstart,date:parseICSDate(dtstart)};
+  }).filter(e=>e.summary&&e.date&&e.date>=now)
+    .sort((a,b)=>a.date-b.date)
+    .slice(0,10);
+}
 function TeacherPreply(){
+  const [icsUrl,setIcsUrl]=useState(()=>localStorage.getItem('preply_ics')||'');
+  const [input,setInput]=useState(()=>localStorage.getItem('preply_ics')||'');
+  const [events,setEvents]=useState([]);
+  const [loading,setLoading]=useState(false);
+  const [err,setErr]=useState('');
   const links=[
     {icon:"💬",ko:"메시지",   en:"Messages",   url:"https://preply.com/ko/messages"},
     {icon:"📅",ko:"캘린더",   en:"Calendar",   url:"https://preply.com/ko/calendar"},
     {icon:"🎓",ko:"학생 찾기",en:"My Students",url:"https://preply.com/ko/my-students"},
   ];
+  useEffect(()=>{
+    if(!icsUrl){setEvents([]);return;}
+    setLoading(true);setErr('');
+    fetch('/api/ics?url='+encodeURIComponent(icsUrl))
+      .then(r=>{if(!r.ok)throw new Error('서버 오류');return r.text();})
+      .then(text=>{setEvents(parseICS(text));setLoading(false);})
+      .catch(()=>{setErr('캘린더를 불러오지 못했어요. URL을 확인해주세요.');setLoading(false);});
+  },[icsUrl]);
+  const save=()=>{localStorage.setItem('preply_ics',input);setIcsUrl(input);};
+  const clear=()=>{localStorage.removeItem('preply_ics');setIcsUrl('');setInput('');setEvents([]);};
+  const fmt=d=>{if(!d)return'';const days=['일','월','화','수','목','금','토'];return`${d.getMonth()+1}/${d.getDate()}(${days[d.getDay()]}) ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;};
   return(
     <div>
       <div className="db-sw-card" style={{background:"linear-gradient(135deg,#6B4FBB 0%,#9B72E6 100%)",marginBottom:24}}>
         <div className="db-sw-hi">Preply</div>
-        <div className="db-sw-sub">수업 관련 Preply 메뉴를 바로 열 수 있어요.</div>
+        <div className="db-sw-sub">캘린더 ICS URL을 등록하면 수업 일정이 여기 보여요.</div>
       </div>
+
+      <div className="db-sec-hd"><div className="db-sec-title">📅 캘린더 연동</div></div>
+      <div className="db-preply-ics-bar">
+        <input
+          className="db-preply-ics-input"
+          placeholder="Preply iCal URL 붙여넣기 (Preply 캘린더 → Sync → iCal)"
+          value={input}
+          onChange={e=>setInput(e.target.value)}
+          onKeyDown={e=>e.key==='Enter'&&save()}
+        />
+        <button className="db-qa-btn prim" onClick={save}>저장</button>
+        {icsUrl&&<button className="db-qa-btn ghost" onClick={clear}>초기화</button>}
+      </div>
+
+      {loading&&<div style={{padding:'20px 0',color:'var(--db-tm)',fontSize:14}}>불러오는 중...</div>}
+      {err&&<div style={{padding:'12px 16px',background:'rgba(239,68,68,.08)',border:'1px solid rgba(239,68,68,.2)',borderRadius:10,color:'#ef4444',fontSize:14,marginBottom:16}}>{err}</div>}
+
+      {events.length>0&&<>
+        <div className="db-sec-hd" style={{marginTop:8}}><div className="db-sec-title">다가오는 수업 · Upcoming Lessons</div><div className="db-sec-count">{events.length}개</div></div>
+        <div className="db-preply-events">
+          {events.map((e,i)=>(
+            <div key={i} className="db-preply-ev">
+              <div className="db-preply-ev-date">{fmt(e.date)}</div>
+              <div className="db-preply-ev-title">{e.summary}</div>
+            </div>
+          ))}
+        </div>
+      </>}
+      {icsUrl&&!loading&&events.length===0&&!err&&(
+        <div style={{padding:'20px 0',color:'var(--db-tm)',fontSize:14}}>다가오는 수업이 없어요.</div>
+      )}
+
+      <div className="db-sec-hd" style={{marginTop:8}}><div className="db-sec-title">바로가기 · Quick Links</div></div>
       <div className="db-preply-grid">
         {links.map(l=>(
           <a key={l.url} href={l.url} target="_blank" rel="noopener noreferrer" className="db-preply-card">

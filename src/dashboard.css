@@ -499,3 +499,25 @@
 .db-preply-en { font-size: 12px; text-transform: uppercase; letter-spacing:.08em; color: var(--db-tm); }
 .db-preply-go { font-size: 14px; font-weight: 700; color: var(--db-v); margin-top: 4px; }
 @media (max-width: 700px) { .db-preply-grid { grid-template-columns: 1fr; } }
+
+.db-preply-ics-bar {
+  display: flex; gap: 8px; align-items: center;
+  margin-bottom: 20px; flex-wrap: wrap;
+}
+.db-preply-ics-input {
+  flex: 1; min-width: 200px;
+  border: 1px solid var(--db-bdr2); border-radius: 8px;
+  padding: 10px 14px; font-size: 14px;
+  background: var(--db-card); color: var(--db-t);
+  font-family: inherit; outline: none;
+}
+.db-preply-ics-input:focus { border-color: var(--db-v); }
+.db-preply-events { display: flex; flex-direction: column; gap: 8px; margin-bottom: 24px; }
+.db-preply-ev {
+  background: var(--db-card); border: 1px solid var(--db-bdr);
+  border-radius: 12px; padding: 14px 18px;
+  display: flex; align-items: center; gap: 16px;
+  box-shadow: var(--db-sh);
+}
+.db-preply-ev-date { font-size: 13px; font-weight: 700; color: var(--db-v); white-space: nowrap; }
+.db-preply-ev-title { font-size: 15px; color: var(--db-t); flex: 1; }
