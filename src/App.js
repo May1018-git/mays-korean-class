@@ -1345,7 +1345,8 @@ function StudentHome({user,data,setTab}){
           <div className="db-ann-dot"></div>
           <div>
             {latest.date&&<div className="db-ann-date">{latest.date}</div>}
-            <div className="db-ann-text">{latest.text||latest.title||latest.content||"공지"}</div>
+            {latest.title&&<div className="db-ann-title">{latest.title}</div>}
+            <div className="db-ann-text">{latest.text||latest.content||latest.title||"공지"}</div>
           </div>
         </div>
       </div>}
