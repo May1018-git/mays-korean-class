@@ -1107,6 +1107,7 @@ function TeacherApp({user,data,save,onLogout}){
     {id:"voc",     icon:"📝", ko:"단어장",      en:"Vocab"},
     {id:"flash",   icon:"🃏", ko:"플래시카드",  en:"Flashcards"},
     {id:"ann",     icon:"📢", ko:"공지",        en:"Notice"},
+    {id:"preply",  icon:"🔗", ko:"Preply",      en:"Preply"},
   ];
   const cur=navItems.find(i=>i.id===tab)||navItems[0];
   return(
@@ -1151,6 +1152,7 @@ function TeacherApp({user,data,save,onLogout}){
           {tab==="voc"      &&<TeacherVoc data={data} save={save}/>}
           {tab==="flash"    &&<TeacherFlash data={data} save={save}/>}
           {tab==="ann"      &&<TeacherAnn data={data} save={save}/>}
+          {tab==="preply"   &&<TeacherPreply/>}
         </div>
       </main>
       <nav className="db-mob-nav">
@@ -1288,6 +1290,7 @@ function TeacherHome({data,setTab}){
         <button className="db-qa-btn prim" onClick={()=>setTab("mat")}>📁 학습자료 추가</button>
         <button className="db-qa-btn warm" onClick={()=>setTab("voc")}>📝 단어장 추가</button>
         <button className="db-qa-btn ghost" onClick={()=>setTab("ann")}>📢 공지 올리기</button>
+        <a href="https://preply.com/" target="_blank" rel="noopener noreferrer" className="db-qa-btn preply">🔗 Preply 바로가기</a>
       </div>
       {recentMat.length>0&&<div className="db-section">
         <div className="db-sec-hd">
@@ -1319,6 +1322,7 @@ function StudentHome({user,data,setTab}){
     {icon:"📢",ko:"공지",      en:"NOTICE",    tab:"ann"},
     {icon:"📁",ko:"학습자료",  en:"MATERIALS", tab:"mat"},
     {icon:"📚",ko:"수업교재",  en:"TEXTBOOK",  tab:"tb"},
+    {icon:"🔗",ko:"Preply",   en:"PREPLY",    url:"https://preply.com/"},
   ];
   return(
     <div>
@@ -1330,7 +1334,7 @@ function StudentHome({user,data,setTab}){
       <div className="db-sec-hd"><div className="db-sec-title">바로가기 · Quick Study</div></div>
       <div className="db-tile-grid">
         {tiles.map(t=>(
-          <button key={t.tab} className="db-tile" onClick={()=>setTab(t.tab)}>
+          <button key={t.tab||t.url} className="db-tile" onClick={()=>t.url?window.open(t.url,"_blank"):setTab(t.tab)}>
             <div className="db-tile-icon">{t.icon}</div>
             <div className="db-tile-ko">{t.ko}</div>
             <div className="db-tile-en">{t.en}</div>
@@ -1354,6 +1358,32 @@ function StudentHome({user,data,setTab}){
           </div>
         </div>
       </div>}
+    </div>
+  );
+}
+
+function TeacherPreply(){
+  const links=[
+    {icon:"💬",ko:"메시지",   en:"Messages",   url:"https://preply.com/ko/messages"},
+    {icon:"📅",ko:"캘린더",   en:"Calendar",   url:"https://preply.com/ko/calendar"},
+    {icon:"🎓",ko:"학생 찾기",en:"My Students",url:"https://preply.com/ko/my-students"},
+  ];
+  return(
+    <div>
+      <div className="db-sw-card" style={{background:"linear-gradient(135deg,#6B4FBB 0%,#9B72E6 100%)",marginBottom:24}}>
+        <div className="db-sw-hi">Preply</div>
+        <div className="db-sw-sub">수업 관련 Preply 메뉴를 바로 열 수 있어요.</div>
+      </div>
+      <div className="db-preply-grid">
+        {links.map(l=>(
+          <a key={l.url} href={l.url} target="_blank" rel="noopener noreferrer" className="db-preply-card">
+            <div className="db-preply-icon">{l.icon}</div>
+            <div className="db-preply-ko">{l.ko}</div>
+            <div className="db-preply-en">{l.en}</div>
+            <div className="db-preply-go">바로가기 →</div>
+          </a>
+        ))}
+      </div>
     </div>
   );
 }

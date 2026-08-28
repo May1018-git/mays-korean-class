@@ -304,6 +304,7 @@
   background: var(--db-card); color: var(--db-t2);
   border: 1px solid var(--db-bdr2);
 }
+.db-qa-btn.preply { background: #6B4FBB; color: #fff; text-decoration: none; }
 
 /* ── SECTION HEADERS ─────────────────────────────────────────────── */
 .db-sec-hd {
@@ -478,3 +479,23 @@
 .db-mob-ni.active { color: var(--db-v); }
 .db-mob-ni-icon  { font-size: 18px; }
 .db-mob-ni-label { font-size: 8px; font-weight: 600; white-space: nowrap; }
+
+/* ── PREPLY TAB ──────────────────────────────────────────────────── */
+.db-preply-grid {
+  display: grid; grid-template-columns: repeat(3,1fr);
+  gap: 16px; margin-bottom: 24px;
+}
+.db-preply-card {
+  background: var(--db-card); border: 1px solid var(--db-bdr);
+  border-radius: 16px; padding: 32px 20px;
+  text-align: center; text-decoration: none;
+  box-shadow: var(--db-sh); display: flex; flex-direction: column;
+  align-items: center; gap: 10px;
+  transition: transform .15s, box-shadow .15s;
+}
+.db-preply-card:hover { transform: translateY(-3px); box-shadow: var(--db-sh2); }
+.db-preply-icon { font-size: 44px; }
+.db-preply-ko { font-family:'Jua',-apple-system,sans-serif; font-size: 20px; color: var(--db-t); }
+.db-preply-en { font-size: 12px; text-transform: uppercase; letter-spacing:.08em; color: var(--db-tm); }
+.db-preply-go { font-size: 14px; font-weight: 700; color: var(--db-v); margin-top: 4px; }
+@media (max-width: 700px) { .db-preply-grid { grid-template-columns: 1fr; } }
