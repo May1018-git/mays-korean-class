@@ -430,7 +430,8 @@
 }
 .db-ann-dot { width: 8px; height: 8px; background: var(--db-am); border-radius: 50%; margin-top: 4px; flex-shrink: 0; }
 .db-ann-date { font-size: 10px; color: var(--db-tm); margin-bottom: 4px; }
-.db-ann-text { font-size: 13px; line-height: 1.5; color: var(--db-t); }
+.db-ann-title { font-size: 13px; font-weight: 600; color: var(--db-t); margin-bottom: 4px; }
+.db-ann-text { font-size: 13px; line-height: 1.5; color: var(--db-t); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .db-ann-en   { font-size: 11px; color: var(--db-t2); margin-top: 3px; }
 
 /* ── MOBILE ──────────────────────────────────────────────────────── */
