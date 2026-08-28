@@ -978,15 +978,15 @@ const Wrap = ({children}) => <div className="max-w-2xl mx-auto px-3 py-4">{child
 export default function App() {
   const [view,setView]=useState("loading");
   const [user,setUser]=useState(null);
-  const [data,setData]=useState({mat:[],tb:DEFAULT_TB,voc:[],ann:[],stu:[]});
+  const [data,setData]=useState({mat:[],tb:DEFAULT_TB,voc:[],ann:[],stu:[],icsUrl:''});
 
   useEffect(()=>{
     setView("login"); // show login immediately; data loads in background
     (async()=>{
-      const [mat,tb,voc,ann,stuRaw]=await Promise.all([
-        fget("materials"),fget("textbooks"),fget("vocab"),fget("announcements"),fget("students"),
+      const [mat,tb,voc,ann,stuRaw,icsUrl]=await Promise.all([
+        fget("materials"),fget("textbooks"),fget("vocab"),fget("announcements"),fget("students"),fget("icsUrl"),
       ]);
-      setData({mat:mat||[],tb:tb||DEFAULT_TB,voc:voc||[],ann:ann||[],stu:normStudents(stuRaw||[])});
+      setData({mat:mat||[],tb:tb||DEFAULT_TB,voc:voc||[],ann:ann||[],stu:normStudents(stuRaw||[]),icsUrl:icsUrl||''});
     })();
   },[]);
 
@@ -1003,7 +1003,7 @@ export default function App() {
   },[view]);
 
   const save = useCallback(async (key,val)=>{
-    const keyMap={mat:"materials",tb:"textbooks",voc:"vocab",ann:"announcements",stu:"students"};
+    const keyMap={mat:"materials",tb:"textbooks",voc:"vocab",ann:"announcements",stu:"students",icsUrl:"icsUrl"};
     await fset(keyMap[key],val);
     setData(d=>({...d,[key]:val}));
   },[]);
@@ -1107,6 +1107,7 @@ function TeacherApp({user,data,save,onLogout}){
     {id:"voc",     icon:"📝", ko:"단어장",      en:"Vocab"},
     {id:"flash",   icon:"🃏", ko:"플래시카드",  en:"Flashcards"},
     {id:"ann",     icon:"📢", ko:"공지",        en:"Notice"},
+    {id:"preply",  icon:"🔗", ko:"Preply",      en:"Preply"},
   ];
   const cur=navItems.find(i=>i.id===tab)||navItems[0];
   return(
@@ -1151,6 +1152,7 @@ function TeacherApp({user,data,save,onLogout}){
           {tab==="voc"      &&<TeacherVoc data={data} save={save}/>}
           {tab==="flash"    &&<TeacherFlash data={data} save={save}/>}
           {tab==="ann"      &&<TeacherAnn data={data} save={save}/>}
+          {tab==="preply"   &&<TeacherPreply data={data} save={save}/>}
         </div>
       </main>
       <nav className="db-mob-nav">
@@ -1288,6 +1290,7 @@ function TeacherHome({data,setTab}){
         <button className="db-qa-btn prim" onClick={()=>setTab("mat")}>📁 학습자료 추가</button>
         <button className="db-qa-btn warm" onClick={()=>setTab("voc")}>📝 단어장 추가</button>
         <button className="db-qa-btn ghost" onClick={()=>setTab("ann")}>📢 공지 올리기</button>
+        <a href="https://preply.com/" target="_blank" rel="noopener noreferrer" className="db-qa-btn preply">🔗 Preply 바로가기</a>
       </div>
       {recentMat.length>0&&<div className="db-section">
         <div className="db-sec-hd">
@@ -1312,12 +1315,14 @@ function TeacherHome({data,setTab}){
 
 function StudentHome({user,data,setTab}){
   const latest=data.ann[data.ann.length-1];
+  const preview=s=>s&&s.length>80?s.slice(0,80)+"…":s||"";
   const tiles=[
     {icon:"🃏",ko:"플래시카드",en:"FLASHCARDS",tab:"flash"},
     {icon:"📝",ko:"단어장",    en:"VOCABULARY",tab:"voc"},
     {icon:"📢",ko:"공지",      en:"NOTICE",    tab:"ann"},
     {icon:"📁",ko:"학습자료",  en:"MATERIALS", tab:"mat"},
     {icon:"📚",ko:"수업교재",  en:"TEXTBOOK",  tab:"tb"},
+    {icon:"🔗",ko:"Preply",   en:"PREPLY",    url:"https://preply.com/"},
   ];
   return(
     <div>
@@ -1329,7 +1334,7 @@ function StudentHome({user,data,setTab}){
       <div className="db-sec-hd"><div className="db-sec-title">바로가기 · Quick Study</div></div>
       <div className="db-tile-grid">
         {tiles.map(t=>(
-          <button key={t.tab} className="db-tile" onClick={()=>setTab(t.tab)}>
+          <button key={t.tab||t.url} className="db-tile" onClick={()=>t.url?window.open(t.url,"_blank"):setTab(t.tab)}>
             <div className="db-tile-icon">{t.icon}</div>
             <div className="db-tile-ko">{t.ko}</div>
             <div className="db-tile-en">{t.en}</div>
@@ -1345,11 +1350,110 @@ function StudentHome({user,data,setTab}){
           <div className="db-ann-dot"></div>
           <div>
             {latest.date&&<div className="db-ann-date">{latest.date}</div>}
-            {latest.title&&<div className="db-ann-title">{latest.title}</div>}
-            <div className="db-ann-text">{latest.text||latest.content||latest.title||"공지"}</div>
+            {latest.title
+              ?<div className="db-ann-title">{latest.title}</div>
+              :<div className="db-ann-text">{preview(latest.text||latest.content||"공지")}</div>}
+            {latest.title&&(latest.text||latest.content)&&
+              <div className="db-ann-text">{preview(latest.text||latest.content)}</div>}
           </div>
         </div>
       </div>}
+    </div>
+  );
+}
+
+function parseICSDate(s){
+  if(!s)return null;
+  const isUTC=s.endsWith('Z');
+  const clean=s.replace(/Z$/,'');
+  if(clean.includes('T')){
+    const d=clean.slice(0,8),t=clean.slice(9)||clean.slice(8);
+    return new Date(`${d.slice(0,4)}-${d.slice(4,6)}-${d.slice(6,8)}T${t.slice(0,2)}:${t.slice(2,4)}:${t.slice(4,6)}${isUTC?'Z':''}`);
+  }
+  return new Date(`${clean.slice(0,4)}-${clean.slice(4,6)}-${clean.slice(6,8)}`);
+}
+function parseICS(text){
+  const now=new Date();
+  return text.split('BEGIN:VEVENT').slice(1).map(block=>{
+    const get=k=>{const m=block.match(new RegExp(k+'(?:;[^:]+)?:([^\r\n]+)'));return m?m[1].trim():'';};
+    const dtstart=get('DTSTART'),summary=get('SUMMARY');
+    return{summary,dtstart,date:parseICSDate(dtstart)};
+  }).filter(e=>e.summary&&e.date&&e.date>=now)
+    .sort((a,b)=>a.date-b.date)
+    .slice(0,10);
+}
+function TeacherPreply({data,save:persist}){
+  const saved=data.icsUrl||'';
+  const [icsUrl,setIcsUrl]=useState(saved);
+  const [input,setInput]=useState(saved);
+  const [events,setEvents]=useState([]);
+  const [loading,setLoading]=useState(false);
+  const [err,setErr]=useState('');
+  const links=[
+    {icon:"💬",ko:"메시지",   en:"Messages",   url:"https://preply.com/ko/messages"},
+    {icon:"📅",ko:"캘린더",   en:"Calendar",   url:"https://preply.com/ko/calendar"},
+    {icon:"🎓",ko:"학생 찾기",en:"My Students",url:"https://preply.com/ko/my-students"},
+  ];
+  useEffect(()=>{
+    if(!icsUrl){setEvents([]);return;}
+    setLoading(true);setErr('');
+    fetch('/api/ics?url='+encodeURIComponent(icsUrl))
+      .then(r=>{if(!r.ok)throw new Error('서버 오류');return r.text();})
+      .then(text=>{setEvents(parseICS(text));setLoading(false);})
+      .catch(()=>{setErr('캘린더를 불러오지 못했어요. URL을 확인해주세요.');setLoading(false);});
+  },[icsUrl]);
+  const save=()=>{persist("icsUrl",input);setIcsUrl(input);};
+  const clear=()=>{persist("icsUrl",'');setIcsUrl('');setInput('');setEvents([]);};
+  const fmt=d=>{if(!d)return'';const days=['일','월','화','수','목','금','토'];return`${d.getMonth()+1}/${d.getDate()}(${days[d.getDay()]}) ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;};
+  return(
+    <div>
+      <div className="db-sw-card" style={{background:"linear-gradient(135deg,#6B4FBB 0%,#9B72E6 100%)",marginBottom:24}}>
+        <div className="db-sw-hi">Preply</div>
+        <div className="db-sw-sub">캘린더 ICS URL을 등록하면 수업 일정이 여기 보여요.</div>
+      </div>
+
+      <div className="db-sec-hd"><div className="db-sec-title">📅 캘린더 연동</div></div>
+      <div className="db-preply-ics-bar">
+        <input
+          className="db-preply-ics-input"
+          placeholder="Preply iCal URL 붙여넣기 (Preply 캘린더 → Sync → iCal)"
+          value={input}
+          onChange={e=>setInput(e.target.value)}
+          onKeyDown={e=>e.key==='Enter'&&save()}
+        />
+        <button className="db-qa-btn prim" onClick={save}>저장</button>
+        {icsUrl&&<button className="db-qa-btn ghost" onClick={clear}>초기화</button>}
+      </div>
+
+      {loading&&<div style={{padding:'20px 0',color:'var(--db-tm)',fontSize:14}}>불러오는 중...</div>}
+      {err&&<div style={{padding:'12px 16px',background:'rgba(239,68,68,.08)',border:'1px solid rgba(239,68,68,.2)',borderRadius:10,color:'#ef4444',fontSize:14,marginBottom:16}}>{err}</div>}
+
+      {events.length>0&&<>
+        <div className="db-sec-hd" style={{marginTop:8}}><div className="db-sec-title">다가오는 수업 · Upcoming Lessons</div><div className="db-sec-count">{events.length}개</div></div>
+        <div className="db-preply-events">
+          {events.map((e,i)=>(
+            <div key={i} className="db-preply-ev">
+              <div className="db-preply-ev-date">{fmt(e.date)}</div>
+              <div className="db-preply-ev-title">{e.summary}</div>
+            </div>
+          ))}
+        </div>
+      </>}
+      {icsUrl&&!loading&&events.length===0&&!err&&(
+        <div style={{padding:'20px 0',color:'var(--db-tm)',fontSize:14}}>다가오는 수업이 없어요.</div>
+      )}
+
+      <div className="db-sec-hd" style={{marginTop:8}}><div className="db-sec-title">바로가기 · Quick Links</div></div>
+      <div className="db-preply-grid">
+        {links.map(l=>(
+          <a key={l.url} href={l.url} target="_blank" rel="noopener noreferrer" className="db-preply-card">
+            <div className="db-preply-icon">{l.icon}</div>
+            <div className="db-preply-ko">{l.ko}</div>
+            <div className="db-preply-en">{l.en}</div>
+            <div className="db-preply-go">바로가기 →</div>
+          </a>
+        ))}
+      </div>
     </div>
   );
 }
