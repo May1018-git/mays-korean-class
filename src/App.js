@@ -1245,12 +1245,11 @@ function TeacherHome({data,setTab}){
     fetch('/api/ics?url='+encodeURIComponent(data.icsUrl))
       .then(r=>r.text()).then(t=>setLessons(parseICS(t))).catch(()=>{});
   },[data.icsUrl]);
-  const todayLessons=lessons.filter(e=>{
-    const d=e.date;
-    return d.getFullYear()===now.getFullYear()&&d.getMonth()===now.getMonth()&&d.getDate()===now.getDate();
-  });
+  const tomorrow=new Date(now); tomorrow.setDate(now.getDate()+1);
+  const isSameDay=(d,ref)=>d.getFullYear()===ref.getFullYear()&&d.getMonth()===ref.getMonth()&&d.getDate()===ref.getDate();
+  const todayLessons=lessons.filter(e=>isSameDay(e.date,now));
+  const tomorrowLessons=lessons.filter(e=>isSameDay(e.date,tomorrow));
   const weekLessons=lessons.filter(e=>e.date-now<7*86400000);
-  const next=lessons[0];
   const fmtDate=d=>`${d.getMonth()+1}/${d.getDate()}(${["일","월","화","수","목","금","토"][d.getDay()]})`;
   const fmtTime=d=>d.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',hour12:false});
   return(
@@ -1292,14 +1291,26 @@ function TeacherHome({data,setTab}){
               <div className="db-stat-en">Upcoming</div>
             </div>
           </div>
-          {next&&(
-            <div className="db-next-lesson" onClick={()=>window.open("https://preply.com/ko/calendar","_blank")}>
-              <div className="db-nl-label">다음 수업 · Next Lesson</div>
-              <div className="db-nl-body">
-                <div className="db-nl-time">{fmtDate(next.date)} {fmtTime(next.date)}</div>
-                <div className="db-nl-name">{next.summary}</div>
-              </div>
-              <div className="db-nl-go">Preply 캘린더 →</div>
+          {(todayLessons.length>0||tomorrowLessons.length>0)&&(
+            <div className="db-day-schedule">
+              {todayLessons.length>0&&<>
+                <div className="db-ds-day">오늘 · {fmtDate(now)}</div>
+                {todayLessons.map((e,i)=>(
+                  <div key={i} className="db-ds-row" onClick={()=>window.open("https://preply.com/ko/calendar","_blank")}>
+                    <span className="db-ds-time">{fmtTime(e.date)}</span>
+                    <span className="db-ds-name">{e.summary}</span>
+                  </div>
+                ))}
+              </>}
+              {tomorrowLessons.length>0&&<>
+                <div className="db-ds-day">내일 · {fmtDate(tomorrow)}</div>
+                {tomorrowLessons.map((e,i)=>(
+                  <div key={i} className="db-ds-row" onClick={()=>window.open("https://preply.com/ko/calendar","_blank")}>
+                    <span className="db-ds-time">{fmtTime(e.date)}</span>
+                    <span className="db-ds-name">{e.summary}</span>
+                  </div>
+                ))}
+              </>}
             </div>
           )}
         </>
@@ -1385,12 +1396,90 @@ function parseICS(text){
   const now=new Date();
   return text.split('BEGIN:VEVENT').slice(1).map(block=>{
     const get=k=>{const m=block.match(new RegExp(k+'(?:;[^:]+)?:([^\r\n]+)'));return m?m[1].trim():'';};
-    const dtstart=get('DTSTART'),summary=get('SUMMARY');
-    return{summary,dtstart,date:parseICSDate(dtstart)};
+    const dtstart=get('DTSTART'),dtend=get('DTEND'),summary=get('SUMMARY');
+    return{summary,dtstart,date:parseICSDate(dtstart),endDate:parseICSDate(dtend)||null};
   }).filter(e=>e.summary&&e.date&&e.date>=now)
-    .sort((a,b)=>a.date-b.date)
-    .slice(0,10);
+    .sort((a,b)=>a.date-b.date);
 }
+function WeekCalendar({events}){
+  const HOUR_H=60,DAY_START=5;
+  const [weekOffset,setWeekOffset]=useState(0);
+  const today=new Date(); today.setHours(0,0,0,0);
+  const getWeekStart=off=>{
+    const d=new Date(today);
+    const dow=d.getDay()||7;
+    d.setDate(d.getDate()-dow+1+off*7);
+    return d;
+  };
+  const weekStart=getWeekStart(weekOffset);
+  const weekDays=Array.from({length:7},(_,i)=>{const d=new Date(weekStart);d.setDate(weekStart.getDate()+i);return d;});
+  const weekEnd=new Date(weekStart); weekEnd.setDate(weekStart.getDate()+7);
+  const weekEvents=events.filter(e=>e.date>=weekStart&&e.date<weekEnd);
+  const dayLabels=["월","화","수","목","금","토","일"];
+  // compute hour range from events (at least 5–23)
+  let minH=20,maxH=23;
+  weekEvents.forEach(e=>{
+    if(e.date.getHours()<minH)minH=e.date.getHours();
+    const endH=e.endDate?e.endDate.getHours()+(e.endDate.getMinutes()>0?1:0):(e.date.getHours()+1);
+    if(endH>maxH)maxH=endH;
+  });
+  minH=Math.max(DAY_START,minH-1); maxH=Math.min(24,maxH+1);
+  const hours=Array.from({length:maxH-minH},(_,i)=>minH+i);
+  const evTop=d=>(d.getHours()-minH)*HOUR_H+(d.getMinutes()/60)*HOUR_H;
+  const evH=(s,e)=>e?Math.max(18,(e-s)/3600000*HOUR_H):HOUR_H;
+  const isToday=d=>d.getFullYear()===today.getFullYear()&&d.getMonth()===today.getMonth()&&d.getDate()===today.getDate();
+  const monthLabel=`${weekStart.getMonth()+1}월 ${weekStart.getDate()}일 – ${weekDays[6].getMonth()+1}월 ${weekDays[6].getDate()}일`;
+  return(
+    <div style={{marginBottom:24}}>
+      <div className="db-cal-nav">
+        <button className="db-cal-nav-btn" onClick={()=>setWeekOffset(w=>w-1)}>← 이전</button>
+        {weekOffset!==0&&<button className="db-cal-nav-btn" onClick={()=>setWeekOffset(0)}>이번 주</button>}
+        <span className="db-cal-nav-label">{monthLabel}</span>
+        <button className="db-cal-nav-btn" onClick={()=>setWeekOffset(w=>w+1)}>다음 →</button>
+      </div>
+      <div className="db-cal-wrap">
+        {/* header */}
+        <div className="db-cal-grid">
+          <div className="db-cal-hdr-cell"/>
+          {weekDays.map((d,i)=>(
+            <div key={i} className={`db-cal-hdr-cell${isToday(d)?" today":""}`}>
+              {dayLabels[i]}<br/>
+              <span className={`db-cal-hdr-num${isToday(d)?" today":""}`}>{d.getDate()}</span>
+            </div>
+          ))}
+        </div>
+        {/* body */}
+        <div className="db-cal-body" style={{height:hours.length*HOUR_H}}>
+          {/* time labels */}
+          <div className="db-cal-time-col">
+            {hours.map(h=>(
+              <div key={h} className="db-cal-hour-label">{String(h).padStart(2,'0')}:00</div>
+            ))}
+          </div>
+          {/* day columns */}
+          {weekDays.map((day,di)=>{
+            const dayEv=weekEvents.filter(e=>isToday(day)?isToday(e.date):e.date.getFullYear()===day.getFullYear()&&e.date.getMonth()===day.getMonth()&&e.date.getDate()===day.getDate());
+            return(
+              <div key={di} className="db-cal-day-col" style={{height:hours.length*HOUR_H}}>
+                {hours.map(h=>(
+                  <div key={h} className="db-cal-hour-line" style={{top:(h-minH)*HOUR_H}}/>
+                ))}
+                {dayEv.map((ev,ei)=>(
+                  <div key={ei} className="db-cal-ev"
+                    style={{top:evTop(ev.date),height:evH(ev.date,ev.endDate)}}>
+                    <div className="db-cal-ev-time">{String(ev.date.getHours()).padStart(2,'0')}:{String(ev.date.getMinutes()).padStart(2,'0')}</div>
+                    <div className="db-cal-ev-title">{ev.summary}</div>
+                  </div>
+                ))}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function TeacherPreply({data,save:persist}){
   const saved=data.icsUrl||'';
   const [icsUrl,setIcsUrl]=useState(saved);
@@ -1413,7 +1502,6 @@ function TeacherPreply({data,save:persist}){
   },[icsUrl]);
   const save=()=>{persist("icsUrl",input);setIcsUrl(input);};
   const clear=()=>{persist("icsUrl",'');setIcsUrl('');setInput('');setEvents([]);};
-  const fmt=d=>{if(!d)return'';const days=['일','월','화','수','목','금','토'];return`${d.getMonth()+1}/${d.getDate()}(${days[d.getDay()]}) ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;};
   return(
     <div>
       <div className="db-sw-card" style={{background:"linear-gradient(135deg,#6B4FBB 0%,#9B72E6 100%)",marginBottom:24}}>
@@ -1438,15 +1526,8 @@ function TeacherPreply({data,save:persist}){
       {err&&<div style={{padding:'12px 16px',background:'rgba(239,68,68,.08)',border:'1px solid rgba(239,68,68,.2)',borderRadius:10,color:'#ef4444',fontSize:14,marginBottom:16}}>{err}</div>}
 
       {events.length>0&&<>
-        <div className="db-sec-hd" style={{marginTop:8}}><div className="db-sec-title">다가오는 수업 · Upcoming Lessons</div><div className="db-sec-count">{events.length}개</div></div>
-        <div className="db-preply-events">
-          {events.map((e,i)=>(
-            <div key={i} className="db-preply-ev">
-              <div className="db-preply-ev-date">{fmt(e.date)}</div>
-              <div className="db-preply-ev-title">{e.summary}</div>
-            </div>
-          ))}
-        </div>
+        <div className="db-sec-hd" style={{marginTop:8}}><div className="db-sec-title">주간 수업 캘린더 · Weekly Schedule</div></div>
+        <WeekCalendar events={events}/>
       </>}
       {icsUrl&&!loading&&events.length===0&&!err&&(
         <div style={{padding:'20px 0',color:'var(--db-tm)',fontSize:14}}>다가오는 수업이 없어요.</div>
