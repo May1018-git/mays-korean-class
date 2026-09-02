@@ -521,3 +521,30 @@
 }
 .db-preply-ev-date { font-size: 13px; font-weight: 700; color: var(--db-v); white-space: nowrap; }
 .db-preply-ev-title { font-size: 15px; color: var(--db-t); flex: 1; }
+
+/* ── TEACHER HOME — ICS PROMPT & NEXT LESSON ───────────────────── */
+.db-ics-prompt {
+  display: flex; align-items: center; gap: 16px;
+  background: var(--db-card); border: 2px dashed var(--db-bdr2);
+  border-radius: 16px; padding: 24px 28px;
+  cursor: pointer; margin-bottom: 24px;
+  transition: border-color .15s, box-shadow .15s;
+}
+.db-ics-prompt:hover { border-color: var(--db-v); box-shadow: var(--db-sh); }
+.db-ics-prompt-icon { font-size: 40px; flex-shrink: 0; }
+.db-ics-prompt-title { font-family:'Jua',-apple-system,sans-serif; font-size: 18px; color: var(--db-t); margin-bottom: 4px; }
+.db-ics-prompt-sub { font-size: 14px; color: var(--db-v); font-weight: 600; }
+
+.db-next-lesson {
+  background: linear-gradient(135deg, var(--db-v) 0%, #9B59F5 100%);
+  border-radius: 16px; padding: 20px 24px;
+  margin-bottom: 24px; cursor: pointer;
+  color: #fff; box-shadow: var(--db-sh2);
+  transition: transform .15s;
+}
+.db-next-lesson:hover { transform: translateY(-2px); }
+.db-nl-label { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; opacity: .8; margin-bottom: 10px; }
+.db-nl-body { display: flex; align-items: baseline; gap: 16px; margin-bottom: 10px; }
+.db-nl-time { font-family:'Jua',-apple-system,sans-serif; font-size: 24px; }
+.db-nl-name { font-size: 18px; opacity: .9; }
+.db-nl-go { font-size: 13px; font-weight: 700; opacity: .8; text-align: right; }
