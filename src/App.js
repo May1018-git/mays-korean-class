@@ -1404,19 +1404,24 @@ function parseICS(text){
 function WeekCalendar({events}){
   const HOUR_H=60,DAY_START=5;
   const [weekOffset,setWeekOffset]=useState(0);
+  const mobile=window.innerWidth<=700;
+  const daysShown=mobile?3:7;
   const today=new Date(); today.setHours(0,0,0,0);
-  const getWeekStart=off=>{
+  const getWindowStart=off=>{
     const d=new Date(today);
-    const dow=d.getDay()||7;
-    d.setDate(d.getDate()-dow+1+off*7);
+    if(mobile){
+      d.setDate(today.getDate()-1+off*3);
+    } else {
+      const dow=d.getDay()||7;
+      d.setDate(d.getDate()-dow+1+off*7);
+    }
     return d;
   };
-  const weekStart=getWeekStart(weekOffset);
-  const weekDays=Array.from({length:7},(_,i)=>{const d=new Date(weekStart);d.setDate(weekStart.getDate()+i);return d;});
-  const weekEnd=new Date(weekStart); weekEnd.setDate(weekStart.getDate()+7);
-  const weekEvents=events.filter(e=>e.date>=weekStart&&e.date<weekEnd);
-  const dayLabels=["월","화","수","목","금","토","일"];
-  // compute hour range from events (at least 5–23)
+  const windowStart=getWindowStart(weekOffset);
+  const weekDays=Array.from({length:daysShown},(_,i)=>{const d=new Date(windowStart);d.setDate(windowStart.getDate()+i);return d;});
+  const weekEnd=new Date(windowStart); weekEnd.setDate(windowStart.getDate()+daysShown);
+  const weekEvents=events.filter(e=>e.date>=windowStart&&e.date<weekEnd);
+  const allDayLabels=["일","월","화","수","목","금","토"];
   let minH=20,maxH=23;
   weekEvents.forEach(e=>{
     if(e.date.getHours()<minH)minH=e.date.getHours();
@@ -1428,37 +1433,37 @@ function WeekCalendar({events}){
   const evTop=d=>(d.getHours()-minH)*HOUR_H+(d.getMinutes()/60)*HOUR_H;
   const evH=(s,e)=>e?Math.max(18,(e-s)/3600000*HOUR_H):HOUR_H;
   const isToday=d=>d.getFullYear()===today.getFullYear()&&d.getMonth()===today.getMonth()&&d.getDate()===today.getDate();
-  const monthLabel=`${weekStart.getMonth()+1}월 ${weekStart.getDate()}일 – ${weekDays[6].getMonth()+1}월 ${weekDays[6].getDate()}일`;
+  const last=weekDays[daysShown-1];
+  const navLabel=mobile
+    ?`${windowStart.getMonth()+1}/${windowStart.getDate()} – ${last.getMonth()+1}/${last.getDate()}`
+    :`${windowStart.getMonth()+1}월 ${windowStart.getDate()}일 – ${last.getMonth()+1}월 ${last.getDate()}일`;
+  const colTpl=`48px repeat(${daysShown},${mobile?'1fr':'minmax(70px,1fr)'})`;
   return(
     <div style={{marginBottom:24}}>
       <div className="db-cal-nav">
         <button className="db-cal-nav-btn" onClick={()=>setWeekOffset(w=>w-1)}>← 이전</button>
-        {weekOffset!==0&&<button className="db-cal-nav-btn" onClick={()=>setWeekOffset(0)}>이번 주</button>}
-        <span className="db-cal-nav-label">{monthLabel}</span>
+        {weekOffset!==0&&<button className="db-cal-nav-btn" onClick={()=>setWeekOffset(0)}>{mobile?'오늘':'이번 주'}</button>}
+        <span className="db-cal-nav-label">{navLabel}</span>
         <button className="db-cal-nav-btn" onClick={()=>setWeekOffset(w=>w+1)}>다음 →</button>
       </div>
       <div className="db-cal-wrap">
-        {/* header */}
-        <div className="db-cal-grid">
+        <div className="db-cal-grid" style={{gridTemplateColumns:colTpl}}>
           <div className="db-cal-hdr-cell"/>
           {weekDays.map((d,i)=>(
             <div key={i} className={`db-cal-hdr-cell${isToday(d)?" today":""}`}>
-              {dayLabels[i]}<br/>
+              {allDayLabels[d.getDay()]}<br/>
               <span className={`db-cal-hdr-num${isToday(d)?" today":""}`}>{d.getDate()}</span>
             </div>
           ))}
         </div>
-        {/* body */}
-        <div className="db-cal-body" style={{height:hours.length*HOUR_H}}>
-          {/* time labels */}
+        <div className="db-cal-body" style={{gridTemplateColumns:colTpl,height:hours.length*HOUR_H}}>
           <div className="db-cal-time-col">
             {hours.map(h=>(
               <div key={h} className="db-cal-hour-label">{String(h).padStart(2,'0')}:00</div>
             ))}
           </div>
-          {/* day columns */}
           {weekDays.map((day,di)=>{
-            const dayEv=weekEvents.filter(e=>isToday(day)?isToday(e.date):e.date.getFullYear()===day.getFullYear()&&e.date.getMonth()===day.getMonth()&&e.date.getDate()===day.getDate());
+            const dayEv=weekEvents.filter(e=>e.date.getFullYear()===day.getFullYear()&&e.date.getMonth()===day.getMonth()&&e.date.getDate()===day.getDate());
             return(
               <div key={di} className="db-cal-day-col" style={{height:hours.length*HOUR_H}}>
                 {hours.map(h=>(
