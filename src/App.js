@@ -1101,13 +1101,13 @@ function TeacherApp({user,data,save,onLogout}){
   const pending=data.stu.filter(s=>s.status==="pending").length;
   const navItems=[
     {id:"home",    icon:"📊", ko:"대시보드",   en:"Dashboard"},
+    {id:"preply",  icon:"🔗", ko:"Preply",      en:"Preply"},
     {id:"students",icon:"👥", ko:"학생 관리",   en:"Students",   badge:pending||null},
     {id:"mat",     icon:"📁", ko:"학습자료",    en:"Materials"},
     {id:"tb",      icon:"📚", ko:"수업교재",    en:"Textbook"},
     {id:"voc",     icon:"📝", ko:"단어장",      en:"Vocab"},
     {id:"flash",   icon:"🃏", ko:"플래시카드",  en:"Flashcards"},
     {id:"ann",     icon:"📢", ko:"공지",        en:"Notice"},
-    {id:"preply",  icon:"🔗", ko:"Preply",      en:"Preply"},
   ];
   const cur=navItems.find(i=>i.id===tab)||navItems[0];
   return(
@@ -1235,12 +1235,24 @@ function StudentApp({user,data,onLogout}){
 
 function TeacherHome({data,setTab}){
   const pending=data.stu.filter(s=>s.status==="pending");
-  const approved=data.stu.filter(s=>s.status==="approved");
   const now=new Date();
   const days=["일요일","월요일","화요일","수요일","목요일","금요일","토요일"];
   const dateStr=`${now.getFullYear()}년 ${now.getMonth()+1}월 ${now.getDate()}일`;
   const dayStr=days[now.getDay()];
-  const recentMat=data.mat.slice(-4).reverse();
+  const [lessons,setLessons]=useState([]);
+  useEffect(()=>{
+    if(!data.icsUrl)return;
+    fetch('/api/ics?url='+encodeURIComponent(data.icsUrl))
+      .then(r=>r.text()).then(t=>setLessons(parseICS(t))).catch(()=>{});
+  },[data.icsUrl]);
+  const todayLessons=lessons.filter(e=>{
+    const d=e.date;
+    return d.getFullYear()===now.getFullYear()&&d.getMonth()===now.getMonth()&&d.getDate()===now.getDate();
+  });
+  const weekLessons=lessons.filter(e=>e.date-now<7*86400000);
+  const next=lessons[0];
+  const fmtDate=d=>`${d.getMonth()+1}/${d.getDate()}(${["일","월","화","수","목","금","토"][d.getDay()]})`;
+  const fmtTime=d=>d.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',hour12:false});
   return(
     <div>
       <div className="db-welcome">
@@ -1250,33 +1262,48 @@ function TeacherHome({data,setTab}){
         </div>
         <div className="db-w-date">{dateStr}<br/>{dayStr}</div>
       </div>
-      <div className="db-stats">
-        <div className="db-stat s1" onClick={()=>setTab("students")}>
-          <div className="db-stat-icon">👥</div>
-          <div className="db-stat-num">{approved.length}</div>
-          <div className="db-stat-ko">학생</div>
-          <div className="db-stat-en">Students</div>
-          {pending.length>0&&<div className="db-stat-tag">⚠️ {pending.length}명 승인 대기</div>}
+      {!data.icsUrl?(
+        <div className="db-ics-prompt" onClick={()=>setTab("preply")}>
+          <div className="db-ics-prompt-icon">📅</div>
+          <div className="db-ics-prompt-text">
+            <div className="db-ics-prompt-title">Preply 캘린더를 연동하면 수업 일정이 여기 표시돼요</div>
+            <div className="db-ics-prompt-sub">Preply 탭에서 설정하기 →</div>
+          </div>
         </div>
-        <div className="db-stat s2" onClick={()=>setTab("mat")}>
-          <div className="db-stat-icon">📁</div>
-          <div className="db-stat-num">{data.mat.length}</div>
-          <div className="db-stat-ko">학습자료</div>
-          <div className="db-stat-en">Materials</div>
-        </div>
-        <div className="db-stat s3" onClick={()=>setTab("voc")}>
-          <div className="db-stat-icon">📝</div>
-          <div className="db-stat-num">{data.voc.length}</div>
-          <div className="db-stat-ko">단어장</div>
-          <div className="db-stat-en">Vocabulary</div>
-        </div>
-        <div className="db-stat s4" onClick={()=>setTab("ann")}>
-          <div className="db-stat-icon">📢</div>
-          <div className="db-stat-num">{data.ann.length}</div>
-          <div className="db-stat-ko">공지</div>
-          <div className="db-stat-en">Notices</div>
-        </div>
-      </div>
+      ):(
+        <>
+          <div className="db-stats">
+            <div className="db-stat s1" onClick={()=>setTab("preply")}>
+              <div className="db-stat-icon">☀️</div>
+              <div className="db-stat-num">{todayLessons.length}</div>
+              <div className="db-stat-ko">오늘 수업</div>
+              <div className="db-stat-en">Today</div>
+            </div>
+            <div className="db-stat s2" onClick={()=>setTab("preply")}>
+              <div className="db-stat-icon">📆</div>
+              <div className="db-stat-num">{weekLessons.length}</div>
+              <div className="db-stat-ko">이번 주</div>
+              <div className="db-stat-en">This Week</div>
+            </div>
+            <div className="db-stat s3" onClick={()=>setTab("preply")}>
+              <div className="db-stat-icon">📋</div>
+              <div className="db-stat-num">{lessons.length}</div>
+              <div className="db-stat-ko">총 예정</div>
+              <div className="db-stat-en">Upcoming</div>
+            </div>
+          </div>
+          {next&&(
+            <div className="db-next-lesson" onClick={()=>window.open("https://preply.com/ko/calendar","_blank")}>
+              <div className="db-nl-label">다음 수업 · Next Lesson</div>
+              <div className="db-nl-body">
+                <div className="db-nl-time">{fmtDate(next.date)} {fmtTime(next.date)}</div>
+                <div className="db-nl-name">{next.summary}</div>
+              </div>
+              <div className="db-nl-go">Preply 캘린더 →</div>
+            </div>
+          )}
+        </>
+      )}
       {pending.length>0&&<div className="db-alert">
         <span className="db-alert-icon">⚠️</span>
         <div className="db-alert-body">
@@ -1287,28 +1314,10 @@ function TeacherHome({data,setTab}){
       </div>}
       <div className="db-sec-hd"><div className="db-sec-title">빠른 작업 · Quick Actions</div></div>
       <div className="db-qa">
-        <button className="db-qa-btn prim" onClick={()=>setTab("mat")}>📁 학습자료 추가</button>
-        <button className="db-qa-btn warm" onClick={()=>setTab("voc")}>📝 단어장 추가</button>
+        <a href="https://preply.com/ko/messages" target="_blank" rel="noopener noreferrer" className="db-qa-btn prim">💬 메시지</a>
+        <button className="db-qa-btn warm" onClick={()=>setTab("preply")}>📅 수업 일정</button>
         <button className="db-qa-btn ghost" onClick={()=>setTab("ann")}>📢 공지 올리기</button>
-        <a href="https://preply.com/" target="_blank" rel="noopener noreferrer" className="db-qa-btn preply">🔗 Preply 바로가기</a>
       </div>
-      {recentMat.length>0&&<div className="db-section">
-        <div className="db-sec-hd">
-          <div className="db-sec-title">최근 학습자료 · Recent Materials</div>
-          <div className="db-sec-count">{data.mat.length}개</div>
-          <button className="db-sec-link" onClick={()=>setTab("mat")}>전체 보기 →</button>
-        </div>
-        <div className="db-table">
-          <div className="db-table-head"><span>자료명</span><span>유형</span><span>날짜</span></div>
-          {recentMat.map((m,i)=>(
-            <div key={m.id||i} className="db-table-row">
-              <div className="db-cell-name">{m.title}</div>
-              <div><span className={`db-chip ${m.embed?"db-chip-v":m.link?"db-chip-a":"db-chip-g"}`}>{m.embed?"영상":m.link?"링크":"자료"}</span></div>
-              <div className="db-cell-date">{m.date||""}</div>
-            </div>
-          ))}
-        </div>
-      </div>}
     </div>
   );
 }
