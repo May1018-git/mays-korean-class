@@ -1102,13 +1102,13 @@ function TeacherApp({user,data,save,onLogout}){
   const navItems=[
     {id:"home",    icon:"📊", ko:"대시보드",   en:"Dashboard"},
     {id:"preply",  icon:"🔗", ko:"Preply",      en:"Preply"},
-    {id:"students",icon:"👥", ko:"학생 관리",   en:"Students",   badge:pending||null},
     {id:"sheets",  icon:"📋", ko:"학생 정보",   en:"Student Info"},
     {id:"mat",     icon:"📁", ko:"학습자료",    en:"Materials"},
     {id:"tb",      icon:"📚", ko:"수업교재",    en:"Textbook"},
     {id:"voc",     icon:"📝", ko:"단어장",      en:"Vocab"},
     {id:"flash",   icon:"🃏", ko:"플래시카드",  en:"Flashcards"},
     {id:"ann",     icon:"📢", ko:"공지",        en:"Notice"},
+    {id:"students",icon:"👥", ko:"승인/관리",   en:"Students",   badge:pending||null},
   ];
   const cur=navItems.find(i=>i.id===tab)||navItems[0];
   return(
