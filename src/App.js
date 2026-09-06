@@ -1415,10 +1415,23 @@ function parseCSVLine(line){
   }
   out.push(cur.trim());return out;
 }
+function toDateInput(v){
+  if(!v)return'';
+  const m=v.match(/(\d{4})[.\-\/]?\s*(\d{1,2})[.\-\/]?\s*(\d{1,2})/);
+  if(!m)return'';
+  return`${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;
+}
+function fromDateInput(v){
+  if(!v)return'';
+  const m=v.match(/(\d{4})-(\d{2})-(\d{2})/);
+  if(!m)return'';
+  return`${m[1]}. ${parseInt(m[2])}. ${parseInt(m[3])}`;
+}
 function parseSheetsCSV(text){
+  text=text.replace(/^﻿/,'');
   const lines=text.split(/\r?\n/).filter(l=>l.trim());
   if(lines.length<3)return{headers:[],rows:[]};
-  const headers=parseCSVLine(lines[1]);
+  const headers=parseCSVLine(lines[1]).map(h=>h.replace(/\s+/g,' ').trim());
   const rows=lines.slice(2).map(l=>parseCSVLine(l)).filter(r=>r[1]&&r[1].trim());
   return{headers,rows};
 }
@@ -1575,17 +1588,17 @@ function TeacherPreply({data,save:persist}){
 }
 
 const ST_COLS=[
-  {key:'구독여부',  label:'구독',       w:90,  type:'select', opts:['구독','구독취소','체험수업']},
-  {key:'이름',      label:'이름',       w:90,  type:'text'},
-  {key:'모국어 이름',label:'로마자',    w:110, type:'text'},
-  {key:'레벨',      label:'레벨',       w:80,  type:'select', opts:['왕초보','초급','중급','고급']},
-  {key:'진도',      label:'진도',       w:210, type:'text'},
-  {key:'마지막수업',label:'마지막수업', w:120, type:'text'},
-  {key:'수업 전 리뷰',label:'수업 전 리뷰',w:160,type:'text'},
-  {key:'특이사항',  label:'특이사항',   w:240, type:'text'},
-  {key:'직업',      label:'직업',       w:140, type:'text'},
-  {key:'나이',      label:'나이',       w:80,  type:'text'},
-  {key:'모국어',    label:'언어',       w:140, type:'text'},
+  {key:'구독여부',  label:'구독',       w:64,  type:'select', opts:['구독','구독취소','체험수업']},
+  {key:'이름',      label:'이름',       w:70,  type:'text'},
+  {key:'모국어 이름',label:'로마자',    w:80,  type:'text'},
+  {key:'레벨',      label:'레벨',       w:58,  type:'select', opts:['왕초보','초급','중급','고급']},
+  {key:'진도',      label:'진도',       w:148, type:'text'},
+  {key:'마지막수업',label:'마지막수업', w:100, type:'date'},
+  {key:'수업 전 리뷰',label:'수업 전 리뷰',w:120,type:'text'},
+  {key:'특이사항',  label:'특이사항',   w:160, type:'text'},
+  {key:'직업',      label:'직업',       w:90,  type:'text'},
+  {key:'나이',      label:'나이',       w:48,  type:'text'},
+  {key:'모국어',    label:'언어',       w:90,  type:'text'},
 ];
 function TeacherSheets({data,save}){
   const [students,setStudents]=useState([]);
@@ -1624,6 +1637,11 @@ function TeacherSheets({data,save}){
     setEditing(null);
   };
   const handleKey=e=>{if(e.key==='Enter'){commitEdit();}else if(e.key==='Escape'){cancelEdit();}};
+  const handlePaste=e=>{
+    e.preventDefault();
+    const pasted=e.clipboardData.getData('text').replace(/[\t\r\n]+/g,' ').trim();
+    setEditVal(pasted);
+  };
   const handleSelectChange=async(rowIdx,colKey,val)=>{
     const name=students[rowIdx]['이름'];
     const newEdits={...sheetEdits,[name]:{...(sheetEdits[name]||{}),[colKey]:val}};
@@ -1637,10 +1655,6 @@ function TeacherSheets({data,save}){
 
   return(
     <div>
-      <div className="db-sw-card" style={{background:"linear-gradient(135deg,#10b981 0%,#059669 100%)",marginBottom:20}}>
-        <div className="db-sw-hi">학생 정보</div>
-        <div className="db-sw-sub">구글 시트에서 불러온 학생 프로필 · 셀 클릭으로 편집</div>
-      </div>
       {loading&&<div style={{padding:'20px 0',color:'var(--db-tm)',fontSize:16}}>불러오는 중...</div>}
       {err&&<div style={{padding:'12px 16px',background:'rgba(239,68,68,.08)',border:'1px solid rgba(239,68,68,.2)',borderRadius:10,color:'#ef4444',fontSize:15,marginBottom:16}}>{err}</div>}
       {!loading&&!err&&<>
@@ -1679,9 +1693,15 @@ function TeacherSheets({data,save}){
                                     onBlur={commitEdit} onKeyDown={handleKey}>
                                     {col.opts.map(o=><option key={o}>{o}</option>)}
                                   </select>
-                                :<input className="db-st-input" autoFocus value={editVal}
-                                    onChange={e=>setEditVal(e.target.value)}
-                                    onBlur={commitEdit} onKeyDown={handleKey}/>
+                                :col.type==='date'
+                                  ?<input type="date" className="db-st-input" autoFocus
+                                      value={toDateInput(editVal)}
+                                      onChange={e=>setEditVal(fromDateInput(e.target.value))}
+                                      onBlur={commitEdit} onKeyDown={handleKey}/>
+                                  :<input className="db-st-input" autoFocus value={editVal}
+                                      onChange={e=>setEditVal(e.target.value)}
+                                      onBlur={commitEdit} onKeyDown={handleKey}
+                                      onPaste={handlePaste}/>
                             ):(
                               <div className="db-st-td-inner" style={{minWidth:col.w-24}}
                                 onClick={()=>startEdit(globalRi,col.key,val)}>
