@@ -978,15 +978,15 @@ const Wrap = ({children}) => <div className="max-w-2xl mx-auto px-3 py-4">{child
 export default function App() {
   const [view,setView]=useState("loading");
   const [user,setUser]=useState(null);
-  const [data,setData]=useState({mat:[],tb:DEFAULT_TB,voc:[],ann:[],stu:[],icsUrl:''});
+  const [data,setData]=useState({mat:[],tb:DEFAULT_TB,voc:[],ann:[],stu:[],icsUrl:'',sheetsUrl:''});
 
   useEffect(()=>{
     setView("login"); // show login immediately; data loads in background
     (async()=>{
-      const [mat,tb,voc,ann,stuRaw,icsUrl]=await Promise.all([
-        fget("materials"),fget("textbooks"),fget("vocab"),fget("announcements"),fget("students"),fget("icsUrl"),
+      const [mat,tb,voc,ann,stuRaw,icsUrl,sheetsUrl]=await Promise.all([
+        fget("materials"),fget("textbooks"),fget("vocab"),fget("announcements"),fget("students"),fget("icsUrl"),fget("sheetsUrl"),
       ]);
-      setData({mat:mat||[],tb:tb||DEFAULT_TB,voc:voc||[],ann:ann||[],stu:normStudents(stuRaw||[]),icsUrl:icsUrl||''});
+      setData({mat:mat||[],tb:tb||DEFAULT_TB,voc:voc||[],ann:ann||[],stu:normStudents(stuRaw||[]),icsUrl:icsUrl||'',sheetsUrl:sheetsUrl||''});
     })();
   },[]);
 
@@ -1003,7 +1003,7 @@ export default function App() {
   },[view]);
 
   const save = useCallback(async (key,val)=>{
-    const keyMap={mat:"materials",tb:"textbooks",voc:"vocab",ann:"announcements",stu:"students",icsUrl:"icsUrl"};
+    const keyMap={mat:"materials",tb:"textbooks",voc:"vocab",ann:"announcements",stu:"students",icsUrl:"icsUrl",sheetsUrl:"sheetsUrl"};
     await fset(keyMap[key],val);
     setData(d=>({...d,[key]:val}));
   },[]);
@@ -1103,6 +1103,7 @@ function TeacherApp({user,data,save,onLogout}){
     {id:"home",    icon:"📊", ko:"대시보드",   en:"Dashboard"},
     {id:"preply",  icon:"🔗", ko:"Preply",      en:"Preply"},
     {id:"students",icon:"👥", ko:"학생 관리",   en:"Students",   badge:pending||null},
+    {id:"sheets",  icon:"📋", ko:"학생 정보",   en:"Student Info"},
     {id:"mat",     icon:"📁", ko:"학습자료",    en:"Materials"},
     {id:"tb",      icon:"📚", ko:"수업교재",    en:"Textbook"},
     {id:"voc",     icon:"📝", ko:"단어장",      en:"Vocab"},
@@ -1147,6 +1148,7 @@ function TeacherApp({user,data,save,onLogout}){
         <div className="db-content">
           {tab==="home"     &&<TeacherHome data={data} setTab={setTab}/>}
           {tab==="students" &&<TeacherStudents data={data} save={save}/>}
+          {tab==="sheets"   &&<TeacherSheets data={data}/>}
           {tab==="mat"      &&<TeacherMat data={data} save={save}/>}
           {tab==="tb"       &&<TeacherTB data={data} save={save}/>}
           {tab==="voc"      &&<TeacherVoc data={data} save={save}/>}
@@ -1401,6 +1403,25 @@ function parseICS(text){
   }).filter(e=>e.summary&&e.date&&e.date>=now)
     .sort((a,b)=>a.date-b.date);
 }
+const SHEET_ID='1-bC-DrG_RtLT3P8wfpOR6Yo89Bh-DymEVy-x0keTpgw';
+const DEFAULT_SHEETS_URL=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv`;
+function parseCSVLine(line){
+  const out=[];let cur='',inQ=false;
+  for(let i=0;i<line.length;i++){
+    const c=line[i];
+    if(c==='"'){if(inQ&&line[i+1]==='"'){cur+='"';i++;}else inQ=!inQ;}
+    else if(c===','&&!inQ){out.push(cur.trim());cur='';}
+    else cur+=c;
+  }
+  out.push(cur.trim());return out;
+}
+function parseSheetsCSV(text){
+  const lines=text.split(/\r?\n/).filter(l=>l.trim());
+  if(lines.length<3)return{headers:[],rows:[]};
+  const headers=parseCSVLine(lines[1]);
+  const rows=lines.slice(2).map(l=>parseCSVLine(l)).filter(r=>r[1]&&r[1].trim());
+  return{headers,rows};
+}
 function WeekCalendar({events}){
   const HOUR_H=60,DAY_START=5;
   const [weekOffset,setWeekOffset]=useState(0);
@@ -1553,6 +1574,64 @@ function TeacherPreply({data,save:persist}){
   );
 }
 
+function TeacherSheets({data}){
+  const [students,setStudents]=useState([]);
+  const [loading,setLoading]=useState(true);
+  const [err,setErr]=useState('');
+  const [filter,setFilter]=useState('전체');
+  const sheetsUrl=data.sheetsUrl||DEFAULT_SHEETS_URL;
+  useEffect(()=>{
+    setLoading(true);setErr('');
+    fetch('/api/sheets?url='+encodeURIComponent(sheetsUrl))
+      .then(r=>{if(!r.ok)throw new Error('서버 오류');return r.text();})
+      .then(text=>{
+        const{headers,rows}=parseSheetsCSV(text);
+        setStudents(rows.map(r=>{const obj={};headers.forEach((h,i)=>{obj[h]=r[i]||'';});return obj;}));
+        setLoading(false);
+      }).catch(()=>{setErr('시트를 불러오지 못했어요. 잠시 후 다시 시도해주세요.');setLoading(false);});
+  },[sheetsUrl]);
+  const filters=['전체','구독','구독취소','체험수업'];
+  const visible=filter==='전체'?students:students.filter(s=>s['구독여부']===filter);
+  const badgeClass=v=>v==='구독'?'active':v==='구독취소'?'cancelled':'trial';
+  return(
+    <div>
+      <div className="db-sw-card" style={{background:"linear-gradient(135deg,#10b981 0%,#059669 100%)",marginBottom:24}}>
+        <div className="db-sw-hi">학생 정보</div>
+        <div className="db-sw-sub">구글 시트에서 불러온 학생 프로필이에요.</div>
+      </div>
+      {loading&&<div style={{padding:'20px 0',color:'var(--db-tm)',fontSize:16}}>불러오는 중...</div>}
+      {err&&<div style={{padding:'12px 16px',background:'rgba(239,68,68,.08)',border:'1px solid rgba(239,68,68,.2)',borderRadius:10,color:'#ef4444',fontSize:15,marginBottom:16}}>{err}</div>}
+      {!loading&&!err&&<>
+        <div className="db-sh-filter">
+          {filters.map(f=>(
+            <button key={f} className={`db-sh-fbtn${filter===f?' active':''}`} onClick={()=>setFilter(f)}>{f} {f==='전체'?`(${students.length})`:students.filter(s=>s['구독여부']===f).length>0?`(${students.filter(s=>s['구독여부']===f).length})`:''}</button>
+          ))}
+        </div>
+        {visible.length===0?<div style={{color:'var(--db-tm)',fontSize:15,padding:'20px 0'}}>해당하는 학생이 없어요.</div>:(
+          <div className="db-sh-grid">
+            {visible.map((s,i)=>(
+              <div key={i} className="db-sh-card">
+                <div className="db-sh-badges">
+                  {s['구독여부']&&<span className={`db-sh-badge ${badgeClass(s['구독여부'])}`}>{s['구독여부']}</span>}
+                  {s['레벨']&&<span className="db-sh-badge level">{s['레벨']}</span>}
+                </div>
+                <div className="db-sh-name">{s['이름']}</div>
+                <div className="db-sh-native">{s['모국어 이름']}</div>
+                {s['모국어']&&<div className="db-sh-row"><span className="db-sh-row-label">🌍</span><span>{s['모국어']}</span></div>}
+                {s['진도']&&<div className="db-sh-row"><span className="db-sh-row-label">📚</span><span>{s['진도']}</span></div>}
+                {s['마지막수업']&&<div className="db-sh-row"><span className="db-sh-row-label">📅</span><span>{s['마지막수업']}</span></div>}
+                {s['직업']&&<div className="db-sh-row"><span className="db-sh-row-label">💼</span><span>{s['직업']}</span></div>}
+                {s['나이']&&<div className="db-sh-row"><span className="db-sh-row-label">🎂</span><span>{s['나이']}</span></div>}
+                {s['수업 전 리뷰']&&<div className="db-sh-row"><span className="db-sh-row-label">✏️</span><span>{s['수업 전 리뷰']}</span></div>}
+                {s['특이사항']&&<div className="db-sh-notes">📝 {s['특이사항']}</div>}
+              </div>
+            ))}
+          </div>
+        )}
+      </>}
+    </div>
+  );
+}
 function TeacherStudents({data,save}){
   const [del,setDel]=useState(null);
   const stu=data.stu;
