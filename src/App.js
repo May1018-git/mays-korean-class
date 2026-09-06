@@ -978,15 +978,15 @@ const Wrap = ({children}) => <div className="max-w-2xl mx-auto px-3 py-4">{child
 export default function App() {
   const [view,setView]=useState("loading");
   const [user,setUser]=useState(null);
-  const [data,setData]=useState({mat:[],tb:DEFAULT_TB,voc:[],ann:[],stu:[],icsUrl:'',sheetsUrl:''});
+  const [data,setData]=useState({mat:[],tb:DEFAULT_TB,voc:[],ann:[],stu:[],icsUrl:'',sheetsUrl:'',sheetEdits:{}});
 
   useEffect(()=>{
     setView("login"); // show login immediately; data loads in background
     (async()=>{
-      const [mat,tb,voc,ann,stuRaw,icsUrl,sheetsUrl]=await Promise.all([
-        fget("materials"),fget("textbooks"),fget("vocab"),fget("announcements"),fget("students"),fget("icsUrl"),fget("sheetsUrl"),
+      const [mat,tb,voc,ann,stuRaw,icsUrl,sheetsUrl,sheetEdits]=await Promise.all([
+        fget("materials"),fget("textbooks"),fget("vocab"),fget("announcements"),fget("students"),fget("icsUrl"),fget("sheetsUrl"),fget("sheetEdits"),
       ]);
-      setData({mat:mat||[],tb:tb||DEFAULT_TB,voc:voc||[],ann:ann||[],stu:normStudents(stuRaw||[]),icsUrl:icsUrl||'',sheetsUrl:sheetsUrl||''});
+      setData({mat:mat||[],tb:tb||DEFAULT_TB,voc:voc||[],ann:ann||[],stu:normStudents(stuRaw||[]),icsUrl:icsUrl||'',sheetsUrl:sheetsUrl||'',sheetEdits:sheetEdits||{}});
     })();
   },[]);
 
@@ -1003,7 +1003,7 @@ export default function App() {
   },[view]);
 
   const save = useCallback(async (key,val)=>{
-    const keyMap={mat:"materials",tb:"textbooks",voc:"vocab",ann:"announcements",stu:"students",icsUrl:"icsUrl",sheetsUrl:"sheetsUrl"};
+    const keyMap={mat:"materials",tb:"textbooks",voc:"vocab",ann:"announcements",stu:"students",icsUrl:"icsUrl",sheetsUrl:"sheetsUrl",sheetEdits:"sheetEdits"};
     await fset(keyMap[key],val);
     setData(d=>({...d,[key]:val}));
   },[]);
@@ -1148,7 +1148,7 @@ function TeacherApp({user,data,save,onLogout}){
         <div className="db-content">
           {tab==="home"     &&<TeacherHome data={data} setTab={setTab}/>}
           {tab==="students" &&<TeacherStudents data={data} save={save}/>}
-          {tab==="sheets"   &&<TeacherSheets data={data}/>}
+          {tab==="sheets"   &&<TeacherSheets data={data} save={save}/>}
           {tab==="mat"      &&<TeacherMat data={data} save={save}/>}
           {tab==="tb"       &&<TeacherTB data={data} save={save}/>}
           {tab==="voc"      &&<TeacherVoc data={data} save={save}/>}
@@ -1574,60 +1574,133 @@ function TeacherPreply({data,save:persist}){
   );
 }
 
-function TeacherSheets({data}){
+const ST_COLS=[
+  {key:'구독여부',  label:'구독',       w:90,  type:'select', opts:['구독','구독취소','체험수업']},
+  {key:'이름',      label:'이름',       w:90,  type:'text'},
+  {key:'모국어 이름',label:'로마자',    w:110, type:'text'},
+  {key:'레벨',      label:'레벨',       w:80,  type:'select', opts:['왕초보','초급','중급','고급']},
+  {key:'진도',      label:'진도',       w:210, type:'text'},
+  {key:'마지막수업',label:'마지막수업', w:120, type:'text'},
+  {key:'수업 전 리뷰',label:'수업 전 리뷰',w:160,type:'text'},
+  {key:'특이사항',  label:'특이사항',   w:240, type:'text'},
+  {key:'직업',      label:'직업',       w:140, type:'text'},
+  {key:'나이',      label:'나이',       w:80,  type:'text'},
+  {key:'모국어',    label:'언어',       w:140, type:'text'},
+];
+function TeacherSheets({data,save}){
   const [students,setStudents]=useState([]);
   const [loading,setLoading]=useState(true);
   const [err,setErr]=useState('');
   const [filter,setFilter]=useState('전체');
+  const [editing,setEditing]=useState(null); // {rowIdx, colKey}
+  const [editVal,setEditVal]=useState('');
   const sheetsUrl=data.sheetsUrl||DEFAULT_SHEETS_URL;
+  const sheetEdits=data.sheetEdits||{};
+  const badgeClass=v=>v==='구독'?'active':v==='구독취소'?'cancelled':'trial';
+
   useEffect(()=>{
     setLoading(true);setErr('');
     fetch('/api/sheets?url='+encodeURIComponent(sheetsUrl))
       .then(r=>{if(!r.ok)throw new Error('서버 오류');return r.text();})
       .then(text=>{
         const{headers,rows}=parseSheetsCSV(text);
-        setStudents(rows.map(r=>{const obj={};headers.forEach((h,i)=>{obj[h]=r[i]||'';});return obj;}));
-        setLoading(false);
+        const merged=rows.map(r=>{
+          const obj={};headers.forEach((h,i)=>{obj[h]=r[i]||'';});
+          return{...obj,...(sheetEdits[obj['이름']]||{})};
+        });
+        setStudents(merged);setLoading(false);
       }).catch(()=>{setErr('시트를 불러오지 못했어요. 잠시 후 다시 시도해주세요.');setLoading(false);});
   },[sheetsUrl]);
+
+  const startEdit=(rowIdx,colKey,cur)=>{setEditing({rowIdx,colKey});setEditVal(cur);};
+  const cancelEdit=()=>setEditing(null);
+  const commitEdit=async()=>{
+    if(!editing)return;
+    const{rowIdx,colKey}=editing;
+    const name=students[rowIdx]['이름'];
+    const newEdits={...sheetEdits,[name]:{...(sheetEdits[name]||{}),[colKey]:editVal}};
+    setStudents(prev=>prev.map((s,i)=>i===rowIdx?{...s,[colKey]:editVal}:s));
+    await save('sheetEdits',newEdits);
+    setEditing(null);
+  };
+  const handleKey=e=>{if(e.key==='Enter'){commitEdit();}else if(e.key==='Escape'){cancelEdit();}};
+  const handleSelectChange=async(rowIdx,colKey,val)=>{
+    const name=students[rowIdx]['이름'];
+    const newEdits={...sheetEdits,[name]:{...(sheetEdits[name]||{}),[colKey]:val}};
+    setStudents(prev=>prev.map((s,i)=>i===rowIdx?{...s,[colKey]:val}:s));
+    await save('sheetEdits',newEdits);
+    setEditing(null);
+  };
+
   const filters=['전체','구독','구독취소','체험수업'];
   const visible=filter==='전체'?students:students.filter(s=>s['구독여부']===filter);
-  const badgeClass=v=>v==='구독'?'active':v==='구독취소'?'cancelled':'trial';
+
   return(
     <div>
-      <div className="db-sw-card" style={{background:"linear-gradient(135deg,#10b981 0%,#059669 100%)",marginBottom:24}}>
+      <div className="db-sw-card" style={{background:"linear-gradient(135deg,#10b981 0%,#059669 100%)",marginBottom:20}}>
         <div className="db-sw-hi">학생 정보</div>
-        <div className="db-sw-sub">구글 시트에서 불러온 학생 프로필이에요.</div>
+        <div className="db-sw-sub">구글 시트에서 불러온 학생 프로필 · 셀 클릭으로 편집</div>
       </div>
       {loading&&<div style={{padding:'20px 0',color:'var(--db-tm)',fontSize:16}}>불러오는 중...</div>}
       {err&&<div style={{padding:'12px 16px',background:'rgba(239,68,68,.08)',border:'1px solid rgba(239,68,68,.2)',borderRadius:10,color:'#ef4444',fontSize:15,marginBottom:16}}>{err}</div>}
       {!loading&&!err&&<>
-        <div className="db-sh-filter">
-          {filters.map(f=>(
-            <button key={f} className={`db-sh-fbtn${filter===f?' active':''}`} onClick={()=>setFilter(f)}>{f} {f==='전체'?`(${students.length})`:students.filter(s=>s['구독여부']===f).length>0?`(${students.filter(s=>s['구독여부']===f).length})`:''}</button>
-          ))}
+        <div className="db-sh-filter" style={{marginBottom:14}}>
+          {filters.map(f=>{
+            const cnt=f==='전체'?students.length:students.filter(s=>s['구독여부']===f).length;
+            return<button key={f} className={`db-sh-fbtn${filter===f?' active':''}`} onClick={()=>setFilter(f)}>{f} ({cnt})</button>;
+          })}
         </div>
-        {visible.length===0?<div style={{color:'var(--db-tm)',fontSize:15,padding:'20px 0'}}>해당하는 학생이 없어요.</div>:(
-          <div className="db-sh-grid">
-            {visible.map((s,i)=>(
-              <div key={i} className="db-sh-card">
-                <div className="db-sh-badges">
-                  {s['구독여부']&&<span className={`db-sh-badge ${badgeClass(s['구독여부'])}`}>{s['구독여부']}</span>}
-                  {s['레벨']&&<span className="db-sh-badge level">{s['레벨']}</span>}
-                </div>
-                <div className="db-sh-name">{s['이름']}</div>
-                <div className="db-sh-native">{s['모국어 이름']}</div>
-                {s['모국어']&&<div className="db-sh-row"><span className="db-sh-row-label">🌍</span><span>{s['모국어']}</span></div>}
-                {s['진도']&&<div className="db-sh-row"><span className="db-sh-row-label">📚</span><span>{s['진도']}</span></div>}
-                {s['마지막수업']&&<div className="db-sh-row"><span className="db-sh-row-label">📅</span><span>{s['마지막수업']}</span></div>}
-                {s['직업']&&<div className="db-sh-row"><span className="db-sh-row-label">💼</span><span>{s['직업']}</span></div>}
-                {s['나이']&&<div className="db-sh-row"><span className="db-sh-row-label">🎂</span><span>{s['나이']}</span></div>}
-                {s['수업 전 리뷰']&&<div className="db-sh-row"><span className="db-sh-row-label">✏️</span><span>{s['수업 전 리뷰']}</span></div>}
-                {s['특이사항']&&<div className="db-sh-notes">📝 {s['특이사항']}</div>}
-              </div>
-            ))}
+        {visible.length===0
+          ?<div style={{color:'var(--db-tm)',fontSize:15,padding:'20px 0'}}>해당하는 학생이 없어요.</div>
+          :<div className="db-st-wrap">
+            <table className="db-st-tbl">
+              <thead>
+                <tr>
+                  {ST_COLS.map(c=>(
+                    <th key={c.key} className="db-st-th" style={{width:c.w,minWidth:c.w}}>{c.label}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {visible.map((s,ri)=>{
+                  const globalRi=students.indexOf(s);
+                  const isEditingRow=editing&&editing.rowIdx===globalRi;
+                  return(
+                    <tr key={ri} className={`db-st-tr${isEditingRow?' editing-row':''}`}>
+                      {ST_COLS.map(col=>{
+                        const isEditingCell=editing&&editing.rowIdx===globalRi&&editing.colKey===col.key;
+                        const val=s[col.key]||'';
+                        return(
+                          <td key={col.key} className="db-st-td">
+                            {isEditingCell?(
+                              col.type==='select'
+                                ?<select className="db-st-select" autoFocus value={editVal}
+                                    onChange={e=>handleSelectChange(globalRi,col.key,e.target.value)}
+                                    onBlur={commitEdit} onKeyDown={handleKey}>
+                                    {col.opts.map(o=><option key={o}>{o}</option>)}
+                                  </select>
+                                :<input className="db-st-input" autoFocus value={editVal}
+                                    onChange={e=>setEditVal(e.target.value)}
+                                    onBlur={commitEdit} onKeyDown={handleKey}/>
+                            ):(
+                              <div className="db-st-td-inner" style={{minWidth:col.w-24}}
+                                onClick={()=>startEdit(globalRi,col.key,val)}>
+                                {col.key==='구독여부'&&val
+                                  ?<span className={`db-st-badge ${badgeClass(val)}`}>{val}</span>
+                                  :<span style={{color:val?'var(--db-t)':'var(--db-tm)',fontStyle:val?'normal':'italic'}}>{val||'—'}</span>
+                                }
+                              </div>
+                            )}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
-        )}
+        }
       </>}
     </div>
   );
