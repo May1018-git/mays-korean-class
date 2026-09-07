@@ -978,15 +978,15 @@ const Wrap = ({children}) => <div className="max-w-2xl mx-auto px-3 py-4">{child
 export default function App() {
   const [view,setView]=useState("loading");
   const [user,setUser]=useState(null);
-  const [data,setData]=useState({mat:[],tb:DEFAULT_TB,voc:[],ann:[],stu:[],icsUrl:'',sheetsUrl:'',sheetEdits:{},sheetNewStudents:[]});
+  const [data,setData]=useState({mat:[],tb:DEFAULT_TB,voc:[],ann:[],stu:[],icsUrl:'',sheetsUrl:'',sheetEdits:{},sheetNewStudents:[],sheetDeletedStudents:[]});
 
   useEffect(()=>{
     setView("login"); // show login immediately; data loads in background
     (async()=>{
-      const [mat,tb,voc,ann,stuRaw,icsUrl,sheetsUrl,sheetEdits,sheetNewStudents]=await Promise.all([
-        fget("materials"),fget("textbooks"),fget("vocab"),fget("announcements"),fget("students"),fget("icsUrl"),fget("sheetsUrl"),fget("sheetEdits"),fget("sheetNewStudents"),
+      const [mat,tb,voc,ann,stuRaw,icsUrl,sheetsUrl,sheetEdits,sheetNewStudents,sheetDeletedStudents]=await Promise.all([
+        fget("materials"),fget("textbooks"),fget("vocab"),fget("announcements"),fget("students"),fget("icsUrl"),fget("sheetsUrl"),fget("sheetEdits"),fget("sheetNewStudents"),fget("sheetDeletedStudents"),
       ]);
-      setData({mat:mat||[],tb:tb||DEFAULT_TB,voc:voc||[],ann:ann||[],stu:normStudents(stuRaw||[]),icsUrl:icsUrl||'',sheetsUrl:sheetsUrl||'',sheetEdits:sheetEdits||{},sheetNewStudents:sheetNewStudents||[]});
+      setData({mat:mat||[],tb:tb||DEFAULT_TB,voc:voc||[],ann:ann||[],stu:normStudents(stuRaw||[]),icsUrl:icsUrl||'',sheetsUrl:sheetsUrl||'',sheetEdits:sheetEdits||{},sheetNewStudents:sheetNewStudents||[],sheetDeletedStudents:sheetDeletedStudents||[]});
     })();
   },[]);
 
@@ -1003,7 +1003,7 @@ export default function App() {
   },[view]);
 
   const save = useCallback(async (key,val)=>{
-    const keyMap={mat:"materials",tb:"textbooks",voc:"vocab",ann:"announcements",stu:"students",icsUrl:"icsUrl",sheetsUrl:"sheetsUrl",sheetEdits:"sheetEdits",sheetNewStudents:"sheetNewStudents"};
+    const keyMap={mat:"materials",tb:"textbooks",voc:"vocab",ann:"announcements",stu:"students",icsUrl:"icsUrl",sheetsUrl:"sheetsUrl",sheetEdits:"sheetEdits",sheetNewStudents:"sheetNewStudents",sheetDeletedStudents:"sheetDeletedStudents"};
     await fset(keyMap[key],val);
     setData(d=>({...d,[key]:val}));
   },[]);
@@ -1618,9 +1618,11 @@ function TeacherSheets({data,save}){
   const [editVal,setEditVal]=useState('');
   const [sortCol,setSortCol]=useState(null);
   const [sortDir,setSortDir]=useState('asc');
+  const [confirmDel,setConfirmDel]=useState(null);
   const sheetsUrl=data.sheetsUrl||DEFAULT_SHEETS_URL;
   const sheetEdits=data.sheetEdits||{};
   const sheetNewStudents=data.sheetNewStudents||[];
+  const sheetDeletedStudents=data.sheetDeletedStudents||[];
   const badgeClass=v=>v==='구독'?'active':v==='구독취소'?'cancelled':'trial';
 
   useEffect(()=>{
@@ -1632,11 +1634,24 @@ function TeacherSheets({data,save}){
         const csvStudents=rows.map(r=>{
           const obj={};headers.forEach((h,i)=>{obj[h]=r[i]||'';});
           return{...obj,...(sheetEdits[obj['이름']]||{})};
-        });
+        }).filter(s=>!sheetDeletedStudents.includes(s['이름']));
         setStudents([...csvStudents,...sheetNewStudents]);
         setLoading(false);
       }).catch(()=>{setErr('시트를 불러오지 못했어요. 잠시 후 다시 시도해주세요.');setLoading(false);});
   },[sheetsUrl,sheetNewStudents.length]);
+
+  const deleteStudent=async(rowIdx)=>{
+    const s=students[rowIdx];
+    setStudents(prev=>prev.filter((_,i)=>i!==rowIdx));
+    if(s._isNew){
+      const updated=sheetNewStudents.filter(n=>n._id!==s._id);
+      await save('sheetNewStudents',updated);
+    } else {
+      const updated=[...sheetDeletedStudents,s['이름']];
+      await save('sheetDeletedStudents',updated);
+    }
+    setConfirmDel(null);
+  };
 
   const addStudent=async()=>{
     const newS={_isNew:true,_id:Date.now(),...Object.fromEntries(ST_COLS.map(c=>[c.key,c.key==='구독여부'?'구독':'']))};
@@ -1733,6 +1748,7 @@ function TeacherSheets({data,save}){
                       {c.label}{sortCol===c.key?<span style={{marginLeft:4,opacity:.7}}>{sortDir==='asc'?'↑':'↓'}</span>:null}
                     </th>
                   ))}
+                  <th className="db-st-th" style={{width:40,minWidth:40}}></th>
                 </tr>
               </thead>
               <tbody>
@@ -1774,6 +1790,9 @@ function TeacherSheets({data,save}){
                           </td>
                         );
                       })}
+                      <td className="db-st-td">
+                        <div className="db-st-del-btn" onClick={()=>setConfirmDel(globalRi)}>🗑</div>
+                      </td>
                     </tr>
                   );
                 })}
@@ -1781,6 +1800,13 @@ function TeacherSheets({data,save}){
             </table>
           </div>
         }
+        {confirmDel!==null&&(
+          <ConfirmDelete
+            label={students[confirmDel]?.['이름']||'신규 학생'}
+            onConfirm={()=>deleteStudent(confirmDel)}
+            onCancel={()=>setConfirmDel(null)}
+          />
+        )}
       </>}
     </div>
   );
