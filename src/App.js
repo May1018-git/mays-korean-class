@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import "./dashboard.css";
 import { db } from "./firebase";
 import { doc, getDoc, setDoc, onSnapshot } from "firebase/firestore";
@@ -978,15 +978,15 @@ const Wrap = ({children}) => <div className="max-w-2xl mx-auto px-3 py-4">{child
 export default function App() {
   const [view,setView]=useState("loading");
   const [user,setUser]=useState(null);
-  const [data,setData]=useState({mat:[],tb:DEFAULT_TB,voc:[],ann:[],stu:[],icsUrl:'',sheetsUrl:'',sheetEdits:{}});
+  const [data,setData]=useState({mat:[],tb:DEFAULT_TB,voc:[],ann:[],stu:[],icsUrl:'',sheetsUrl:'',sheetEdits:{},sheetNewStudents:[]});
 
   useEffect(()=>{
     setView("login"); // show login immediately; data loads in background
     (async()=>{
-      const [mat,tb,voc,ann,stuRaw,icsUrl,sheetsUrl,sheetEdits]=await Promise.all([
-        fget("materials"),fget("textbooks"),fget("vocab"),fget("announcements"),fget("students"),fget("icsUrl"),fget("sheetsUrl"),fget("sheetEdits"),
+      const [mat,tb,voc,ann,stuRaw,icsUrl,sheetsUrl,sheetEdits,sheetNewStudents]=await Promise.all([
+        fget("materials"),fget("textbooks"),fget("vocab"),fget("announcements"),fget("students"),fget("icsUrl"),fget("sheetsUrl"),fget("sheetEdits"),fget("sheetNewStudents"),
       ]);
-      setData({mat:mat||[],tb:tb||DEFAULT_TB,voc:voc||[],ann:ann||[],stu:normStudents(stuRaw||[]),icsUrl:icsUrl||'',sheetsUrl:sheetsUrl||'',sheetEdits:sheetEdits||{}});
+      setData({mat:mat||[],tb:tb||DEFAULT_TB,voc:voc||[],ann:ann||[],stu:normStudents(stuRaw||[]),icsUrl:icsUrl||'',sheetsUrl:sheetsUrl||'',sheetEdits:sheetEdits||{},sheetNewStudents:sheetNewStudents||[]});
     })();
   },[]);
 
@@ -1003,7 +1003,7 @@ export default function App() {
   },[view]);
 
   const save = useCallback(async (key,val)=>{
-    const keyMap={mat:"materials",tb:"textbooks",voc:"vocab",ann:"announcements",stu:"students",icsUrl:"icsUrl",sheetsUrl:"sheetsUrl",sheetEdits:"sheetEdits"};
+    const keyMap={mat:"materials",tb:"textbooks",voc:"vocab",ann:"announcements",stu:"students",icsUrl:"icsUrl",sheetsUrl:"sheetsUrl",sheetEdits:"sheetEdits",sheetNewStudents:"sheetNewStudents"};
     await fset(keyMap[key],val);
     setData(d=>({...d,[key]:val}));
   },[]);
@@ -1608,15 +1608,19 @@ const ST_COLS=[
   {key:'나이',      label:'나이',       w:48,  type:'text'},
   {key:'모국어',    label:'언어',       w:90,  type:'text'},
 ];
+const LEVEL_ORDER=['왕초보','초급','중급','고급'];
 function TeacherSheets({data,save}){
   const [students,setStudents]=useState([]);
   const [loading,setLoading]=useState(true);
   const [err,setErr]=useState('');
   const [filter,setFilter]=useState('전체');
-  const [editing,setEditing]=useState(null); // {rowIdx, colKey}
+  const [editing,setEditing]=useState(null);
   const [editVal,setEditVal]=useState('');
+  const [sortCol,setSortCol]=useState(null);
+  const [sortDir,setSortDir]=useState('asc');
   const sheetsUrl=data.sheetsUrl||DEFAULT_SHEETS_URL;
   const sheetEdits=data.sheetEdits||{};
+  const sheetNewStudents=data.sheetNewStudents||[];
   const badgeClass=v=>v==='구독'?'active':v==='구독취소'?'cancelled':'trial';
 
   useEffect(()=>{
@@ -1625,25 +1629,41 @@ function TeacherSheets({data,save}){
       .then(r=>{if(!r.ok)throw new Error('서버 오류');return r.text();})
       .then(text=>{
         const{headers,rows}=parseSheetsCSV(text);
-        const merged=rows.map(r=>{
+        const csvStudents=rows.map(r=>{
           const obj={};headers.forEach((h,i)=>{obj[h]=r[i]||'';});
           return{...obj,...(sheetEdits[obj['이름']]||{})};
         });
-        setStudents(merged);setLoading(false);
+        setStudents([...csvStudents,...sheetNewStudents]);
+        setLoading(false);
       }).catch(()=>{setErr('시트를 불러오지 못했어요. 잠시 후 다시 시도해주세요.');setLoading(false);});
-  },[sheetsUrl]);
+  },[sheetsUrl,sheetNewStudents.length]);
+
+  const addStudent=async()=>{
+    const newS={_isNew:true,_id:Date.now(),...Object.fromEntries(ST_COLS.map(c=>[c.key,c.key==='구독여부'?'구독':'']))};
+    const updated=[...sheetNewStudents,newS];
+    setStudents(prev=>[...prev,newS]);
+    await save('sheetNewStudents',updated);
+  };
 
   const startEdit=(rowIdx,colKey,cur)=>{setEditing({rowIdx,colKey});setEditVal(cur);};
   const cancelEdit=()=>setEditing(null);
+
   const commitEdit=async()=>{
     if(!editing)return;
     const{rowIdx,colKey}=editing;
-    const name=students[rowIdx]['이름'];
-    const newEdits={...sheetEdits,[name]:{...(sheetEdits[name]||{}),[colKey]:editVal}};
-    setStudents(prev=>prev.map((s,i)=>i===rowIdx?{...s,[colKey]:editVal}:s));
-    await save('sheetEdits',newEdits);
+    const s=students[rowIdx];
+    setStudents(prev=>prev.map((p,i)=>i===rowIdx?{...p,[colKey]:editVal}:p));
+    if(s._isNew){
+      const updated=sheetNewStudents.map(n=>n._id===s._id?{...n,[colKey]:editVal}:n);
+      await save('sheetNewStudents',updated);
+    } else {
+      const name=s['이름'];
+      const newEdits={...sheetEdits,[name]:{...(sheetEdits[name]||{}),[colKey]:editVal}};
+      await save('sheetEdits',newEdits);
+    }
     setEditing(null);
   };
+
   const handleKey=e=>{if(e.key==='Enter'){commitEdit();}else if(e.key==='Escape'){cancelEdit();}};
   const handlePaste=e=>{
     e.preventDefault();
@@ -1651,15 +1671,43 @@ function TeacherSheets({data,save}){
     setEditVal(pasted);
   };
   const handleSelectChange=async(rowIdx,colKey,val)=>{
-    const name=students[rowIdx]['이름'];
-    const newEdits={...sheetEdits,[name]:{...(sheetEdits[name]||{}),[colKey]:val}};
-    setStudents(prev=>prev.map((s,i)=>i===rowIdx?{...s,[colKey]:val}:s));
-    await save('sheetEdits',newEdits);
+    const s=students[rowIdx];
+    setStudents(prev=>prev.map((p,i)=>i===rowIdx?{...p,[colKey]:val}:p));
+    if(s._isNew){
+      const updated=sheetNewStudents.map(n=>n._id===s._id?{...n,[colKey]:val}:n);
+      await save('sheetNewStudents',updated);
+    } else {
+      const name=s['이름'];
+      const newEdits={...sheetEdits,[name]:{...(sheetEdits[name]||{}),[colKey]:val}};
+      await save('sheetEdits',newEdits);
+    }
     setEditing(null);
   };
 
+  const handleSortClick=key=>{
+    if(sortCol===key){setSortDir(d=>d==='asc'?'desc':'asc');}
+    else{setSortCol(key);setSortDir('asc');}
+  };
+
   const filters=['전체','구독','구독취소','체험수업'];
-  const visible=filter==='전체'?students:students.filter(s=>s['구독여부']===filter);
+
+  const sortedVisible=useMemo(()=>{
+    const base=filter==='전체'?students:students.filter(s=>s['구독여부']===filter);
+    if(!sortCol)return base;
+    return[...base].sort((a,b)=>{
+      let av=a[sortCol]||'',bv=b[sortCol]||'';
+      if(sortCol==='마지막수업'){
+        const pd=v=>{const m=v.match(/(\d{4})\D+(\d{1,2})\D+(\d{1,2})/);return m?new Date(+m[1],+m[2]-1,+m[3]):new Date(0);};
+        av=pd(av);bv=pd(bv);
+      } else if(sortCol==='레벨'){
+        av=LEVEL_ORDER.indexOf(av);bv=LEVEL_ORDER.indexOf(bv);
+        if(av===-1)av=999;if(bv===-1)bv=999;
+      }
+      if(av<bv)return sortDir==='asc'?-1:1;
+      if(av>bv)return sortDir==='asc'?1:-1;
+      return 0;
+    });
+  },[students,filter,sortCol,sortDir]);
 
   return(
     <div>
@@ -1671,24 +1719,28 @@ function TeacherSheets({data,save}){
             const cnt=f==='전체'?students.length:students.filter(s=>s['구독여부']===f).length;
             return<button key={f} className={`db-sh-fbtn${filter===f?' active':''}`} onClick={()=>setFilter(f)}>{f} ({cnt})</button>;
           })}
+          <button className="db-sh-addbtn" onClick={addStudent}>+ 학생 추가</button>
         </div>
-        {visible.length===0
+        {sortedVisible.length===0
           ?<div style={{color:'var(--db-tm)',fontSize:15,padding:'20px 0'}}>해당하는 학생이 없어요.</div>
           :<div className="db-st-wrap">
             <table className="db-st-tbl">
               <thead>
                 <tr>
                   {ST_COLS.map(c=>(
-                    <th key={c.key} className="db-st-th" style={{width:c.w,minWidth:c.w}}>{c.label}</th>
+                    <th key={c.key} className="db-st-th" style={{width:c.w,minWidth:c.w,cursor:'pointer',userSelect:'none'}}
+                        onClick={()=>handleSortClick(c.key)}>
+                      {c.label}{sortCol===c.key?<span style={{marginLeft:4,opacity:.7}}>{sortDir==='asc'?'↑':'↓'}</span>:null}
+                    </th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {visible.map((s,ri)=>{
+                {sortedVisible.map((s,ri)=>{
                   const globalRi=students.indexOf(s);
                   const isEditingRow=editing&&editing.rowIdx===globalRi;
                   return(
-                    <tr key={ri} className={`db-st-tr${isEditingRow?' editing-row':''}`}>
+                    <tr key={s._id||ri} className={`db-st-tr${isEditingRow?' editing-row':''}${s._isNew?' _new-row':''}`}>
                       {ST_COLS.map(col=>{
                         const isEditingCell=editing&&editing.rowIdx===globalRi&&editing.colKey===col.key;
                         const val=s[col.key]||'';
