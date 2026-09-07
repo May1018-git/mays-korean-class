@@ -1403,6 +1403,14 @@ function parseICS(text){
   }).filter(e=>e.summary&&e.date&&e.date>=now)
     .sort((a,b)=>a.date-b.date);
 }
+function parseICSAll(text){
+  return text.split('BEGIN:VEVENT').slice(1).map(block=>{
+    const get=k=>{const m=block.match(new RegExp(k+'(?:;[^:]+)?:([^\r\n]+)'));return m?m[1].trim():'';};
+    const dtstart=get('DTSTART'),dtend=get('DTEND'),summary=get('SUMMARY');
+    return{summary,dtstart,date:parseICSDate(dtstart),endDate:parseICSDate(dtend)||null};
+  }).filter(e=>e.summary&&e.date)
+    .sort((a,b)=>a.date-b.date);
+}
 const SHEET_ID='1-bC-DrG_RtLT3P8wfpOR6Yo89Bh-DymEVy-x0keTpgw';
 const DEFAULT_SHEETS_URL=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv`;
 function parseCSVLine(line){
@@ -1536,7 +1544,7 @@ function TeacherPreply({data,save:persist}){
     setLoading(true);setErr('');
     fetch('/api/ics?url='+encodeURIComponent(icsUrl))
       .then(r=>{if(!r.ok)throw new Error('서버 오류');return r.text();})
-      .then(text=>{setEvents(parseICS(text));setLoading(false);})
+      .then(text=>{setEvents(parseICSAll(text));setLoading(false);})
       .catch(()=>{setErr('캘린더를 불러오지 못했어요. URL을 확인해주세요.');setLoading(false);});
   },[icsUrl]);
   const save=()=>{persist("icsUrl",input);setIcsUrl(input);};
