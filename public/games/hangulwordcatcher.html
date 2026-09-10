@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>한글 단어 떨어지기 (Hangul Word Catcher)</title>
+<title>Catch HANGUL! — 한글을 담아요!</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; }
   html,body { height:100%; overflow:hidden; }
@@ -23,15 +23,14 @@
   .hud-val { font-size:22px; font-weight:900; color:#5A3413; line-height:1.1; }
   #catPanel { text-align:center; background:#fff; border:3px solid #FF9F1C; }
   #catWord { font-size:22px; font-weight:900; color:#E85D75; }
-  #catWord.en { display:block; font-size:11px; color:#B08A5A; font-weight:700; }
   #lives { font-size:20px; letter-spacing:2px; }
   #muteBtn { position:absolute; top:12px; right:14px; z-index:6; width:44px; height:44px; border-radius:14px; border:3px solid #E85D75; background:#fff; font-size:20px; cursor:pointer; box-shadow:0 4px 0 rgba(232,93,117,.3); }
   #muteBtn:active { transform:translateY(3px); box-shadow:0 1px 0 rgba(232,93,117,.3); }
   .hud-top-left { display:flex; flex-direction:column; gap:8px; align-items:flex-start; }
 
   /* Basket */
-  #basket { position:absolute; bottom:8px; width:110px; height:78px; z-index:4; will-change:transform; transition:transform .12s cubic-bezier(.3,1.6,.5,1); }
-  #basket.bounce { transform:translate(-50%,0) scale(1.15,.85) !important; }
+  #basket { position:absolute; bottom:8px; width:110px; height:78px; z-index:4; will-change:transform; margin-left:-55px; }
+  #basket.bounce { transform:scale(1.15,.85); }
 
   /* Falling cards */
   .card {
@@ -43,22 +42,43 @@
   }
   .card .em { font-size:26px; }
   .card .w { font-size:19px; font-weight:900; color:#4A2E14; }
+  .card .g { font-size:11px; color:#B08A5A; font-weight:700; }
   .card.correct-glow { animation:cardPulse .5s infinite alternate; }
   @keyframes cardPulse { from{ box-shadow:0 6px 0 rgba(180,120,70,.25), inset 0 0 0 3px var(--cc); } to{ box-shadow:0 6px 0 rgba(180,120,70,.25), inset 0 0 0 6px var(--cc); } }
 
   /* Particles & popups */
   .particle { position:absolute; width:10px; height:10px; border-radius:50%; z-index:7; pointer-events:none; will-change:transform,opacity; }
   .popup { position:absolute; z-index:8; font-weight:900; font-size:24px; color:#FF7BA9; pointer-events:none; text-shadow:0 2px 0 #fff; will-change:transform,opacity; }
-  .popup.bad { color:#6B7A8F; }
+  .popup.bad { color:#6B7A8F; font-size:18px; }
 
   /* Overlays */
   .overlay { position:absolute; inset:0; z-index:20; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:24px; background:rgba(255,244,230,.88); backdrop-filter:blur(4px); }
   .overlay.hidden { display:none; }
-  .bigtitle { font-size:clamp(34px,9vw,64px); font-weight:900; color:#E85D75; text-shadow:0 4px 0 #FFD1DC, 0 8px 0 rgba(180,120,70,.2); line-height:1.15; animation:floaty 2.4s ease-in-out infinite; }
+  .bigtitle { font-size:clamp(38px,10vw,72px); font-weight:900; color:#E85D75; text-shadow:0 4px 0 #FFD1DC, 0 8px 0 rgba(180,120,70,.2); line-height:1.1; animation:floaty 2.4s ease-in-out infinite; letter-spacing:1px; }
+  .bigtitle .ko { display:block; font-size:clamp(16px,4vw,24px); color:#FF9F1C; margin-top:6px; letter-spacing:3px; }
   @keyframes floaty { 0%,100%{ transform:translateY(0) rotate(-2deg);} 50%{ transform:translateY(-10px) rotate(2deg);} }
-  .sub { margin-top:14px; font-size:16px; color:#8A5A2B; font-weight:700; }
-  .inst { margin-top:20px; background:#fff; border-radius:20px; padding:16px 22px; box-shadow:0 6px 0 rgba(180,120,70,.2); font-size:15px; color:#5A3413; font-weight:600; line-height:1.7; max-width:420px; }
-  .inst b { color:#E85D75; }
+  .sub { margin-top:10px; font-size:15px; color:#8A5A2B; font-weight:700; }
+
+  /* Instruction box */
+  .inst {
+    margin-top:16px; background:#fff; border-radius:20px; padding:14px 20px;
+    box-shadow:0 6px 0 rgba(180,120,70,.2); max-width:420px; width:100%;
+    text-align:left;
+  }
+  .inst-row { display:flex; flex-direction:column; gap:2px; padding:7px 0; border-bottom:1px solid #F5E8D8; }
+  .inst-row:last-child { border-bottom:none; padding-bottom:0; }
+  .inst-row:first-child { padding-top:0; }
+  .inst-ko { font-size:14px; font-weight:700; color:#4A2E14; line-height:1.5; }
+  .inst-ko b { color:#E85D75; }
+  .inst-en { font-size:11px; font-weight:600; color:#B08A5A; line-height:1.4; margin-top:1px; }
+
+  .lvls { margin-top:18px; display:flex; gap:12px; flex-wrap:wrap; justify-content:center; }
+  .lvlbtn { font-family:inherit; font-size:19px; font-weight:900; color:#fff; border:none; border-radius:999px; padding:14px 30px; cursor:pointer; box-shadow:0 6px 0 rgba(0,0,0,.18); animation:pulseBtn 1.8s infinite; }
+  .lvlbtn small { display:block; font-size:11px; font-weight:700; opacity:.9; letter-spacing:1px; }
+  .lvlbtn:active { transform:translateY(4px); box-shadow:0 2px 0 rgba(0,0,0,.18); }
+  .lvl-easy { background:linear-gradient(180deg,#6BCB77,#3FA34D); box-shadow:0 6px 0 #2E7D3A; }
+  .lvl-mid { background:linear-gradient(180deg,#FFB03A,#F08A00); box-shadow:0 6px 0 #C06F00; }
+  .lvl-hard { background:linear-gradient(180deg,#FF6B8B,#E0406B); box-shadow:0 6px 0 #B02E53; }
   .bigbtn { margin-top:26px; font-size:24px; font-weight:900; color:#fff; background:linear-gradient(180deg,#FF8FA3,#F76C8A); border:none; border-radius:999px; padding:16px 54px; cursor:pointer; box-shadow:0 6px 0 #D14B6B; font-family:inherit; animation:pulseBtn 1.6s infinite; }
   @keyframes pulseBtn { 0%,100%{ transform:scale(1);} 50%{ transform:scale(1.06);} }
   .bigbtn:active { transform:translateY(4px); box-shadow:0 2px 0 #D14B6B; }
@@ -66,7 +86,7 @@
   .gameover-score .n { font-size:40px; color:#FF7BA9; }
   .newrecord { color:#FF9F1C; font-size:22px; font-weight:900; margin-top:6px; animation:pulseBtn 1s infinite; }
   .combo-badge { position:absolute; z-index:8; font-weight:900; font-size:18px; color:#fff; background:linear-gradient(90deg,#FF9F1C,#FF5E7E); padding:6px 16px; border-radius:999px; pointer-events:none; will-change:transform,opacity; box-shadow:0 4px 0 rgba(210,80,100,.4); }
-  .levelbanner { position:absolute; top:38%; left:50%; transform:translateX(-50%); z-index:9; font-size:34px; font-weight:900; color:#9B5DE5; text-shadow:0 3px 0 #fff; pointer-events:none; }
+  .levelbanner { position:absolute; top:38%; left:50%; margin-left:-120px; width:240px; z-index:9; font-size:34px; font-weight:900; color:#9B5DE5; text-shadow:0 3px 0 #fff; pointer-events:none; text-align:center; }
 </style>
 </head>
 <body>
@@ -75,8 +95,8 @@
     <div id="hud">
       <div class="hud-top-left">
         <div class="panel"><div class="hud-label">점수 (SCORE)</div><div class="hud-val" id="scoreEl">0</div></div>
-        <div class="panel"><div class="hud-label">레벨 (LEVEL)</div><div class="hud-val" id="levelEl">1</div></div>
-        <div class="panel"><div class="hud-label">목표 (TARGET)</div><div class="hud-val" id="catWord">음식</div></div>
+        <div class="panel"><div class="hud-label">단계 (LEVEL)</div><div class="hud-val" id="levelEl">초급</div></div>
+        <div class="panel" id="catPanel"><div class="hud-label">목표 (TARGET)</div><div id="catWord">음식</div></div>
       </div>
       <div class="panel" style="margin-right:52px"><div class="hud-label">생명 (LIVES)</div><div id="lives">❤️❤️❤️</div></div>
     </div>
@@ -85,16 +105,33 @@
     <div id="basket"></div>
 
     <div class="overlay" id="startScreen">
-      <div class="bigtitle">한글 단어<br>떨어지기</div>
-      <div class="sub">Hangul Word Catcher</div>
+      <div class="bigtitle">Catch HANGUL!<span class="ko">한글 단어를 담아요!</span></div>
+      <div class="sub">떨어지는 한국어 단어를 바구니에 담아요 🧺</div>
+
       <div class="inst">
-        🧺 바구니로 떨어지는 단어를 받으세요!<br>
-        🎯 위의 <b>목표 카테고리</b>와 같은 단어를 잡으면 점수 +<br>
-        ❌ 다른 단어를 잡거나 정답을 놓치면 생명 -1<br>
-        🔥 연속 정답은 <b>콤보 보너스!</b><br>
-        ⌨️ 방향키(←→) 이동 · 📱 손가락으로 드래그
+        <div class="inst-row">
+          <div class="inst-ko">🎯 위의 <b>목표 카테고리</b>와 같은 단어를 잡으세요!</div>
+          <div class="inst-en">Catch words that match the target category shown above.</div>
+        </div>
+        <div class="inst-row">
+          <div class="inst-ko">✅ 맞는 단어 → <b>+10점</b> &nbsp;·&nbsp; 🔥 연속 정답 → <b>콤보 보너스!</b></div>
+          <div class="inst-en">Correct word = +10 pts · Streak = Combo bonus!</div>
+        </div>
+        <div class="inst-row">
+          <div class="inst-ko">❌ 틀린 단어를 잡거나 놓치면 → <b>생명 -1</b> (3개 → 게임 종료)</div>
+          <div class="inst-en">Wrong catch or miss = -1 life · 3 lives total, then game over.</div>
+        </div>
+        <div class="inst-row">
+          <div class="inst-ko">⌨️ 방향키 ←→ &nbsp;·&nbsp; 🖱️ 마우스 &nbsp;·&nbsp; 📱 손가락 드래그</div>
+          <div class="inst-en">Arrow keys / Mouse / Touch drag to move the basket.</div>
+        </div>
       </div>
-      <button class="bigbtn" id="startBtn">시작하기 (START)</button>
+
+      <div class="lvls">
+        <button class="lvlbtn lvl-easy" data-lvl="초급">🌱 초급<small>BEGINNER</small></button>
+        <button class="lvlbtn lvl-mid" data-lvl="중급">🚀 중급<small>INTERMEDIATE</small></button>
+        <button class="lvlbtn lvl-hard" data-lvl="고급">🔥 고급<small>ADVANCED</small></button>
+      </div>
     </div>
 
     <div class="overlay hidden" id="overScreen">
@@ -105,7 +142,8 @@
         최고 점수: <span id="finalHigh">0</span>
         <div class="newrecord hidden" id="newRecord">🎉 새 최고 기록!</div>
       </div>
-      <button class="bigbtn" id="restartBtn">다시 하기 (RETRY)</button>
+      <button class="bigbtn" id="restartBtn">다시 도전! (RETRY)</button>
+      <button class="bigbtn" id="menuBtn" style="background:linear-gradient(180deg,#9B5DE5,#7B3FD1); box-shadow:0 6px 0 #5E2FA8; margin-top:12px; font-size:18px; padding:12px 36px;">단계 선택으로 (MENU)</button>
     </div>
   </div>
 </div>
@@ -113,13 +151,41 @@
 <script>
 (function(){
   "use strict";
+
   var WORDS = {
-    "음식": [["사과","🍎"],["빵","🍞"],["우유","🥛"],["김치","🥬"],["계란","🥚"],["치즈","🧀"],["고기","🍖"],["밥","🍚"],["포도","🍇"],["당근","🥕"],["아이스크림","🍦"],["피자","🍕"],["떡볶이","🍢"],["커피","☕"],["수박","🍉"],["바나나","🍌"],["고구마","🍠"],["라면","🍜"],["햄버거","🍔"],["도넛","🍩"]],
-    "동물": [["강아지","🐶"],["고양이","🐱"],["토끼","🐰"],["사자","🦁"],["호랑이","🐯"],["코끼리","🐘"],["기린","🦒"],["펭귄","🐧"],["물고기","🐟"],["새","🐦"],["오리","🦆"],["말","🐴"],["돼지","🐷"],["닭","🐔"],["곰","🐻"],["개구리","🐸"],["원숭이","🐵"],["달팽이","🐌"],["나비","🦋"],["거북이","🐢"]],
-    "사물": [["책","📚"],["연필","✏️"],["우산","☂️"],["시계","⏰"],["가방","🎒"],["신발","👟"],["볼펜","🖊️"],["휴대폰","📱"],["안경","👓"],["열쇠","🔑"],["모자","🧢"],["의자","🪑"],["창문","🪟"],["전구","💡"],["사다리","🪜"],["테이프","🩹"],["종이","📄"],["컵","🥛"],["드라이버","🪛"],["이어폰","🎧"]]
+    "초급": {
+      "음식": [["사과","🍎","apple"],["물","💧","water"],["밥","🍚","rice"],["빵","🍞","bread"],["우유","🥛","milk"],["김치","🥬","kimchi"],["계란","🥚","egg"],["고기","🍖","meat"]],
+      "동물": [["강아지","🐶","puppy"],["고양이","🐱","cat"],["토끼","🐰","rabbit"],["새","🐦","bird"],["물고기","🐟","fish"],["말","🐴","horse"],["돼지","🐷","pig"],["닭","🐔","chicken"]],
+      "사물": [["책","📚","book"],["연필","✏️","pencil"],["시계","⏰","clock"],["가방","🎒","bag"],["신발","👟","shoes"],["열쇠","🔑","key"],["모자","🧢","hat"],["문","🚪","door"]],
+      "자연": [["하늘","🌤️","sky"],["바다","🌊","sea"],["산","⛰️","mountain"],["해","☀️","sun"],["달","🌙","moon"],["별","⭐","star"],["나무","🌳","tree"],["꽃","🌸","flower"]],
+      "색깔": [["빨간색","🔴","red"],["파란색","🔵","blue"],["노란색","🟡","yellow"],["초록색","🟢","green"],["검은색","⚫","black"],["흰색","⚪","white"],["분홍색","🩷","pink"],["보라색","🟣","purple"]],
+      "직업": [["의사","🧑‍⚕️","doctor"],["선생님","🧑‍🏫","teacher"],["경찰","👮","police officer"],["요리사","🧑‍🍳","cook"],["학생","🧑‍🎓","student"],["가수","🧑‍🎤","singer"],["소방관","🧑‍🚒","firefighter"],["농부","🧑‍🌾","farmer"]],
+      "장소": [["학교","🏫","school"],["집","🏠","house"],["병원","🏥","hospital"],["가게","🏪","store"],["공원","🏞️","park"],["시장","🛒","market"],["은행","🏦","bank"],["우체국","📮","post office"]],
+      "교통": [["버스","🚌","bus"],["택시","🚕","taxi"],["지하철","🚇","subway"],["자전거","🚲","bicycle"],["비행기","✈️","airplane"],["배","🚢","ship"],["기차","🚆","train"],["자동차","🚗","car"]]
+    },
+    "중급": {
+      "음식": [["삼겹살","🥓","pork belly"],["비빔밥","🍲","bibimbap"],["떡볶이","🍢","tteokbokki"],["김밥","🌯","kimbap"],["라면","🍜","ramyeon"],["치즈","🧀","cheese"],["포도","🍇","grapes"],["고구마","🍠","sweet potato"]],
+      "동물": [["호랑이","🐯","tiger"],["사자","🦁","lion"],["코끼리","🐘","elephant"],["펭귄","🐧","penguin"],["개구리","🐸","frog"],["나비","🦋","butterfly"],["거북이","🐢","turtle"],["기린","🦒","giraffe"]],
+      "사물": [["우산","☂️","umbrella"],["휴대폰","📱","cell phone"],["의자","🪑","chair"],["창문","🪟","window"],["전구","💡","light bulb"],["이어폰","🎧","earphones"],["거울","🪞","mirror"],["자물쇠","🔒","lock"]],
+      "자연": [["무지개","🌈","rainbow"],["구름","☁️","cloud"],["바람","🍃","wind"],["비","🌧️","rain"],["눈","❄️","snow"],["안개","🌫️","fog"],["숲","🌲","forest"],["개울","🏞️","stream"]],
+      "색깔": [["갈색","🟤","brown"],["회색","🩶","gray"],["주황색","🟠","orange"],["연두색","🫒","yellow-green"],["금색","🥇","gold"],["은색","🥈","silver"],["청록색","🩵","teal"],["자주색","🟥","crimson"]],
+      "직업": [["간호사","💉","nurse"],["변호사","⚖️","lawyer"],["군인","🪖","soldier"],["화가","🎨","painter"],["배우","🎭","actor"],["통역사","🗣️","interpreter"],["목수","🪚","carpenter"],["파일럿","👨‍✈️","pilot"]],
+      "장소": [["도서관","📚","library"],["공항","🛫","airport"],["박물관","🏛️","museum"],["카페","☕","cafe"],["극장","🎬","theater"],["약국","💊","pharmacy"],["슈퍼마켓","🛒","supermarket"],["정류장","🚏","bus stop"]],
+      "교통": [["오토바이","🏍️","motorcycle"],["트럭","🚚","truck"],["요트","⛵","yacht"],["캠핑카","🚐","camper van"],["킥보드","🛴","kickboard"],["유람선","🛳️","cruise ship"],["우주선","🚀","spaceship"],["마차","🐎","carriage"]]
+    },
+    "고급": {
+      "음식": [["전복죽","🥣","abalone porridge"],["막걸리","🍶","makgeolli"],["잡채","🍝","japchae"],["수정과","🥤","sujeonggwa"],["갈비탕","🍲","galbitang"],["삼계탕","🍗","samgyetang"],["떡갈비","🍖","tteokgalbi"],["약과","🍩","yakgwa"]],
+      "동물": [["두루미","🕊️","crane"],["반달가슴곰","🐻","moon bear"],["도롱뇽","🦎","salamander"],["따오기","🦩","crested ibis"],["담비","🦡","marten"],["수달","🦦","otter"],["고라니","🦌","water deer"],["물범","🦭","seal"]],
+      "사물": [["서랍장","🗄️","drawer"],["돗자리","🧺","picnic mat"],["다듬이돌","🪨","grinding stone"],["등잔","🕯️","oil lamp"],["가락바퀴","🧵","spindle"],["목탁","🪵","wooden fish"],["소반","🪵","small table"],["질그릇","🏺","earthenware"]],
+      "자연": [["절벽","🧗","cliff"],["골짜기","⛰️","valley"],["습지","🪷","wetland"],["이끼","🌿","moss"],["화산","🌋","volcano"],["사막","🏜️","desert"],["동굴","🕳️","cave"],["호수","🏞️","lake"]],
+      "색깔": [["다홍색","🌺","crimson red"],["쪽빛","🟦","indigo"],["감청색","🔷","navy"],["올리브색","🫒","olive"],["살구색","🍑","apricot"],["옥색","🟩","jade green"],["밤색","🌰","maroon"],["회청색","🩶","grayish blue"]],
+      "직업": [["검사","⚖️","prosecutor"],["판사","👨‍⚖️","judge"],["건축가","📐","architect"],["작곡가","🎼","composer"],["시인","✍️","poet"],["조각가","🗿","sculptor"],["감독","🎬","director"],["사진가","📷","photographer"]],
+      "장소": [["정자","🏯","pavilion"],["사찰","🛕","temple"],["온천","♨️","hot spring"],["발전소","⚡","power plant"],["관측소","🔭","observatory"],["전망대","🗼","observatory deck"],["시청","🏛️","city hall"],["항구","⚓","port"]],
+      "교통": [["케이블카","🚡","cable car"],["삼륜차","🛺","three-wheeler"],["뗏목","🪵","raft"],["증기기관차","🚂","steam locomotive"],["모노레일","🚝","monorail"],["경운기","🚜","farm truck"],["곤도라","🚠","gondola"],["호버크래프트","🛥️","hovercraft"]]
+    }
   };
-  var CATS = Object.keys(WORDS);
-  var CAT_COLORS = {"음食":"", "음식":"#FF9F1C","동물":"#4CC9F0","사물":"#B388FF"};
+  var LEVELS = ["초급","중급","고급"];
+  var CAT_COLORS = {"음식":"#FF9F1C","동물":"#4CC9F0","사물":"#B388FF","자연":"#43AA8B","색깔":"#F72585","직업":"#577590","장소":"#F9A03F","교통":"#9B5DE5"};
 
   var playfield = document.getElementById('playfield');
   var basketEl = document.getElementById('basket');
@@ -129,22 +195,21 @@
   var catEl = document.getElementById('catWord');
   var livesEl = document.getElementById('lives');
 
-  // Basket SVG
   basketEl.innerHTML = '<svg viewBox="0 0 110 78" width="110" height="78"><path d="M8 26 Q55 -14 102 26 L92 70 Q55 82 18 70 Z" fill="#C68B4E" stroke="#8A5A2B" stroke-width="5"/><path d="M8 26 Q55 10 102 26 L98 40 Q55 26 12 40 Z" fill="#FF9F1C" opacity=".85"/><g stroke="#8A5A2B" stroke-width="4" opacity=".6"><line x1="30" y1="42" x2="34" y2="68"/><line x1="50" y1="44" x2="50" y2="72"/><line x1="72" y1="42" x2="70" y2="68"/></g><text x="55" y="66" text-anchor="middle" font-size="18">🧺</text></svg>';
 
-  // Sky decorations
   [[8,10,70,'#FFC2D1'],[80,18,50,'#FFE29A'],[20,30,40,'#C2F0FF'],[60,6,36,'#D9C2FF']].forEach(function(d){
     var s = document.createElement('div'); s.className='skydeco';
     s.style.cssText='left:'+d[0]+'%;top:'+d[1]+'%;width:'+d[2]+'px;height:'+d[2]+'px;background:'+d[3]+';';
     shakeEl.insertBefore(s, shakeEl.firstChild);
   });
 
-  var S = { running:false, score:0, lives:3, level:1, combo:0, cat:"음식", hi:+(localStorage.getItem('hwc_hi')||0),
-            basketX:.5, cards:[], lastSpawn:0, spawnInterval:1800, fallBase:110, startedAt:0, muted:false, raf:0, lastT:0, targetWords:[] };
-  scoreEl.textContent = S.score; levelEl.textContent = 1;
+  var S = { running:false, score:0, lives:3, lvl:"초급", combo:0, cat:"음식", hi:+(localStorage.getItem('ch_hi')||0),
+            basketX:.5, cards:[], lastSpawn:0, spawnInterval:1800, fallBase:110, muted:false, raf:0, lastT:0 };
+
+  var his = {};
+  LEVELS.forEach(function(l){ his[l] = +(localStorage.getItem('ch_hi_'+l) || 0); });
   document.getElementById('finalHigh').textContent = S.hi;
 
-  // ---------- Audio ----------
   var actx = null;
   function beep(freq, dur, type, vol, slide){
     if (S.muted) return;
@@ -167,12 +232,11 @@
     S.muted = !S.muted; this.textContent = S.muted ? '🔇' : '🔊';
   });
 
-  // ---------- Effects ----------
   function burst(x, y, color, n){
     for (var i=0;i<n;i++){
       var p = document.createElement('div'); p.className='particle';
       var sz = 6+Math.random()*10;
-      p.style.cssText = 'left:'+x+'px;top:'+y+'px;width:'+sz+'px;height:'+sz+'px;background:'+(color||'#FF9F1C')+';left:'+(x-sz/2)+'px;top:'+(y-sz/2)+'px;';
+      p.style.cssText = 'width:'+sz+'px;height:'+sz+'px;background:'+(color||'#FF9F1C')+';left:'+(x-sz/2)+'px;top:'+(y-sz/2)+'px;';
       playfield.appendChild(p);
       var ang = Math.random()*Math.PI*2, sp = 80+Math.random()*180;
       var dx = Math.cos(ang)*sp, dy = Math.sin(ang)*sp - 140;
@@ -211,55 +275,62 @@
   }
   function levelBanner(){
     var el = document.createElement('div'); el.className='levelbanner';
-    el.textContent = '레벨 ' + S.level + '!';
+    el.textContent = '⚡ 속도 업!';
     shakeEl.appendChild(el);
     el.animate([
-      {transform:'translateX(-50%) scale(.3)', opacity:0},
-      {transform:'translateX(-50%) scale(1.2)', opacity:1, offset:.2},
-      {transform:'translateX(-50%) scale(1)', opacity:1, offset:.8},
-      {transform:'translateX(-50%) scale(1.4)', opacity:0}
+      {transform:'scale(.3)', opacity:0},
+      {transform:'scale(1.2)', opacity:1, offset:.2},
+      {transform:'scale(1)', opacity:1, offset:.8},
+      {transform:'scale(1.4)', opacity:0}
     ], {duration:1600}).onfinish = function(){ el.remove(); };
   }
 
-  // ---------- Game logic ----------
   function pickCategory(){
-    var c = CATS[Math.floor(Math.random()*CATS.length)];
-    S.cat = c; S.targetWords = WORDS[c].map(function(w){ return w[0]; });
-    catEl.textContent = c;
+    var cats = Object.keys(WORDS[S.lvl]);
+    S.cat = cats[Math.floor(Math.random()*cats.length)];
+    catEl.textContent = S.cat;
   }
   function setLives(){
     livesEl.textContent = S.lives > 0 ? new Array(S.lives+1).join('❤️') : '💔';
   }
-  function levelOf(score){ return Math.min(9, 1 + Math.floor(score/120)); }
-  function applyLevel(){
-    var lv = levelOf(S.score);
-    if (lv > S.level){
-      S.level = lv; levelEl.textContent = lv;
-      S.spawnInterval = Math.max(650, 1800 - (lv-1)*150);
-      S.fallBase = 110 + (lv-1)*22;
-      levelBanner(); sfxLevel();
-      burst(window.innerWidth*.5, window.innerHeight*.4, '#9B5DE5', 22);
-    }
+  var SETTING = {
+    "초급": { spawn:2000, fall:100, correctRate:.55, speedRamp:8,  rampEvery:100 },
+    "중급": { spawn:1500, fall:135, correctRate:.45, speedRamp:12, rampEvery:120 },
+    "고급": { spawn:1100, fall:170, correctRate:.38, speedRamp:16, rampEvery:140 }
+  };
+  function applyRamp(){
+    var st = SETTING[S.lvl];
+    var stage = Math.floor(S.score / st.rampEvery);
+    S.spawnInterval = Math.max(650, st.spawn - stage*130);
+    S.fallBase = st.fall + stage*st.speedRamp;
   }
   function spawn(){
-    var catKeys = CATS;
-    var correct = Math.random() < .45;
+    var pool = WORDS[S.lvl];
+    var cats = Object.keys(pool);
+    var correct = Math.random() < SETTING[S.lvl].correctRate;
     var cat, entry;
-    if (correct) { cat = S.cat; entry = WORDS[cat][Math.floor(Math.random()*WORDS[cat].length)]; }
-    else {
-      cat = CATS[Math.floor(Math.random()*CATS.length)];
-      if (cat === S.cat && Math.random()<.7) cat = CATS[(CATS.indexOf(cat)+1)%CATS.length];
-      if (cat === S.cat) { // fallback: pick a wrong word from target cat visually but it's correct — avoid; pick other cat
-        cat = catKeys.find(function(c){return c!==S.cat;});
-      }
-      entry = WORDS[cat][Math.floor(Math.random()*WORDS[cat].length)];
+    if (correct) {
+      cat = S.cat;
+    } else {
+      cat = cats[Math.floor(Math.random()*cats.length)];
+      if (cat === S.cat && cats.length>1) cat = cats[(cats.indexOf(cat)+1)%cats.length];
     }
+    entry = pool[cat][Math.floor(Math.random()*pool[cat].length)];
     var el = document.createElement('div'); el.className='card';
     el.style.setProperty('--cc', CAT_COLORS[cat] || '#9BD1FF');
-    el.innerHTML = '<span class="em">'+entry[1]+'</span><span class="w">'+entry[0]+'</span>';
+    el.innerHTML = '<span class="em">'+entry[1]+'</span><span class="w">'+entry[0]+'</span><span class="g">'+entry[2]+'</span>';
     playfield.appendChild(el);
     var w = el.offsetWidth || 120;
     var x = Math.random()*(window.innerWidth - w - 20) + 10;
+    for (var tries=0; tries<16; tries++){
+      var ok = true;
+      for (var j=0; j<S.cards.length; j++){
+        var o = S.cards[j];
+        if (o.y < 220 && Math.abs((x + w/2) - (o.x + o.w/2)) < (w + o.w)/2 + 40){ ok = false; break; }
+      }
+      if (ok) break;
+      x = Math.random()*(window.innerWidth - w - 20) + 10;
+    }
     el.style.left = x+'px';
     var speed = S.fallBase * (0.85 + Math.random()*.35);
     S.cards.push({el:el, x:x, w:w, y:-90, speed:speed, word:entry[0], correct:correct, rot:(Math.random()*16-8), wob:Math.random()*Math.PI*2});
@@ -270,7 +341,7 @@
     var bx = S.basketX*window.innerWidth;
     if (card.correct){
       S.combo++;
-      var pts = 10 + Math.min(S.combo-1,5)*5 + S.level*2;
+      var pts = 10 + Math.min(S.combo-1,5)*5;
       S.score += pts;
       sfxCatch(S.combo);
       popup(card.x + card.w/2, card.y, '+'+pts);
@@ -278,12 +349,12 @@
       if (S.combo >= 3) comboBadge(bx, window.innerHeight-150, S.combo);
       basketEl.classList.add('bounce');
       setTimeout(function(){ basketEl.classList.remove('bounce'); }, 130);
-      applyLevel();
+      applyRamp();
     } else {
       S.combo = 0;
       S.lives--; setLives();
       sfxWrong(); shakeScreen(true);
-      popup(card.x + card.w/2, card.y, '앗! 틀린 단어 (-1 생명)', true);
+      popup(card.x + card.w/2, card.y, '앗, 다른 단어! -1 ❤️', true);
       burst(bx, window.innerHeight-70, '#8D99AE', 10);
       if (S.lives <= 0) return gameOver();
     }
@@ -292,54 +363,30 @@
   }
   function removeCard(card){ card.el.remove(); var i=S.cards.indexOf(card); if(i>=0) S.cards.splice(i,1); }
 
-  function gameOver(){
-    S.running = false;
-    sfxOver();
-    var isRecord = S.score > S.hi;
-    if (isRecord){ S.hi = S.score; localStorage.setItem('hwc_hi', S.score); }
-    document.getElementById('finalScore').textContent = S.score;
-    document.getElementById('finalHigh').textContent = S.hi;
-    document.getElementById('newRecord').classList.toggle('hidden', !isRecord);
-    S.cards.slice().forEach(removeCard);
-    document.getElementById('overScreen') ;
-    document.getElementById('overScreen') = null;
-    setTimeout(function(){ document.getElementById('overScreen'); }, 0);
-    show('overScreen');
-  }
   function show(id){
     ['startScreen','overScreen'].forEach(function(s){ document.getElementById(s).classList.add('hidden'); });
     if (id) document.getElementById(id).classList.remove('hidden');
   }
-  // overScreen element exists? We only declared startScreen in HTML — add one dynamically.
-  var overEl = document.createElement('div');
-  overEl.className='overlay hidden'; overEl.id='overScreen';
-  overEl.innerHTML = '<div class="bigtitle" style="font-size:clamp(28px,7vw,48px)">게임 오버!</div><div class="sub">Game Over</div>'+
-    '<div class="gameover-score">점수: <span class="n" id="finalScore">0</span><br>최고 점수: <span id="finalHighEl">0</span><div class="newrecord hidden" id="newRecord">🎉 새 최고 기록!</div></div>'+
-    '<button class="bigbtn" id="restartBtn">다시 하기 (RETRY)</button>';
-  shakeEl.appendChild(overEl);
-  document.getElementById('finalHigh').textContent = S.hi;
-  overEl.querySelector('#restartBtn').addEventListener('click', startGame);
 
-  function gameOverUI(){
-    S.running = false; sfxOver();
-    var isRecord = S.score > S.hi;
-    if (isRecord){ S.hi = S.score; localStorage.setItem('hwc_hi', S.score); document.getElementById('finalHigh').textContent = S.hi; }
-    overEl.querySelector('#finalScore').textContent = S.score;
-    overEl.querySelector('#finalHighEl').textContent = S.hi;
-    overEl.querySelector('#newRecord').classList.toggle('hidden', !isRecord);
+  function gameOver(){
+    S.running = false;
+    sfxOver();
+    var isRecord = S.score > (his[S.lvl]||0);
+    if (isRecord){ his[S.lvl] = S.score; localStorage.setItem('ch_hi_'+S.lvl, S.score); }
+    document.getElementById('finalScore').textContent = S.score;
+    document.getElementById('finalHigh').textContent = his[S.lvl];
+    document.getElementById('newRecord').classList.toggle('hidden', !isRecord);
     S.cards.slice().forEach(removeCard);
     show('overScreen');
   }
-  // replace earlier broken gameOver references
-  var gameOver = gameOverUI;
+  document.getElementById('restartBtn').addEventListener('click', function(){ startGame(S.lvl); });
+  document.getElementById('menuBtn').addEventListener('click', function(){ show('startScreen'); });
 
   function loop(t){
     if (!S.running) return;
     var dt = Math.min(50, t - (S.lastT||t)); S.lastT = t;
     var H = window.innerHeight;
-    // spawn
-    if (t - S.lastSpawn > S.spawnInterval){ S.lastSpawn = S.lastSpawn; spawn(); S.lastSpawn = t; }
-    // cards
+    if (t - S.lastSpawn > S.spawnInterval){ spawn(); S.lastSpawn = t; }
     for (var i=S.cards.length-1; i>=0; i--){
       var c = S.cards[i];
       c.y += c.speed * dt/1000;
@@ -356,8 +403,8 @@
         if (c.correct){
           S.combo = 0; S.lives--; setLives();
           sfxWrong(); shakeScreen(false);
-          popup(Math.min(Math.max(c.x,60), window.innerWidth-160), H-140, '놓쳤어요! (-1 생명)', true);
-          if (S.lives <= 0){ gameOverUI(); return; }
+          popup(Math.min(Math.max(c.x,60), window.innerWidth-160), H-140, '놓쳤어요! -1 ❤️', true);
+          if (S.lives <= 0){ gameOver(); return; }
         }
         removeCard(c);
       }
@@ -365,18 +412,12 @@
     S.raf = requestAnimationFrame(loop);
   }
 
-  // ---------- Input ----------
   function setBasket(clientX){
     S.basketX = Math.min(.96, Math.max(.04, clientX/window.innerWidth));
-    basketEl.style.left = (S.basketX*100)+'%';
   }
-  basketEl.style.left = '50%';
-  basketEl.style.transform = 'translateX(-50%)';
-  basketEl.style.marginLeft = '0';
-  // position via left%; transform used for bounce — combine
   function placeBasket(){ basketEl.style.left = (S.basketX*100)+'%'; }
   window.addEventListener('keydown', function(e){
-    if (!S.running) { if(e.key===' '||e.key==='Enter'){ startGame(); } return; }
+    if (!S.running) return;
     if (e.key==='ArrowLeft'){ setBasket(S.basketX*window.innerWidth - 70); placeBasket(); e.preventDefault(); }
     if (e.key==='ArrowRight'){ setBasket(S.basketX*window.innerWidth + 70); placeBasket(); e.preventDefault(); }
   });
@@ -388,10 +429,13 @@
   document.addEventListener('mousemove', function(e){ if(S.running && !dragging && matchMedia('(pointer:fine)').matches){ setBasket(e.clientX); placeBasket(); } });
   window.addEventListener('resize', placeBasket);
 
-  function startGame(){
-    S.running = true; S.score=0; S.lives=3; S.level=1; S.combo=0;
-    S.spawnInterval=1800; S.fallBase=110; S.cards=[]; S.lastSpawn=0;
-    scoreEl.textContent='0'; levelEl.textContent='1'; setLives(); pickCategory(); placeBasket();
+  function startGame(lvl){
+    S.lvl = lvl || S.lvl;
+    levelEl.textContent = S.lvl;
+    S.running = true; S.score=0; S.lives=3; S.combo=0;
+    S.spawnInterval = SETTING[S.lvl].spawn; S.fallBase = SETTING[S.lvl].fall;
+    S.cards=[]; S.lastSpawn=0;
+    scoreEl.textContent='0'; setLives(); pickCategory(); placeBasket();
     show(null);
     playfield.innerHTML='';
     S.lastT = 0;
@@ -399,11 +443,11 @@
     S.raf = requestAnimationFrame(loop);
     beep(660,.15,'triangle',.15);
   }
-  document.getElementById('startBtn').addEventListener('click', startGame);
+  Array.prototype.forEach.call(document.querySelectorAll('.lvlbtn'), function(b){
+    b.addEventListener('click', function(){ startGame(b.getAttribute('data-lvl')); });
+  });
   setLives();
 })();
 </script>
-</body>
-</html>
 </body>
 </html>
