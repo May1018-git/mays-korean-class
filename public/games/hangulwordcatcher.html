@@ -7,11 +7,7 @@
 <style>
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; }
   html,body { height:100%; overflow:hidden; }
-  body {
-    font-family: system-ui, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
-    background: linear-gradient(180deg, #FFE3EC 0%, #FFD6A5 45%, #FFF3C4 100%);
-    touch-action:none;
-  }
+  body { font-family:system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif; background:linear-gradient(180deg,#FFE3EC 0%,#FFD6A5 45%,#FFF3C4 100%); touch-action:none; }
   #game { position:fixed; inset:0; overflow:hidden; }
   .skydeco { position:absolute; border-radius:50%; opacity:.5; pointer-events:none; }
   #shake { position:absolute; inset:0; }
@@ -28,20 +24,19 @@
   #muteBtn:active { transform:translateY(3px); box-shadow:0 1px 0 rgba(232,93,117,.3); }
   .hud-top-left { display:flex; flex-direction:column; gap:8px; align-items:flex-start; }
 
-  /* Mobile HUD compact */
-  @media (max-width:500px) {
-    #hud { padding:8px 10px; }
-    .hud-top-left { gap:5px; }
-    .panel { padding:5px 9px; border-radius:12px; }
-    .hud-label { font-size:9px; letter-spacing:.5px; }
-    .hud-val { font-size:16px; }
-    #catWord { font-size:16px; }
-    #lives { font-size:15px; letter-spacing:1px; }
-    #muteBtn { width:34px; height:34px; font-size:15px; top:8px; right:8px; border-radius:10px; }
-    .card .em { font-size:20px; }
-    .card .w { font-size:15px; }
-    .card .g { font-size:10px; }
-    .card { padding:6px 10px; gap:5px; border-radius:12px; }
+  @media (max-width:500px){
+    #hud { padding:7px 9px; }
+    .hud-top-left { gap:4px; }
+    .panel { padding:4px 8px; border-radius:10px; }
+    .hud-label { font-size:9px; letter-spacing:.3px; }
+    .hud-val { font-size:14px; }
+    #catWord { font-size:14px; }
+    #lives { font-size:13px; letter-spacing:1px; }
+    #muteBtn { width:32px; height:32px; font-size:14px; top:7px; right:7px; border-radius:9px; }
+    .card .em { font-size:18px; }
+    .card .w { font-size:13px; }
+    .card .g { font-size:9px; }
+    .card { padding:5px 8px; gap:4px; border-radius:10px; }
   }
 
   /* Basket */
@@ -49,18 +44,10 @@
   #basket.bounce { transform:scale(1.15,.85); }
 
   /* Falling cards */
-  .card {
-    position:absolute; top:-90px; z-index:3;
-    background:#fff; border-radius:16px; padding:8px 14px;
-    display:flex; align-items:center; gap:8px;
-    box-shadow:0 6px 0 rgba(180,120,70,.25), inset 0 0 0 3px var(--cc,#9BD1FF);
-    will-change:transform; white-space:nowrap;
-  }
+  .card { position:absolute; top:-90px; z-index:3; background:#fff; border-radius:16px; padding:8px 14px; display:flex; align-items:center; gap:8px; box-shadow:0 6px 0 rgba(180,120,70,.25), inset 0 0 0 3px var(--cc,#9BD1FF); will-change:transform; white-space:nowrap; }
   .card .em { font-size:26px; }
   .card .w { font-size:19px; font-weight:900; color:#4A2E14; }
   .card .g { font-size:11px; color:#B08A5A; font-weight:700; }
-  .card.correct-glow { animation:cardPulse .5s infinite alternate; }
-  @keyframes cardPulse { from{ box-shadow:0 6px 0 rgba(180,120,70,.25), inset 0 0 0 3px var(--cc); } to{ box-shadow:0 6px 0 rgba(180,120,70,.25), inset 0 0 0 6px var(--cc); } }
 
   /* Particles & popups */
   .particle { position:absolute; width:10px; height:10px; border-radius:50%; z-index:7; pointer-events:none; will-change:transform,opacity; }
@@ -68,41 +55,55 @@
   .popup.bad { color:#6B7A8F; font-size:18px; }
 
   /* Overlays */
-  .overlay { position:absolute; inset:0; z-index:20; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:24px; background:rgba(255,244,230,.88); backdrop-filter:blur(4px); }
+  .overlay { position:absolute; inset:0; z-index:20; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:20px 16px; background:rgba(255,244,230,.93); backdrop-filter:blur(6px); overflow-y:auto; }
   .overlay.hidden { display:none; }
-  .bigtitle { font-size:clamp(38px,10vw,72px); font-weight:900; color:#E85D75; text-shadow:0 4px 0 #FFD1DC, 0 8px 0 rgba(180,120,70,.2); line-height:1.1; animation:floaty 2.4s ease-in-out infinite; letter-spacing:1px; }
-  .bigtitle .ko { display:block; font-size:clamp(16px,4vw,24px); color:#FF9F1C; margin-top:6px; letter-spacing:3px; }
-  @keyframes floaty { 0%,100%{ transform:translateY(0) rotate(-2deg);} 50%{ transform:translateY(-10px) rotate(2deg);} }
-  .sub { margin-top:10px; font-size:15px; color:#8A5A2B; font-weight:700; }
+  .bigtitle { font-size:clamp(34px,9vw,64px); font-weight:900; color:#E85D75; text-shadow:0 4px 0 #FFD1DC,0 8px 0 rgba(180,120,70,.2); line-height:1.1; animation:floaty 2.4s ease-in-out infinite; letter-spacing:1px; }
+  .bigtitle .ko { display:block; font-size:clamp(14px,3.5vw,22px); color:#FF9F1C; margin-top:6px; letter-spacing:3px; }
+  @keyframes floaty { 0%,100%{transform:translateY(0) rotate(-2deg);}50%{transform:translateY(-8px) rotate(2deg);} }
+  .sub { margin-top:8px; font-size:14px; color:#8A5A2B; font-weight:700; }
 
   /* Instruction box */
-  .inst {
-    margin-top:16px; background:#fff; border-radius:20px; padding:14px 20px;
-    box-shadow:0 6px 0 rgba(180,120,70,.2); max-width:420px; width:100%;
-    text-align:left;
-  }
-  .inst-row { display:flex; flex-direction:column; gap:2px; padding:7px 0; border-bottom:1px solid #F5E8D8; }
+  .inst { margin-top:14px; background:#fff; border-radius:18px; padding:12px 16px; box-shadow:0 6px 0 rgba(180,120,70,.2); max-width:400px; width:100%; text-align:left; }
+  .inst-row { display:flex; flex-direction:column; gap:2px; padding:6px 0; border-bottom:1px solid #F5E8D8; }
   .inst-row:last-child { border-bottom:none; padding-bottom:0; }
   .inst-row:first-child { padding-top:0; }
-  .inst-ko { font-size:14px; font-weight:700; color:#4A2E14; line-height:1.5; }
+  .inst-ko { font-size:13px; font-weight:700; color:#4A2E14; line-height:1.5; }
   .inst-ko b { color:#E85D75; }
   .inst-en { font-size:11px; font-weight:600; color:#B08A5A; line-height:1.4; margin-top:1px; }
 
-  .lvls { margin-top:18px; display:flex; gap:12px; flex-wrap:wrap; justify-content:center; }
-  .lvlbtn { font-family:inherit; font-size:19px; font-weight:900; color:#fff; border:none; border-radius:999px; padding:14px 30px; cursor:pointer; box-shadow:0 6px 0 rgba(0,0,0,.18); animation:pulseBtn 1.8s infinite; }
-  .lvlbtn small { display:block; font-size:11px; font-weight:700; opacity:.9; letter-spacing:1px; }
+  /* Level buttons */
+  .lvls { margin-top:16px; display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
+  .lvlbtn { font-family:inherit; font-size:18px; font-weight:900; color:#fff; border:none; border-radius:999px; padding:13px 26px; cursor:pointer; box-shadow:0 6px 0 rgba(0,0,0,.18); animation:pulseBtn 1.8s infinite; }
+  .lvlbtn small { display:block; font-size:10px; font-weight:700; opacity:.9; letter-spacing:1px; }
   .lvlbtn:active { transform:translateY(4px); box-shadow:0 2px 0 rgba(0,0,0,.18); }
   .lvl-easy { background:linear-gradient(180deg,#6BCB77,#3FA34D); box-shadow:0 6px 0 #2E7D3A; }
   .lvl-mid { background:linear-gradient(180deg,#FFB03A,#F08A00); box-shadow:0 6px 0 #C06F00; }
   .lvl-hard { background:linear-gradient(180deg,#FF6B8B,#E0406B); box-shadow:0 6px 0 #B02E53; }
-  .bigbtn { margin-top:26px; font-size:24px; font-weight:900; color:#fff; background:linear-gradient(180deg,#FF8FA3,#F76C8A); border:none; border-radius:999px; padding:16px 54px; cursor:pointer; box-shadow:0 6px 0 #D14B6B; font-family:inherit; animation:pulseBtn 1.6s infinite; }
-  @keyframes pulseBtn { 0%,100%{ transform:scale(1);} 50%{ transform:scale(1.06);} }
+  @keyframes pulseBtn { 0%,100%{transform:scale(1);}50%{transform:scale(1.05);} }
+
+  /* Category screen */
+  .cat-screen-title { font-size:clamp(22px,6vw,36px); font-weight:900; color:#E85D75; text-shadow:0 3px 0 #FFD1DC; margin-bottom:4px; }
+  .cat-screen-sub { font-size:12px; color:#8A5A2B; font-weight:700; margin-bottom:14px; }
+  .cat-lvl-badge { display:inline-block; font-size:13px; font-weight:900; color:#fff; padding:4px 14px; border-radius:999px; margin-bottom:10px; }
+  .cat-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:9px; max-width:380px; width:100%; }
+  @media (min-width:420px){ .cat-grid { grid-template-columns:repeat(4,1fr); } }
+  .cat-btn { font-family:inherit; background:#fff; border:2px solid #FFD6A5; border-radius:14px; padding:10px 6px; cursor:pointer; text-align:center; box-shadow:0 4px 0 rgba(180,120,70,.18); transition:border-color .1s; }
+  .cat-btn:active { transform:translateY(3px); box-shadow:0 1px 0 rgba(180,120,70,.18); }
+  .cat-btn:hover { border-color:#FF9F1C; }
+  .cat-btn-em { font-size:26px; display:block; }
+  .cat-btn-ko { font-size:13px; font-weight:900; color:#4A2E14; display:block; margin-top:2px; }
+  .cat-btn-en { font-size:10px; color:#B08A5A; font-weight:600; display:block; }
+  .back-btn { margin-top:14px; font-family:inherit; background:transparent; border:2px solid #B08A5A; border-radius:999px; padding:9px 22px; color:#8A5A2B; font-size:13px; font-weight:700; cursor:pointer; }
+  .back-btn:active { transform:scale(.97); }
+
+  /* Game-over */
+  .bigbtn { margin-top:22px; font-size:22px; font-weight:900; color:#fff; background:linear-gradient(180deg,#FF8FA3,#F76C8A); border:none; border-radius:999px; padding:14px 48px; cursor:pointer; box-shadow:0 6px 0 #D14B6B; font-family:inherit; animation:pulseBtn 1.6s infinite; }
   .bigbtn:active { transform:translateY(4px); box-shadow:0 2px 0 #D14B6B; }
-  .gameover-score { margin-top:16px; font-size:20px; color:#5A3413; font-weight:800; line-height:1.8; }
-  .gameover-score .n { font-size:40px; color:#FF7BA9; }
-  .newrecord { color:#FF9F1C; font-size:22px; font-weight:900; margin-top:6px; animation:pulseBtn 1s infinite; }
-  .combo-badge { position:absolute; z-index:8; font-weight:900; font-size:18px; color:#fff; background:linear-gradient(90deg,#FF9F1C,#FF5E7E); padding:6px 16px; border-radius:999px; pointer-events:none; will-change:transform,opacity; box-shadow:0 4px 0 rgba(210,80,100,.4); }
-  .levelbanner { position:absolute; top:38%; left:50%; margin-left:-120px; width:240px; z-index:9; font-size:34px; font-weight:900; color:#9B5DE5; text-shadow:0 3px 0 #fff; pointer-events:none; text-align:center; }
+  .gameover-score { margin-top:14px; font-size:19px; color:#5A3413; font-weight:800; line-height:1.8; }
+  .gameover-score .n { font-size:38px; color:#FF7BA9; }
+  .newrecord { color:#FF9F1C; font-size:20px; font-weight:900; margin-top:6px; animation:pulseBtn 1s infinite; }
+  .combo-badge { position:absolute; z-index:8; font-weight:900; font-size:17px; color:#fff; background:linear-gradient(90deg,#FF9F1C,#FF5E7E); padding:5px 14px; border-radius:999px; pointer-events:none; will-change:transform,opacity; box-shadow:0 4px 0 rgba(210,80,100,.4); }
+  .levelbanner { position:absolute; top:38%; left:50%; margin-left:-120px; width:240px; z-index:9; font-size:32px; font-weight:900; color:#9B5DE5; text-shadow:0 3px 0 #fff; pointer-events:none; text-align:center; }
 </style>
 </head>
 <body>
@@ -114,16 +115,16 @@
         <div class="panel"><div class="hud-label">단계 (LEVEL)</div><div class="hud-val" id="levelEl">초급</div></div>
         <div class="panel" id="catPanel"><div class="hud-label">목표 (TARGET)</div><div id="catWord">음식</div></div>
       </div>
-      <div class="panel" style="margin-right:52px"><div class="hud-label">생명 (LIVES)</div><div id="lives">❤️❤️❤️</div></div>
+      <div class="panel" style="margin-right:44px"><div class="hud-label">생명 (LIVES)</div><div id="lives">❤️❤️❤️</div></div>
     </div>
     <button id="muteBtn" title="소리 켜기/끄기">🔊</button>
     <div id="playfield"></div>
     <div id="basket"></div>
 
+    <!-- START SCREEN -->
     <div class="overlay" id="startScreen">
       <div class="bigtitle">Catch HANGUL!<span class="ko">한글 단어를 담아요!</span></div>
       <div class="sub">떨어지는 한국어 단어를 바구니에 담아요 🧺</div>
-
       <div class="inst">
         <div class="inst-row">
           <div class="inst-ko">🎯 위의 <b>목표 카테고리</b>와 같은 단어를 잡으세요!</div>
@@ -142,7 +143,6 @@
           <div class="inst-en">Arrow keys / Mouse / Touch drag to move the basket.</div>
         </div>
       </div>
-
       <div class="lvls">
         <button class="lvlbtn lvl-easy" data-lvl="초급">🌱 초급<small>BEGINNER</small></button>
         <button class="lvlbtn lvl-mid" data-lvl="중급">🚀 중급<small>INTERMEDIATE</small></button>
@@ -150,8 +150,18 @@
       </div>
     </div>
 
+    <!-- CATEGORY SCREEN -->
+    <div class="overlay hidden" id="catScreen">
+      <div class="cat-screen-title">카테고리 선택</div>
+      <div class="cat-screen-sub">Choose a Category</div>
+      <div class="cat-lvl-badge" id="catLvlBadge"></div>
+      <div class="cat-grid" id="catGrid"></div>
+      <button class="back-btn" id="backBtn">← 레벨 선택으로 (Back)</button>
+    </div>
+
+    <!-- GAME OVER SCREEN -->
     <div class="overlay hidden" id="overScreen">
-      <div class="bigtitle" style="font-size:clamp(28px,7vw,48px)">게임 오버!</div>
+      <div class="bigtitle" style="font-size:clamp(26px,7vw,46px)">게임 오버!</div>
       <div class="sub">Game Over</div>
       <div class="gameover-score">
         점수: <span class="n" id="finalScore">0</span><br>
@@ -159,320 +169,329 @@
         <div class="newrecord hidden" id="newRecord">🎉 새 최고 기록!</div>
       </div>
       <button class="bigbtn" id="restartBtn">다시 도전! (RETRY)</button>
-      <button class="bigbtn" id="menuBtn" style="background:linear-gradient(180deg,#9B5DE5,#7B3FD1); box-shadow:0 6px 0 #5E2FA8; margin-top:12px; font-size:18px; padding:12px 36px;">단계 선택으로 (MENU)</button>
+      <button class="bigbtn" id="menuBtn" style="background:linear-gradient(180deg,#9B5DE5,#7B3FD1);box-shadow:0 6px 0 #5E2FA8;margin-top:10px;font-size:17px;padding:11px 32px;">단계 선택으로 (MENU)</button>
     </div>
   </div>
 </div>
 
 <script>
 (function(){
-  "use strict";
+"use strict";
 
-  var WORDS = {
-    "초급": {
-      "음식": [["사과","🍎","apple"],["물","💧","water"],["밥","🍚","rice"],["빵","🍞","bread"],["우유","🥛","milk"],["김치","🥬","kimchi"],["계란","🥚","egg"],["고기","🍖","meat"]],
-      "동물": [["강아지","🐶","puppy"],["고양이","🐱","cat"],["토끼","🐰","rabbit"],["새","🐦","bird"],["물고기","🐟","fish"],["말","🐴","horse"],["돼지","🐷","pig"],["닭","🐔","chicken"]],
-      "사물": [["책","📚","book"],["연필","✏️","pencil"],["시계","⏰","clock"],["가방","🎒","bag"],["신발","👟","shoes"],["열쇠","🔑","key"],["모자","🧢","hat"],["문","🚪","door"]],
-      "자연": [["하늘","🌤️","sky"],["바다","🌊","sea"],["산","⛰️","mountain"],["해","☀️","sun"],["달","🌙","moon"],["별","⭐","star"],["나무","🌳","tree"],["꽃","🌸","flower"]],
-      "색깔": [["빨간색","🔴","red"],["파란색","🔵","blue"],["노란색","🟡","yellow"],["초록색","🟢","green"],["검은색","⚫","black"],["흰색","⚪","white"],["분홍색","🩷","pink"],["보라색","🟣","purple"]],
-      "직업": [["의사","🧑‍⚕️","doctor"],["선생님","🧑‍🏫","teacher"],["경찰","👮","police officer"],["요리사","🧑‍🍳","cook"],["학생","🧑‍🎓","student"],["가수","🧑‍🎤","singer"],["소방관","🧑‍🚒","firefighter"],["농부","🧑‍🌾","farmer"]],
-      "장소": [["학교","🏫","school"],["집","🏠","house"],["병원","🏥","hospital"],["가게","🏪","store"],["공원","🏞️","park"],["시장","🛒","market"],["은행","🏦","bank"],["우체국","📮","post office"]],
-      "교통": [["버스","🚌","bus"],["택시","🚕","taxi"],["지하철","🚇","subway"],["자전거","🚲","bicycle"],["비행기","✈️","airplane"],["배","🚢","ship"],["기차","🚆","train"],["자동차","🚗","car"]]
-    },
-    "중급": {
-      "음식": [["삼겹살","🥓","pork belly"],["비빔밥","🍲","bibimbap"],["떡볶이","🍢","tteokbokki"],["김밥","🌯","kimbap"],["라면","🍜","ramyeon"],["치즈","🧀","cheese"],["포도","🍇","grapes"],["고구마","🍠","sweet potato"]],
-      "동물": [["호랑이","🐯","tiger"],["사자","🦁","lion"],["코끼리","🐘","elephant"],["펭귄","🐧","penguin"],["개구리","🐸","frog"],["나비","🦋","butterfly"],["거북이","🐢","turtle"],["기린","🦒","giraffe"]],
-      "사물": [["우산","☂️","umbrella"],["휴대폰","📱","cell phone"],["의자","🪑","chair"],["창문","🪟","window"],["전구","💡","light bulb"],["이어폰","🎧","earphones"],["거울","🪞","mirror"],["자물쇠","🔒","lock"]],
-      "자연": [["무지개","🌈","rainbow"],["구름","☁️","cloud"],["바람","🍃","wind"],["비","🌧️","rain"],["눈","❄️","snow"],["안개","🌫️","fog"],["숲","🌲","forest"],["개울","🏞️","stream"]],
-      "색깔": [["갈색","🟤","brown"],["회색","🩶","gray"],["주황색","🟠","orange"],["연두색","🫒","yellow-green"],["금색","🥇","gold"],["은색","🥈","silver"],["청록색","🩵","teal"],["자주색","🟥","crimson"]],
-      "직업": [["간호사","💉","nurse"],["변호사","⚖️","lawyer"],["군인","🪖","soldier"],["화가","🎨","painter"],["배우","🎭","actor"],["통역사","🗣️","interpreter"],["목수","🪚","carpenter"],["파일럿","👨‍✈️","pilot"]],
-      "장소": [["도서관","📚","library"],["공항","🛫","airport"],["박물관","🏛️","museum"],["카페","☕","cafe"],["극장","🎬","theater"],["약국","💊","pharmacy"],["슈퍼마켓","🛒","supermarket"],["정류장","🚏","bus stop"]],
-      "교통": [["오토바이","🏍️","motorcycle"],["트럭","🚚","truck"],["요트","⛵","yacht"],["캠핑카","🚐","camper van"],["킥보드","🛴","kickboard"],["유람선","🛳️","cruise ship"],["우주선","🚀","spaceship"],["마차","🐎","carriage"]]
-    },
-    "고급": {
-      "음식": [["전복죽","🥣","abalone porridge"],["막걸리","🍶","makgeolli"],["잡채","🍝","japchae"],["수정과","🥤","sujeonggwa"],["갈비탕","🍲","galbitang"],["삼계탕","🍗","samgyetang"],["떡갈비","🍖","tteokgalbi"],["약과","🍩","yakgwa"]],
-      "동물": [["두루미","🕊️","crane"],["반달가슴곰","🐻","moon bear"],["도롱뇽","🦎","salamander"],["따오기","🦩","crested ibis"],["담비","🦡","marten"],["수달","🦦","otter"],["고라니","🦌","water deer"],["물범","🦭","seal"]],
-      "사물": [["서랍장","🗄️","drawer"],["돗자리","🧺","picnic mat"],["다듬이돌","🪨","grinding stone"],["등잔","🕯️","oil lamp"],["가락바퀴","🧵","spindle"],["목탁","🪵","wooden fish"],["소반","🪵","small table"],["질그릇","🏺","earthenware"]],
-      "자연": [["절벽","🧗","cliff"],["골짜기","⛰️","valley"],["습지","🪷","wetland"],["이끼","🌿","moss"],["화산","🌋","volcano"],["사막","🏜️","desert"],["동굴","🕳️","cave"],["호수","🏞️","lake"]],
-      "색깔": [["다홍색","🌺","crimson red"],["쪽빛","🟦","indigo"],["감청색","🔷","navy"],["올리브색","🫒","olive"],["살구색","🍑","apricot"],["옥색","🟩","jade green"],["밤색","🌰","maroon"],["회청색","🩶","grayish blue"]],
-      "직업": [["검사","⚖️","prosecutor"],["판사","👨‍⚖️","judge"],["건축가","📐","architect"],["작곡가","🎼","composer"],["시인","✍️","poet"],["조각가","🗿","sculptor"],["감독","🎬","director"],["사진가","📷","photographer"]],
-      "장소": [["정자","🏯","pavilion"],["사찰","🛕","temple"],["온천","♨️","hot spring"],["발전소","⚡","power plant"],["관측소","🔭","observatory"],["전망대","🗼","observatory deck"],["시청","🏛️","city hall"],["항구","⚓","port"]],
-      "교통": [["케이블카","🚡","cable car"],["삼륜차","🛺","three-wheeler"],["뗏목","🪵","raft"],["증기기관차","🚂","steam locomotive"],["모노레일","🚝","monorail"],["경운기","🚜","farm truck"],["곤도라","🚠","gondola"],["호버크래프트","🛥️","hovercraft"]]
+/* ===== 단어 데이터 (레벨·카테고리별) ===== */
+var WORDS = {
+  "초급": {
+    "음식":   [["사과","🍎","apple"],["물","💧","water"],["밥","🍚","rice"],["빵","🍞","bread"],["우유","🥛","milk"],["김치","🥬","kimchi"],["계란","🥚","egg"],["고기","🍖","meat"]],
+    "동물":   [["강아지","🐶","dog"],["고양이","🐱","cat"],["토끼","🐰","rabbit"],["새","🐦","bird"],["물고기","🐟","fish"],["말","🐴","horse"],["돼지","🐷","pig"],["닭","🐔","chicken"]],
+    "색깔":   [["빨간색","🔴","red"],["파란색","🔵","blue"],["노란색","🟡","yellow"],["초록색","🟢","green"],["검은색","⚫","black"],["흰색","⚪","white"],["분홍색","🩷","pink"],["보라색","🟣","purple"]],
+    "가족":   [["엄마","👩","mom"],["아빠","👨","dad"],["형","👦","older brother"],["언니","👧","older sister"],["할머니","👵","grandmother"],["할아버지","👴","grandfather"],["남동생","🧒","younger brother"],["여동생","👧","younger sister"]],
+    "신체":   [["눈","👁️","eye"],["코","👃","nose"],["입","👄","mouth"],["귀","👂","ear"],["손","🤚","hand"],["발","🦶","foot"],["머리","🗣️","head"],["등","🫀","back"]],
+    "날씨":   [["맑음","☀️","sunny"],["흐림","☁️","cloudy"],["비","🌧️","rain"],["눈","❄️","snow"],["바람","🌬️","wind"],["더움","🌡️","hot"],["추움","🥶","cold"],["안개","🌫️","fog"]],
+    "장소":   [["학교","🏫","school"],["집","🏠","home"],["병원","🏥","hospital"],["가게","🏪","store"],["공원","🏞️","park"],["시장","🛒","market"],["은행","🏦","bank"],["우체국","📮","post office"]],
+    "교통":   [["버스","🚌","bus"],["택시","🚕","taxi"],["지하철","🚇","subway"],["자전거","🚲","bicycle"],["비행기","✈️","airplane"],["배","🚢","ship"],["기차","🚆","train"],["자동차","🚗","car"]]
+  },
+  "중급": {
+    "직장":   [["회의","📊","meeting"],["보고서","📋","report"],["상사","👔","boss"],["동료","🤝","colleague"],["월급","💵","salary"],["야근","🌙","overtime"],["휴가","🏖️","vacation"],["업무","💼","work task"]],
+    "요리":   [["삼겹살","🥓","pork belly"],["비빔밥","🍲","bibimbap"],["떡볶이","🍢","tteokbokki"],["김밥","🌯","kimbap"],["된장찌개","🫕","doenjang jjigae"],["불고기","🥩","bulgogi"],["잡채","🍝","japchae"],["순두부","🥣","soft tofu"]],
+    "감정":   [["행복","😊","happiness"],["슬픔","😢","sadness"],["분노","😠","anger"],["두려움","😨","fear"],["설렘","🥰","excitement"],["지루함","😑","boredom"],["놀람","😲","surprise"],["부끄러움","😳","embarrassment"]],
+    "쇼핑":   [["할인","🏷️","discount"],["영수증","🧾","receipt"],["환불","💸","refund"],["사이즈","📏","size"],["계산","🖩","checkout"],["세일","🎫","sale"],["카드","💳","card"],["교환","🔄","exchange"]],
+    "건강":   [["두통","🤕","headache"],["감기","🤧","cold"],["약","💊","medicine"],["운동","🏋️","exercise"],["식단","🥗","diet"],["수면","😴","sleep"],["스트레스","😰","stress"],["치료","🩺","treatment"]],
+    "여행":   [["공항","🛫","airport"],["여권","🛂","passport"],["호텔","🏨","hotel"],["관광","🗺️","sightseeing"],["짐","🧳","luggage"],["환전","💱","currency exchange"],["예약","📅","reservation"],["지도","🗺️","map"]],
+    "스포츠": [["축구","⚽","soccer"],["야구","⚾","baseball"],["수영","🏊","swimming"],["테니스","🎾","tennis"],["농구","🏀","basketball"],["달리기","🏃","running"],["체조","🤸","gymnastics"],["골프","⛳","golf"]],
+    "취미":   [["독서","📖","reading"],["영화","🎬","movies"],["음악","🎵","music"],["사진","📷","photography"],["게임","🎮","gaming"],["그림","🎨","painting"],["요가","🧘","yoga"],["요리","🍳","cooking"]]
+  },
+  "고급": {
+    "정치":   [["선거","🗳️","election"],["국회","🏛️","parliament"],["대통령","👑","president"],["정당","🏴","political party"],["투표","🗳️","voting"],["외교","🤝","diplomacy"],["정책","📜","policy"],["시위","📢","protest"]],
+    "경제":   [["주식","📈","stocks"],["환율","💱","exchange rate"],["인플레이션","📊","inflation"],["금리","💰","interest rate"],["무역","🚢","trade"],["세금","💸","tax"],["예산","📋","budget"],["경기","📉","economy"]],
+    "의학":   [["증상","🤒","symptom"],["진단","🩺","diagnosis"],["수술","🏥","surgery"],["처방","💊","prescription"],["면역","🛡️","immunity"],["바이러스","🦠","virus"],["백신","💉","vaccine"],["치료","🩹","treatment"]],
+    "역사":   [["조선","🏯","Joseon"],["고려","🗺️","Goryeo"],["독립","🎌","independence"],["광복","☀️","liberation"],["전쟁","⚔️","war"],["왕조","👑","dynasty"],["문화재","🏺","cultural heritage"],["유물","🧩","artifact"]],
+    "환경":   [["탄소","💨","carbon"],["재활용","♻️","recycling"],["기후","🌡️","climate"],["오염","🏭","pollution"],["생태계","🌿","ecosystem"],["에너지","⚡","energy"],["멸종","🦕","extinction"],["온실","🌱","greenhouse"]],
+    "예술":   [["조각","🗿","sculpture"],["회화","🖼️","painting"],["음악","🎼","music"],["무용","💃","dance"],["연극","🎭","theater"],["건축","🏛️","architecture"],["문학","📚","literature"],["사진","📷","photography"]],
+    "사회":   [["인구","👥","population"],["복지","🏠","welfare"],["교육","🎓","education"],["인권","✊","human rights"],["평등","⚖️","equality"],["다문화","🌍","multicultural"],["빈곤","😔","poverty"],["범죄","🚨","crime"]],
+    "언론":   [["뉴스","📺","news"],["기사","📰","article"],["방송","📡","broadcast"],["취재","📷","reporting"],["보도","📢","coverage"],["여론","💬","public opinion"],["광고","📣","advertisement"],["인터뷰","🎤","interview"]]
+  }
+};
+
+var LEVELS = ["초급","중급","고급"];
+
+/* 카테고리 메타 (이모지 + 영어명) */
+var CAT_META = {
+  "음식":{em:"🍎",en:"Food"},   "동물":{em:"🐶",en:"Animals"},  "색깔":{em:"🌈",en:"Colors"},
+  "가족":{em:"👨‍👩‍👧",en:"Family"}, "신체":{em:"💪",en:"Body"},     "날씨":{em:"⛅",en:"Weather"},
+  "장소":{em:"🏫",en:"Places"}, "교통":{em:"🚗",en:"Transport"},
+  "직장":{em:"💼",en:"Workplace"},"요리":{em:"🍳",en:"Cooking"},  "감정":{em:"😊",en:"Emotions"},
+  "쇼핑":{em:"🛍️",en:"Shopping"},"건강":{em:"🏃",en:"Health"},   "여행":{em:"✈️",en:"Travel"},
+  "스포츠":{em:"⚽",en:"Sports"},"취미":{em:"🎨",en:"Hobbies"},
+  "정치":{em:"🏛️",en:"Politics"},"경제":{em:"📈",en:"Economy"},  "의학":{em:"💊",en:"Medicine"},
+  "역사":{em:"📜",en:"History"}, "환경":{em:"🌿",en:"Environment"},"예술":{em:"🎭",en:"Arts"},
+  "사회":{em:"🤝",en:"Society"}, "언론":{em:"📰",en:"Media"}
+};
+
+var CAT_COLORS = {
+  "음식":"#FF9F1C","동물":"#4CC9F0","색깔":"#F72585","가족":"#FF6B6B","신체":"#48CAE4","날씨":"#43AA8B","장소":"#F9A03F","교통":"#9B5DE5",
+  "직장":"#577590","요리":"#FF9F1C","감정":"#F72585","쇼핑":"#9B5DE5","건강":"#43AA8B","여행":"#4CC9F0","스포츠":"#F9A03F","취미":"#B388FF",
+  "정치":"#4A6FA5","경제":"#4A7C59","의학":"#EF233C","역사":"#8D5524","환경":"#43AA8B","예술":"#9B5DE5","사회":"#577590","언론":"#F9A03F"
+};
+
+var LVL_BADGE_COLOR = {"초급":"#3FA34D","중급":"#F08A00","고급":"#E0406B"};
+var LVL_LABEL = {"초급":"🌱 초급 BEGINNER","중급":"🚀 중급 INTERMEDIATE","고급":"🔥 고급 ADVANCED"};
+
+/* DOM */
+var playfield = document.getElementById('playfield');
+var basketEl  = document.getElementById('basket');
+var shakeEl   = document.getElementById('shake');
+var scoreEl   = document.getElementById('scoreEl');
+var levelEl   = document.getElementById('levelEl');
+var catEl     = document.getElementById('catWord');
+var livesEl   = document.getElementById('lives');
+
+/* 모바일 바구니 크기 */
+var isMobile = window.innerWidth <= 500;
+var BK_W = isMobile ? 50 : 110;
+var BK_H = isMobile ? 36 : 78;
+var BK_HALF = BK_W / 2;
+var CATCH_TOL = Math.round(BK_W * 0.48) + 5;
+
+basketEl.style.width  = BK_W + 'px';
+basketEl.style.height = BK_H + 'px';
+basketEl.style.marginLeft = -BK_HALF + 'px';
+basketEl.innerHTML = '<svg viewBox="0 0 110 78" width="'+BK_W+'" height="'+BK_H+'"><path d="M8 26 Q55 -14 102 26 L92 70 Q55 82 18 70 Z" fill="#C68B4E" stroke="#8A5A2B" stroke-width="5"/><path d="M8 26 Q55 10 102 26 L98 40 Q55 26 12 40 Z" fill="#FF9F1C" opacity=".85"/><g stroke="#8A5A2B" stroke-width="4" opacity=".6"><line x1="30" y1="42" x2="34" y2="68"/><line x1="50" y1="44" x2="50" y2="72"/><line x1="72" y1="42" x2="70" y2="68"/></g><text x="55" y="66" text-anchor="middle" font-size="18">🧺</text></svg>';
+
+/* Sky deco */
+[[8,10,70,'#FFC2D1'],[80,18,50,'#FFE29A'],[20,30,40,'#C2F0FF'],[60,6,36,'#D9C2FF']].forEach(function(d){
+  var s=document.createElement('div'); s.className='skydeco';
+  s.style.cssText='left:'+d[0]+'%;top:'+d[1]+'%;width:'+d[2]+'px;height:'+d[2]+'px;background:'+d[3]+';';
+  shakeEl.insertBefore(s,shakeEl.firstChild);
+});
+
+/* State */
+var S = {running:false,score:0,lives:3,lvl:"초급",combo:0,cat:"음식",
+         basketX:.5,cards:[],lastSpawn:0,spawnInterval:1800,fallBase:110,muted:false,raf:0,lastT:0};
+var his = {};
+LEVELS.forEach(function(l){ his[l]=+(localStorage.getItem('ch_hi_'+l)||0); });
+
+/* Audio */
+var actx=null;
+function beep(freq,dur,type,vol,slide){
+  if(S.muted)return;
+  try{
+    actx=actx||new(window.AudioContext||window.webkitAudioContext)();
+    if(actx.state==='suspended')actx.resume();
+    var o=actx.createOscillator(),g=actx.createGain(),t=actx.currentTime;
+    o.type=type||'sine'; o.frequency.setValueAtTime(freq,t);
+    if(slide)o.frequency.exponentialRampToValueAtTime(slide,t+dur);
+    g.gain.setValueAtTime(vol||.15,t); g.gain.exponentialRampToValueAtTime(.001,t+dur);
+    o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t+dur+.02);
+  }catch(e){}
+}
+function sfxCatch(combo){beep(520+Math.min(combo,8)*60,.12,'triangle',.18,900+combo*60);}
+function sfxWrong(){beep(160,.3,'sawtooth',.2,70);}
+function sfxOver(){[440,349,262].forEach(function(f,i){setTimeout(function(){beep(f,.4,'triangle',.18);},i*250);});}
+document.getElementById('muteBtn').addEventListener('click',function(){S.muted=!S.muted;this.textContent=S.muted?'🔇':'🔊';});
+
+/* Effects */
+function burst(x,y,color,n){
+  for(var i=0;i<n;i++){
+    var p=document.createElement('div'); p.className='particle';
+    var sz=6+Math.random()*10;
+    p.style.cssText='width:'+sz+'px;height:'+sz+'px;background:'+(color||'#FF9F1C')+';left:'+(x-sz/2)+'px;top:'+(y-sz/2)+'px;';
+    playfield.appendChild(p);
+    var ang=Math.random()*Math.PI*2,sp=80+Math.random()*180;
+    var dx=Math.cos(ang)*sp,dy=Math.sin(ang)*sp-140,rot=(Math.random()*720-360);
+    p.animate([{transform:'translate(0,0) rotate(0)',opacity:1},{transform:'translate('+dx+'px,'+(dy+250)+'px) rotate('+rot+'deg)',opacity:0}],
+      {duration:700+Math.random()*400,easing:'cubic-bezier(.2,.6,.4,1)'}).onfinish=function(){this.remove();}.bind(p);
+    setTimeout(function(el){el.remove();},1200,p);
+  }
+}
+function popup(x,y,text,bad){
+  var el=document.createElement('div'); el.className='popup'+(bad?' bad':'');
+  el.textContent=text; el.style.left=x+'px'; el.style.top=y+'px';
+  playfield.appendChild(el);
+  el.animate([{transform:'translate(-50%,0) scale(.6)',opacity:1},{transform:'translate(-50%,-70px) scale(1.3)',opacity:0}],
+    {duration:900,easing:'ease-out'}).onfinish=function(){el.remove();};
+}
+function shakeScreen(heavy){
+  shakeEl.animate([{transform:'translate(0,0)'},{transform:'translate('+(heavy?'-10px':'-5px')+',4px) rotate(-1deg)'},
+    {transform:'translate('+(heavy?'8px':'4px')+',-4px) rotate(1deg)'},{transform:'translate(0,0)'}],{duration:heavy?350:220});
+}
+function comboBadge(x,y,n){
+  var el=document.createElement('div'); el.className='combo-badge';
+  el.textContent=n+' 콤보! (COMBO)'; el.style.left=x+'px'; el.style.top=y+'px';
+  playfield.appendChild(el);
+  el.animate([{transform:'translate(-50%,0) scale(.5) rotate(-6deg)',opacity:1},{transform:'translate(-50%,-50px) scale(1.1) rotate(4deg)',opacity:0}],
+    {duration:1000,easing:'ease-out'}).onfinish=function(){el.remove();};
+}
+
+/* Game settings per level */
+var SETTING = {
+  "초급":{spawn:2000,fall:100,correctRate:.55,speedRamp:8, rampEvery:100},
+  "중급":{spawn:1500,fall:135,correctRate:.45,speedRamp:12,rampEvery:120},
+  "고급":{spawn:1100,fall:170,correctRate:.38,speedRamp:16,rampEvery:140}
+};
+function applyRamp(){
+  var st=SETTING[S.lvl];
+  var stage=Math.floor(S.score/st.rampEvery);
+  S.spawnInterval=Math.max(650,st.spawn-stage*130);
+  S.fallBase=st.fall+stage*st.speedRamp;
+}
+
+function spawn(){
+  var pool=WORDS[S.lvl], cats=Object.keys(pool);
+  var correct=Math.random()<SETTING[S.lvl].correctRate;
+  var cat;
+  if(correct){ cat=S.cat; }
+  else {
+    cat=cats[Math.floor(Math.random()*cats.length)];
+    if(cat===S.cat&&cats.length>1) cat=cats[(cats.indexOf(cat)+1)%cats.length];
+  }
+  var entry=pool[cat][Math.floor(Math.random()*pool[cat].length)];
+  var el=document.createElement('div'); el.className='card';
+  el.style.setProperty('--cc',CAT_COLORS[cat]||'#9BD1FF');
+  el.innerHTML='<span class="em">'+entry[1]+'</span><span class="w">'+entry[0]+'</span><span class="g">'+entry[2]+'</span>';
+  playfield.appendChild(el);
+  var w=el.offsetWidth||120;
+  var x=Math.random()*(window.innerWidth-w-20)+10;
+  for(var tries=0;tries<16;tries++){
+    var ok=true;
+    for(var j=0;j<S.cards.length;j++){
+      var o=S.cards[j];
+      if(o.y<220&&Math.abs((x+w/2)-(o.x+o.w/2))<(w+o.w)/2+40){ok=false;break;}
     }
-  };
-  var LEVELS = ["초급","중급","고급"];
-  var CAT_COLORS = {"음식":"#FF9F1C","동물":"#4CC9F0","사물":"#B388FF","자연":"#43AA8B","색깔":"#F72585","직업":"#577590","장소":"#F9A03F","교통":"#9B5DE5"};
+    if(ok)break;
+    x=Math.random()*(window.innerWidth-w-20)+10;
+  }
+  el.style.left=x+'px';
+  var speed=S.fallBase*(0.85+Math.random()*.35);
+  S.cards.push({el:el,x:x,w:w,y:-90,speed:speed,word:entry[0],correct:correct,rot:(Math.random()*16-8),wob:Math.random()*Math.PI*2});
+}
 
-  var playfield = document.getElementById('playfield');
-  var basketEl = document.getElementById('basket');
-  var shakeEl = document.getElementById('shake');
-  var scoreEl = document.getElementById('scoreEl');
-  var levelEl = document.getElementById('levelEl');
-  var catEl = document.getElementById('catWord');
-  var livesEl = document.getElementById('lives');
+function catchCard(card){
+  var bx=S.basketX*window.innerWidth;
+  if(card.correct){
+    S.combo++;
+    var pts=10+Math.min(S.combo-1,5)*5;
+    S.score+=pts; sfxCatch(S.combo);
+    popup(card.x+card.w/2,card.y,'+'+pts);
+    burst(bx,window.innerHeight-70,'#FFD166',14);
+    if(S.combo>=3) comboBadge(bx,window.innerHeight-150,S.combo);
+    basketEl.classList.add('bounce');
+    setTimeout(function(){basketEl.classList.remove('bounce');},130);
+    applyRamp();
+  } else {
+    S.combo=0; S.lives--; setLives(); sfxWrong(); shakeScreen(true);
+    popup(card.x+card.w/2,card.y,'앗, 다른 단어! -1 ❤️',true);
+    burst(bx,window.innerHeight-70,'#8D99AE',10);
+    if(S.lives<=0)return gameOver();
+  }
+  scoreEl.textContent=S.score;
+  removeCard(card);
+}
+function removeCard(card){card.el.remove();var i=S.cards.indexOf(card);if(i>=0)S.cards.splice(i,1);}
+function setLives(){livesEl.textContent=S.lives>0?new Array(S.lives+1).join('❤️'):'💔';}
 
-  // Mobile-responsive basket size
-  var isMobile = window.innerWidth <= 500;
-  var BK_W = isMobile ? 70 : 110;
-  var BK_H = isMobile ? 50 : 78;
-  var BK_HALF = BK_W / 2;
-  var CATCH_TOL = Math.round(BK_W * 0.5) + 6; // half-basket + small tolerance
+/* Screen management */
+function show(id){
+  ['startScreen','catScreen','overScreen'].forEach(function(s){document.getElementById(s).classList.add('hidden');});
+  if(id)document.getElementById(id).classList.remove('hidden');
+}
 
-  basketEl.style.width = BK_W + 'px';
-  basketEl.style.height = BK_H + 'px';
-  basketEl.style.marginLeft = -BK_HALF + 'px';
-  basketEl.innerHTML = '<svg viewBox="0 0 110 78" width="'+BK_W+'" height="'+BK_H+'"><path d="M8 26 Q55 -14 102 26 L92 70 Q55 82 18 70 Z" fill="#C68B4E" stroke="#8A5A2B" stroke-width="5"/><path d="M8 26 Q55 10 102 26 L98 40 Q55 26 12 40 Z" fill="#FF9F1C" opacity=".85"/><g stroke="#8A5A2B" stroke-width="4" opacity=".6"><line x1="30" y1="42" x2="34" y2="68"/><line x1="50" y1="44" x2="50" y2="72"/><line x1="72" y1="42" x2="70" y2="68"/></g><text x="55" y="66" text-anchor="middle" font-size="18">🧺</text></svg>';
-
-  [[8,10,70,'#FFC2D1'],[80,18,50,'#FFE29A'],[20,30,40,'#C2F0FF'],[60,6,36,'#D9C2FF']].forEach(function(d){
-    var s = document.createElement('div'); s.className='skydeco';
-    s.style.cssText='left:'+d[0]+'%;top:'+d[1]+'%;width:'+d[2]+'px;height:'+d[2]+'px;background:'+d[3]+';';
-    shakeEl.insertBefore(s, shakeEl.firstChild);
+/* Category screen */
+function showCatScreen(lvl){
+  var badge=document.getElementById('catLvlBadge');
+  badge.textContent=LVL_LABEL[lvl];
+  badge.style.background=LVL_BADGE_COLOR[lvl];
+  badge.style.color='#fff';
+  var grid=document.getElementById('catGrid'); grid.innerHTML='';
+  Object.keys(WORDS[lvl]).forEach(function(cat){
+    var meta=CAT_META[cat]||{em:'📌',en:cat};
+    var btn=document.createElement('button'); btn.className='cat-btn';
+    btn.innerHTML='<span class="cat-btn-em">'+meta.em+'</span><span class="cat-btn-ko">'+cat+'</span><span class="cat-btn-en">'+meta.en+'</span>';
+    btn.addEventListener('click',function(){startGame(lvl,cat);});
+    grid.appendChild(btn);
   });
+  show('catScreen');
+}
 
-  var S = { running:false, score:0, lives:3, lvl:"초급", combo:0, cat:"음식", hi:+(localStorage.getItem('ch_hi')||0),
-            basketX:.5, cards:[], lastSpawn:0, spawnInterval:1800, fallBase:110, muted:false, raf:0, lastT:0 };
+document.getElementById('backBtn').addEventListener('click',function(){show('startScreen');});
 
-  var his = {};
-  LEVELS.forEach(function(l){ his[l] = +(localStorage.getItem('ch_hi_'+l) || 0); });
-  document.getElementById('finalHigh').textContent = S.hi;
+/* Level buttons → category screen */
+Array.prototype.forEach.call(document.querySelectorAll('.lvlbtn'),function(b){
+  b.addEventListener('click',function(){showCatScreen(b.getAttribute('data-lvl'));});
+});
 
-  var actx = null;
-  function beep(freq, dur, type, vol, slide){
-    if (S.muted) return;
-    try {
-      actx = actx || new (window.AudioContext||window.webkitAudioContext)();
-      if (actx.state==='suspended') actx.resume();
-      var o = actx.createOscillator(), g = actx.createGain(), t = actx.currentTime;
-      o.type = type||'sine'; o.frequency.setValueAtTime(freq, t);
-      if (slide) o.frequency.exponentialRampToValueAtTime(slide, t+dur);
-      g.gain.setValueAtTime(vol||.15, t);
-      g.gain.exponentialRampToValueAtTime(.001, t+dur);
-      o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t+dur+.02);
-    } catch(e){}
-  }
-  function sfxCatch(combo){ beep(520 + Math.min(combo,8)*60, .12, 'triangle', .18, 900 + combo*60); }
-  function sfxWrong(){ beep(160, .3, 'sawtooth', .2, 70); }
-  function sfxLevel(){ [523,659,784,1047].forEach(function(f,i){ setTimeout(function(){beep(f,.18,'square',.12);}, i*110); }); }
-  function sfxOver(){ [440,349,262].forEach(function(f,i){ setTimeout(function(){beep(f,.4,'triangle',.18);}, i*250); }); }
-  document.getElementById('muteBtn').addEventListener('click', function(){
-    S.muted = !S.muted; this.textContent = S.muted ? '🔇' : '🔊';
-  });
+/* Game over */
+function gameOver(){
+  S.running=false; sfxOver();
+  var isRecord=S.score>(his[S.lvl]||0);
+  if(isRecord){his[S.lvl]=S.score;localStorage.setItem('ch_hi_'+S.lvl,S.score);}
+  document.getElementById('finalScore').textContent=S.score;
+  document.getElementById('finalHigh').textContent=his[S.lvl];
+  document.getElementById('newRecord').classList.toggle('hidden',!isRecord);
+  S.cards.slice().forEach(removeCard);
+  show('overScreen');
+}
+document.getElementById('restartBtn').addEventListener('click',function(){startGame(S.lvl,S.cat);});
+document.getElementById('menuBtn').addEventListener('click',function(){show('startScreen');});
 
-  function burst(x, y, color, n){
-    for (var i=0;i<n;i++){
-      var p = document.createElement('div'); p.className='particle';
-      var sz = 6+Math.random()*10;
-      p.style.cssText = 'width:'+sz+'px;height:'+sz+'px;background:'+(color||'#FF9F1C')+';left:'+(x-sz/2)+'px;top:'+(y-sz/2)+'px;';
-      playfield.appendChild(p);
-      var ang = Math.random()*Math.PI*2, sp = 80+Math.random()*180;
-      var dx = Math.cos(ang)*sp, dy = Math.sin(ang)*sp - 140;
-      var rot = (Math.random()*720-360);
-      p.animate([
-        {transform:'translate(0,0) rotate(0)', opacity:1},
-        {transform:'translate('+dx+'px,'+(dy+250)+'px) rotate('+rot+'deg)', opacity:0}
-      ], {duration:700+Math.random()*400, easing:'cubic-bezier(.2,.6,.4,1)'}).onfinish = function(){ this.remove(); }.bind(p);
-      setTimeout(function(el){ el.remove(); }, 1200, p);
+/* Main loop */
+function loop(t){
+  if(!S.running)return;
+  var dt=Math.min(50,t-(S.lastT||t)); S.lastT=t;
+  var H=window.innerHeight;
+  if(t-S.lastSpawn>S.spawnInterval){spawn();S.lastSpawn=t;}
+  for(var i=S.cards.length-1;i>=0;i--){
+    var c=S.cards[i];
+    c.y+=c.speed*dt/1000; c.wob+=dt/1000*3;
+    var wob=Math.sin(c.wob)*10;
+    c.el.style.transform='translateY('+c.y+'px) rotate('+Math.sin(c.wob)*c.rot+'deg) translateX('+wob+'px)';
+    var catchY=H-(BK_H+17);
+    if(c.y+50>=catchY&&c.y<catchY+BK_H){
+      var cx=c.x+c.w/2, bx=S.basketX*window.innerWidth;
+      if(Math.abs(cx-bx)<CATCH_TOL+c.w/4){catchCard(c);continue;}
     }
-  }
-  function popup(x, y, text, bad){
-    var el = document.createElement('div'); el.className='popup'+(bad?' bad':'');
-    el.textContent = text; el.style.left = x+'px'; el.style.top = y+'px';
-    playfield.appendChild(el);
-    el.animate([
-      {transform:'translate(-50%,0) scale(.6)', opacity:1},
-      {transform:'translate(-50%,-70px) scale(1.3)', opacity:0}
-    ], {duration:900, easing:'ease-out'}).onfinish = function(){ el.remove(); };
-  }
-  function shakeScreen(heavy){
-    shakeEl.animate([
-      {transform:'translate(0,0)'},{transform:'translate('+(heavy?'-10px':'-5px')+',4px) rotate(-1deg)'},
-      {transform:'translate('+(heavy?'8px':'4px')+',-4px) rotate(1deg)'},{transform:'translate(0,0)'}
-    ], {duration:heavy?350:220});
-  }
-  function comboBadge(x, y, n){
-    var el = document.createElement('div'); el.className='combo-badge';
-    el.textContent = n+' 콤보! (COMBO)';
-    el.style.left = x+'px'; el.style.top = y+'px';
-    playfield.appendChild(el);
-    el.animate([
-      {transform:'translate(-50%,0) scale(.5) rotate(-6deg)', opacity:1},
-      {transform:'translate(-50%,-50px) scale(1.1) rotate(4deg)', opacity:0}
-    ], {duration:1000, easing:'ease-out'}).onfinish = function(){ el.remove(); };
-  }
-  function levelBanner(){
-    var el = document.createElement('div'); el.className='levelbanner';
-    el.textContent = '⚡ 속도 업!';
-    shakeEl.appendChild(el);
-    el.animate([
-      {transform:'scale(.3)', opacity:0},
-      {transform:'scale(1.2)', opacity:1, offset:.2},
-      {transform:'scale(1)', opacity:1, offset:.8},
-      {transform:'scale(1.4)', opacity:0}
-    ], {duration:1600}).onfinish = function(){ el.remove(); };
-  }
-
-  function pickCategory(){
-    var cats = Object.keys(WORDS[S.lvl]);
-    S.cat = cats[Math.floor(Math.random()*cats.length)];
-    catEl.textContent = S.cat;
-  }
-  function setLives(){
-    livesEl.textContent = S.lives > 0 ? new Array(S.lives+1).join('❤️') : '💔';
-  }
-  var SETTING = {
-    "초급": { spawn:2000, fall:100, correctRate:.55, speedRamp:8,  rampEvery:100 },
-    "중급": { spawn:1500, fall:135, correctRate:.45, speedRamp:12, rampEvery:120 },
-    "고급": { spawn:1100, fall:170, correctRate:.38, speedRamp:16, rampEvery:140 }
-  };
-  function applyRamp(){
-    var st = SETTING[S.lvl];
-    var stage = Math.floor(S.score / st.rampEvery);
-    S.spawnInterval = Math.max(650, st.spawn - stage*130);
-    S.fallBase = st.fall + stage*st.speedRamp;
-  }
-  function spawn(){
-    var pool = WORDS[S.lvl];
-    var cats = Object.keys(pool);
-    var correct = Math.random() < SETTING[S.lvl].correctRate;
-    var cat, entry;
-    if (correct) {
-      cat = S.cat;
-    } else {
-      cat = cats[Math.floor(Math.random()*cats.length)];
-      if (cat === S.cat && cats.length>1) cat = cats[(cats.indexOf(cat)+1)%cats.length];
-    }
-    entry = pool[cat][Math.floor(Math.random()*pool[cat].length)];
-    var el = document.createElement('div'); el.className='card';
-    el.style.setProperty('--cc', CAT_COLORS[cat] || '#9BD1FF');
-    el.innerHTML = '<span class="em">'+entry[1]+'</span><span class="w">'+entry[0]+'</span><span class="g">'+entry[2]+'</span>';
-    playfield.appendChild(el);
-    var w = el.offsetWidth || 120;
-    var x = Math.random()*(window.innerWidth - w - 20) + 10;
-    for (var tries=0; tries<16; tries++){
-      var ok = true;
-      for (var j=0; j<S.cards.length; j++){
-        var o = S.cards[j];
-        if (o.y < 220 && Math.abs((x + w/2) - (o.x + o.w/2)) < (w + o.w)/2 + 40){ ok = false; break; }
+    if(c.y>H+20){
+      if(c.correct){
+        S.combo=0; S.lives--; setLives(); sfxWrong(); shakeScreen(false);
+        popup(Math.min(Math.max(c.x,60),window.innerWidth-160),H-140,'놓쳤어요! -1 ❤️',true);
+        if(S.lives<=0){gameOver();return;}
       }
-      if (ok) break;
-      x = Math.random()*(window.innerWidth - w - 20) + 10;
+      removeCard(c);
     }
-    el.style.left = x+'px';
-    var speed = S.fallBase * (0.85 + Math.random()*.35);
-    S.cards.push({el:el, x:x, w:w, y:-90, speed:speed, word:entry[0], correct:correct, rot:(Math.random()*16-8), wob:Math.random()*Math.PI*2});
-    if (correct) el.classList.add('correct-glow');
   }
+  S.raf=requestAnimationFrame(loop);
+}
 
-  function catchCard(card){
-    var bx = S.basketX*window.innerWidth;
-    if (card.correct){
-      S.combo++;
-      var pts = 10 + Math.min(S.combo-1,5)*5;
-      S.score += pts;
-      sfxCatch(S.combo);
-      popup(card.x + card.w/2, card.y, '+'+pts);
-      burst(bx, window.innerHeight-70, '#FFD166', 14);
-      if (S.combo >= 3) comboBadge(bx, window.innerHeight-150, S.combo);
-      basketEl.classList.add('bounce');
-      setTimeout(function(){ basketEl.classList.remove('bounce'); }, 130);
-      applyRamp();
-    } else {
-      S.combo = 0;
-      S.lives--; setLives();
-      sfxWrong(); shakeScreen(true);
-      popup(card.x + card.w/2, card.y, '앗, 다른 단어! -1 ❤️', true);
-      burst(bx, window.innerHeight-70, '#8D99AE', 10);
-      if (S.lives <= 0) return gameOver();
-    }
-    scoreEl.textContent = S.score;
-    removeCard(card);
-  }
-  function removeCard(card){ card.el.remove(); var i=S.cards.indexOf(card); if(i>=0) S.cards.splice(i,1); }
+/* Input */
+function setBasket(clientX){S.basketX=Math.min(.96,Math.max(.04,clientX/window.innerWidth));}
+function placeBasket(){basketEl.style.left=(S.basketX*100)+'%';}
+window.addEventListener('keydown',function(e){
+  if(!S.running)return;
+  if(e.key==='ArrowLeft'){setBasket(S.basketX*window.innerWidth-70);placeBasket();e.preventDefault();}
+  if(e.key==='ArrowRight'){setBasket(S.basketX*window.innerWidth+70);placeBasket();e.preventDefault();}
+});
+var dragging=false;
+function touchMove(e){if(!S.running)return;var t=e.touches?e.touches[0]:e;setBasket(t.clientX);placeBasket();if(e.cancelable)e.preventDefault();}
+document.addEventListener('touchstart',function(e){dragging=true;touchMove(e);},{passive:false});
+document.addEventListener('touchmove',function(e){if(dragging)touchMove(e);},{passive:false});
+document.addEventListener('touchend',function(){dragging=false;});
+document.addEventListener('mousemove',function(e){if(S.running&&!dragging&&matchMedia('(pointer:fine)').matches){setBasket(e.clientX);placeBasket();}});
+window.addEventListener('resize',placeBasket);
 
-  function show(id){
-    ['startScreen','overScreen'].forEach(function(s){ document.getElementById(s).classList.add('hidden'); });
-    if (id) document.getElementById(id).classList.remove('hidden');
-  }
+/* Start game */
+function startGame(lvl,cat){
+  S.lvl=lvl; S.cat=cat;
+  catEl.textContent=S.cat; levelEl.textContent=S.lvl;
+  S.running=true; S.score=0; S.lives=3; S.combo=0;
+  S.spawnInterval=SETTING[S.lvl].spawn; S.fallBase=SETTING[S.lvl].fall;
+  S.cards=[]; S.lastSpawn=0;
+  scoreEl.textContent='0'; setLives(); placeBasket();
+  show(null); playfield.innerHTML='';
+  S.lastT=0; cancelAnimationFrame(S.raf);
+  S.raf=requestAnimationFrame(loop);
+  beep(660,.15,'triangle',.15);
+}
 
-  function gameOver(){
-    S.running = false;
-    sfxOver();
-    var isRecord = S.score > (his[S.lvl]||0);
-    if (isRecord){ his[S.lvl] = S.score; localStorage.setItem('ch_hi_'+S.lvl, S.score); }
-    document.getElementById('finalScore').textContent = S.score;
-    document.getElementById('finalHigh').textContent = his[S.lvl];
-    document.getElementById('newRecord').classList.toggle('hidden', !isRecord);
-    S.cards.slice().forEach(removeCard);
-    show('overScreen');
-  }
-  document.getElementById('restartBtn').addEventListener('click', function(){ startGame(S.lvl); });
-  document.getElementById('menuBtn').addEventListener('click', function(){ show('startScreen'); });
-
-  function loop(t){
-    if (!S.running) return;
-    var dt = Math.min(50, t - (S.lastT||t)); S.lastT = t;
-    var H = window.innerHeight;
-    if (t - S.lastSpawn > S.spawnInterval){ spawn(); S.lastSpawn = t; }
-    for (var i=S.cards.length-1; i>=0; i--){
-      var c = S.cards[i];
-      c.y += c.speed * dt/1000;
-      c.wob += dt/1000 * 3;
-      var wob = Math.sin(c.wob)*10;
-      c.el.style.transform = 'translateY('+c.y+'px) rotate('+Math.sin(c.wob)*c.rot+'deg) translateX('+wob+'px)';
-      var catchY = H - (BK_H + 17);
-      if (c.y + 50 >= catchY && c.y < catchY + BK_H){
-        var cx = c.x + c.w/2;
-        var bx = S.basketX*window.innerWidth;
-        if (Math.abs(cx - bx) < CATCH_TOL + c.w/4){ catchCard(c); continue; }
-      }
-      if (c.y > H + 20){
-        if (c.correct){
-          S.combo = 0; S.lives--; setLives();
-          sfxWrong(); shakeScreen(false);
-          popup(Math.min(Math.max(c.x,60), window.innerWidth-160), H-140, '놓쳤어요! -1 ❤️', true);
-          if (S.lives <= 0){ gameOver(); return; }
-        }
-        removeCard(c);
-      }
-    }
-    S.raf = requestAnimationFrame(loop);
-  }
-
-  function setBasket(clientX){
-    S.basketX = Math.min(.96, Math.max(.04, clientX/window.innerWidth));
-  }
-  function placeBasket(){ basketEl.style.left = (S.basketX*100)+'%'; }
-  window.addEventListener('keydown', function(e){
-    if (!S.running) return;
-    if (e.key==='ArrowLeft'){ setBasket(S.basketX*window.innerWidth - 70); placeBasket(); e.preventDefault(); }
-    if (e.key==='ArrowRight'){ setBasket(S.basketX*window.innerWidth + 70); placeBasket(); e.preventDefault(); }
-  });
-  var dragging = false;
-  function touchMove(e){ if(!S.running) return; var t = e.touches? e.touches[0] : e; setBasket(t.clientX); placeBasket(); if(e.cancelable) e.preventDefault(); }
-  document.addEventListener('touchstart', function(e){ dragging = true; touchMove(e); }, {passive:false});
-  document.addEventListener('touchmove', function(e){ if(dragging) touchMove(e); }, {passive:false});
-  document.addEventListener('touchend', function(){ dragging = false; });
-  document.addEventListener('mousemove', function(e){ if(S.running && !dragging && matchMedia('(pointer:fine)').matches){ setBasket(e.clientX); placeBasket(); } });
-  window.addEventListener('resize', placeBasket);
-
-  function startGame(lvl){
-    S.lvl = lvl || S.lvl;
-    levelEl.textContent = S.lvl;
-    S.running = true; S.score=0; S.lives=3; S.combo=0;
-    S.spawnInterval = SETTING[S.lvl].spawn; S.fallBase = SETTING[S.lvl].fall;
-    S.cards=[]; S.lastSpawn=0;
-    scoreEl.textContent='0'; setLives(); pickCategory(); placeBasket();
-    show(null);
-    playfield.innerHTML='';
-    S.lastT = 0;
-    cancelAnimationFrame(S.raf);
-    S.raf = requestAnimationFrame(loop);
-    beep(660,.15,'triangle',.15);
-  }
-  Array.prototype.forEach.call(document.querySelectorAll('.lvlbtn'), function(b){
-    b.addEventListener('click', function(){ startGame(b.getAttribute('data-lvl')); });
-  });
-  setLives();
+setLives();
 })();
 </script>
 </body>
