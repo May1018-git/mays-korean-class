@@ -1096,6 +1096,14 @@ function PendingScreen({user,data,onApproved,onRejected,onCancel}){
   );
 }
 
+function GameTab(){
+  return(
+    <div style={{position:'relative',width:'100%',height:'calc(100vh - 120px)',borderRadius:16,overflow:'hidden',background:'var(--db-card)'}}>
+      <iframe src="/games/hangulwordcatcher.html" style={{width:'100%',height:'100%',border:'none'}} title="한글 단어 떨어지기"/>
+    </div>
+  );
+}
+
 function TeacherApp({user,data,save,onLogout}){
   const [tab,setTab]=useState("home");
   const pending=data.stu.filter(s=>s.status==="pending").length;
@@ -1108,6 +1116,7 @@ function TeacherApp({user,data,save,onLogout}){
     {id:"voc",     icon:"📝", ko:"단어장",      en:"Vocab"},
     {id:"flash",   icon:"🃏", ko:"플래시카드",  en:"Flashcards"},
     {id:"ann",     icon:"📢", ko:"공지",        en:"Notice"},
+    {id:"game",    icon:"🎮", ko:"게임",         en:"Game"},
     {id:"students",icon:"👥", ko:"승인/관리",   en:"Students",   badge:pending||null},
   ];
   const cur=navItems.find(i=>i.id===tab)||navItems[0];
@@ -1155,6 +1164,7 @@ function TeacherApp({user,data,save,onLogout}){
           {tab==="flash"    &&<TeacherFlash data={data} save={save}/>}
           {tab==="ann"      &&<TeacherAnn data={data} save={save}/>}
           {tab==="preply"   &&<TeacherPreply data={data} save={save}/>}
+          {tab==="game"     &&<GameTab/>}
         </div>
       </main>
       <nav className="db-mob-nav">
@@ -1178,6 +1188,7 @@ function StudentApp({user,data,onLogout}){
     {id:"tb",    icon:"📚", ko:"수업교재",   en:"Textbook"},
     {id:"voc",   icon:"📝", ko:"단어장",     en:"Vocab"},
     {id:"flash", icon:"🃏", ko:"플래시카드", en:"Flashcards"},
+    {id:"game",  icon:"🎮", ko:"게임",       en:"Game"},
   ];
   const cur=navItems.find(i=>i.id===tab)||navItems[0];
   return(
@@ -1221,6 +1232,7 @@ function StudentApp({user,data,onLogout}){
           {tab==="tb"    &&<StudentTB tb={data.tb}/>}
           {tab==="voc"   &&<StudentVoc voc={data.voc}/>}
           {tab==="flash" &&<StudentFlash data={data}/>}
+          {tab==="game"  &&<GameTab/>}
         </div>
       </main>
       <nav className="db-mob-nav">

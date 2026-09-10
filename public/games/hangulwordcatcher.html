@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>한글 단어 떨어지기 (Hangul Word Catcher)</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; }
+  html,body { height:100%; overflow:hidden; }
+  body {
+    font-family: system-ui, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    background: linear-gradient(180deg, #FFE3EC 0%, #FFD6A5 45%, #FFF3C4 100%);
+    touch-action:none;
+  }
+  #game { position:fixed; inset:0; overflow:hidden; }
+  .skydeco { position:absolute; border-radius:50%; opacity:.5; pointer-events:none; }
+  #shake { position:absolute; inset:0; }
+
+  /* HUD */
+  #hud { position:absolute; top:0; left:0; right:0; display:flex; justify-content:space-between; align-items:flex-start; padding:12px 14px; z-index:5; pointer-events:none; }
+  .panel { background:rgba(255,255,255,.75); backdrop-filter:blur(6px); border-radius:18px; padding:8px 14px; box-shadow:0 4px 0 rgba(210,140,90,.25); pointer-events:auto; }
+  .hud-label { font-size:11px; font-weight:800; color:#B0682F; letter-spacing:1px; }
+  .hud-val { font-size:22px; font-weight:900; color:#5A3413; line-height:1.1; }
+  #catPanel { text-align:center; background:#fff; border:3px solid #FF9F1C; }
+  #catWord { font-size:22px; font-weight:900; color:#E85D75; }
+  #catWord.en { display:block; font-size:11px; color:#B08A5A; font-weight:700; }
+  #lives { font-size:20px; letter-spacing:2px; }
+  #muteBtn { position:absolute; top:12px; right:14px; z-index:6; width:44px; height:44px; border-radius:14px; border:3px solid #E85D75; background:#fff; font-size:20px; cursor:pointer; box-shadow:0 4px 0 rgba(232,93,117,.3); }
+  #muteBtn:active { transform:translateY(3px); box-shadow:0 1px 0 rgba(232,93,117,.3); }
+  .hud-top-left { display:flex; flex-direction:column; gap:8px; align-items:flex-start; }
+
+  /* Basket */
+  #basket { position:absolute; bottom:8px; width:110px; height:78px; z-index:4; will-change:transform; transition:transform .12s cubic-bezier(.3,1.6,.5,1); }
+  #basket.bounce { transform:translate(-50%,0) scale(1.15,.85) !important; }
+
+  /* Falling cards */
+  .card {
+    position:absolute; top:-90px; z-index:3;
+    background:#fff; border-radius:16px; padding:8px 14px;
+    display:flex; align-items:center; gap:8px;
+    box-shadow:0 6px 0 rgba(180,120,70,.25), inset 0 0 0 3px var(--cc,#9BD1FF);
+    will-change:transform; white-space:nowrap;
+  }
+  .card .em { font-size:26px; }
+  .card .w { font-size:19px; font-weight:900; color:#4A2E14; }
+  .card.correct-glow { animation:cardPulse .5s infinite alternate; }
+  @keyframes cardPulse { from{ box-shadow:0 6px 0 rgba(180,120,70,.25), inset 0 0 0 3px var(--cc); } to{ box-shadow:0 6px 0 rgba(180,120,70,.25), inset 0 0 0 6px var(--cc); } }
+
+  /* Particles & popups */
+  .particle { position:absolute; width:10px; height:10px; border-radius:50%; z-index:7; pointer-events:none; will-change:transform,opacity; }
+  .popup { position:absolute; z-index:8; font-weight:900; font-size:24px; color:#FF7BA9; pointer-events:none; text-shadow:0 2px 0 #fff; will-change:transform,opacity; }
+  .popup.bad { color:#6B7A8F; }
+
+  /* Overlays */
+  .overlay { position:absolute; inset:0; z-index:20; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:24px; background:rgba(255,244,230,.88); backdrop-filter:blur(4px); }
+  .overlay.hidden { display:none; }
+  .bigtitle { font-size:clamp(34px,9vw,64px); font-weight:900; color:#E85D75; text-shadow:0 4px 0 #FFD1DC, 0 8px 0 rgba(180,120,70,.2); line-height:1.15; animation:floaty 2.4s ease-in-out infinite; }
+  @keyframes floaty { 0%,100%{ transform:translateY(0) rotate(-2deg);} 50%{ transform:translateY(-10px) rotate(2deg);} }
+  .sub { margin-top:14px; font-size:16px; color:#8A5A2B; font-weight:700; }
+  .inst { margin-top:20px; background:#fff; border-radius:20px; padding:16px 22px; box-shadow:0 6px 0 rgba(180,120,70,.2); font-size:15px; color:#5A3413; font-weight:600; line-height:1.7; max-width:420px; }
+  .inst b { color:#E85D75; }
+  .bigbtn { margin-top:26px; font-size:24px; font-weight:900; color:#fff; background:linear-gradient(180deg,#FF8FA3,#F76C8A); border:none; border-radius:999px; padding:16px 54px; cursor:pointer; box-shadow:0 6px 0 #D14B6B; font-family:inherit; animation:pulseBtn 1.6s infinite; }
+  @keyframes pulseBtn { 0%,100%{ transform:scale(1);} 50%{ transform:scale(1.06);} }
+  .bigbtn:active { transform:translateY(4px); box-shadow:0 2px 0 #D14B6B; }
+  .gameover-score { margin-top:16px; font-size:20px; color:#5A3413; font-weight:800; line-height:1.8; }
+  .gameover-score .n { font-size:40px; color:#FF7BA9; }
+  .newrecord { color:#FF9F1C; font-size:22px; font-weight:900; margin-top:6px; animation:pulseBtn 1s infinite; }
+  .combo-badge { position:absolute; z-index:8; font-weight:900; font-size:18px; color:#fff; background:linear-gradient(90deg,#FF9F1C,#FF5E7E); padding:6px 16px; border-radius:999px; pointer-events:none; will-change:transform,opacity; box-shadow:0 4px 0 rgba(210,80,100,.4); }
+  .levelbanner { position:absolute; top:38%; left:50%; transform:translateX(-50%); z-index:9; font-size:34px; font-weight:900; color:#9B5DE5; text-shadow:0 3px 0 #fff; pointer-events:none; }
+</style>
+</head>
+<body>
+<div id="game">
+  <div id="shake">
+    <div id="hud">
+      <div class="hud-top-left">
+        <div class="panel"><div class="hud-label">점수 (SCORE)</div><div class="hud-val" id="scoreEl">0</div></div>
+        <div class="panel"><div class="hud-label">레벨 (LEVEL)</div><div class="hud-val" id="levelEl">1</div></div>
+        <div class="panel"><div class="hud-label">목표 (TARGET)</div><div class="hud-val" id="catWord">음식</div></div>
+      </div>
+      <div class="panel" style="margin-right:52px"><div class="hud-label">생명 (LIVES)</div><div id="lives">❤️❤️❤️</div></div>
+    </div>
+    <button id="muteBtn" title="소리 켜기/끄기">🔊</button>
+    <div id="playfield"></div>
+    <div id="basket"></div>
+
+    <div class="overlay" id="startScreen">
+      <div class="bigtitle">한글 단어<br>떨어지기</div>
+      <div class="sub">Hangul Word Catcher</div>
+      <div class="inst">
+        🧺 바구니로 떨어지는 단어를 받으세요!<br>
+        🎯 위의 <b>목표 카테고리</b>와 같은 단어를 잡으면 점수 +<br>
+        ❌ 다른 단어를 잡거나 정답을 놓치면 생명 -1<br>
+        🔥 연속 정답은 <b>콤보 보너스!</b><br>
+        ⌨️ 방향키(←→) 이동 · 📱 손가락으로 드래그
+      </div>
+      <button class="bigbtn" id="startBtn">시작하기 (START)</button>
+    </div>
+
+    <div class="overlay hidden" id="overScreen">
+      <div class="bigtitle" style="font-size:clamp(28px,7vw,48px)">게임 오버!</div>
+      <div class="sub">Game Over</div>
+      <div class="gameover-score">
+        점수: <span class="n" id="finalScore">0</span><br>
+        최고 점수: <span id="finalHigh">0</span>
+        <div class="newrecord hidden" id="newRecord">🎉 새 최고 기록!</div>
+      </div>
+      <button class="bigbtn" id="restartBtn">다시 하기 (RETRY)</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var WORDS = {
+    "음식": [["사과","🍎"],["빵","🍞"],["우유","🥛"],["김치","🥬"],["계란","🥚"],["치즈","🧀"],["고기","🍖"],["밥","🍚"],["포도","🍇"],["당근","🥕"],["아이스크림","🍦"],["피자","🍕"],["떡볶이","🍢"],["커피","☕"],["수박","🍉"],["바나나","🍌"],["고구마","🍠"],["라면","🍜"],["햄버거","🍔"],["도넛","🍩"]],
+    "동물": [["강아지","🐶"],["고양이","🐱"],["토끼","🐰"],["사자","🦁"],["호랑이","🐯"],["코끼리","🐘"],["기린","🦒"],["펭귄","🐧"],["물고기","🐟"],["새","🐦"],["오리","🦆"],["말","🐴"],["돼지","🐷"],["닭","🐔"],["곰","🐻"],["개구리","🐸"],["원숭이","🐵"],["달팽이","🐌"],["나비","🦋"],["거북이","🐢"]],
+    "사물": [["책","📚"],["연필","✏️"],["우산","☂️"],["시계","⏰"],["가방","🎒"],["신발","👟"],["볼펜","🖊️"],["휴대폰","📱"],["안경","👓"],["열쇠","🔑"],["모자","🧢"],["의자","🪑"],["창문","🪟"],["전구","💡"],["사다리","🪜"],["테이프","🩹"],["종이","📄"],["컵","🥛"],["드라이버","🪛"],["이어폰","🎧"]]
+  };
+  var CATS = Object.keys(WORDS);
+  var CAT_COLORS = {"음食":"", "음식":"#FF9F1C","동물":"#4CC9F0","사물":"#B388FF"};
+
+  var playfield = document.getElementById('playfield');
+  var basketEl = document.getElementById('basket');
+  var shakeEl = document.getElementById('shake');
+  var scoreEl = document.getElementById('scoreEl');
+  var levelEl = document.getElementById('levelEl');
+  var catEl = document.getElementById('catWord');
+  var livesEl = document.getElementById('lives');
+
+  // Basket SVG
+  basketEl.innerHTML = '<svg viewBox="0 0 110 78" width="110" height="78"><path d="M8 26 Q55 -14 102 26 L92 70 Q55 82 18 70 Z" fill="#C68B4E" stroke="#8A5A2B" stroke-width="5"/><path d="M8 26 Q55 10 102 26 L98 40 Q55 26 12 40 Z" fill="#FF9F1C" opacity=".85"/><g stroke="#8A5A2B" stroke-width="4" opacity=".6"><line x1="30" y1="42" x2="34" y2="68"/><line x1="50" y1="44" x2="50" y2="72"/><line x1="72" y1="42" x2="70" y2="68"/></g><text x="55" y="66" text-anchor="middle" font-size="18">🧺</text></svg>';
+
+  // Sky decorations
+  [[8,10,70,'#FFC2D1'],[80,18,50,'#FFE29A'],[20,30,40,'#C2F0FF'],[60,6,36,'#D9C2FF']].forEach(function(d){
+    var s = document.createElement('div'); s.className='skydeco';
+    s.style.cssText='left:'+d[0]+'%;top:'+d[1]+'%;width:'+d[2]+'px;height:'+d[2]+'px;background:'+d[3]+';';
+    shakeEl.insertBefore(s, shakeEl.firstChild);
+  });
+
+  var S = { running:false, score:0, lives:3, level:1, combo:0, cat:"음식", hi:+(localStorage.getItem('hwc_hi')||0),
+            basketX:.5, cards:[], lastSpawn:0, spawnInterval:1800, fallBase:110, startedAt:0, muted:false, raf:0, lastT:0, targetWords:[] };
+  scoreEl.textContent = S.score; levelEl.textContent = 1;
+  document.getElementById('finalHigh').textContent = S.hi;
+
+  // ---------- Audio ----------
+  var actx = null;
+  function beep(freq, dur, type, vol, slide){
+    if (S.muted) return;
+    try {
+      actx = actx || new (window.AudioContext||window.webkitAudioContext)();
+      if (actx.state==='suspended') actx.resume();
+      var o = actx.createOscillator(), g = actx.createGain(), t = actx.currentTime;
+      o.type = type||'sine'; o.frequency.setValueAtTime(freq, t);
+      if (slide) o.frequency.exponentialRampToValueAtTime(slide, t+dur);
+      g.gain.setValueAtTime(vol||.15, t);
+      g.gain.exponentialRampToValueAtTime(.001, t+dur);
+      o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t+dur+.02);
+    } catch(e){}
+  }
+  function sfxCatch(combo){ beep(520 + Math.min(combo,8)*60, .12, 'triangle', .18, 900 + combo*60); }
+  function sfxWrong(){ beep(160, .3, 'sawtooth', .2, 70); }
+  function sfxLevel(){ [523,659,784,1047].forEach(function(f,i){ setTimeout(function(){beep(f,.18,'square',.12);}, i*110); }); }
+  function sfxOver(){ [440,349,262].forEach(function(f,i){ setTimeout(function(){beep(f,.4,'triangle',.18);}, i*250); }); }
+  document.getElementById('muteBtn').addEventListener('click', function(){
+    S.muted = !S.muted; this.textContent = S.muted ? '🔇' : '🔊';
+  });
+
+  // ---------- Effects ----------
+  function burst(x, y, color, n){
+    for (var i=0;i<n;i++){
+      var p = document.createElement('div'); p.className='particle';
+      var sz = 6+Math.random()*10;
+      p.style.cssText = 'left:'+x+'px;top:'+y+'px;width:'+sz+'px;height:'+sz+'px;background:'+(color||'#FF9F1C')+';left:'+(x-sz/2)+'px;top:'+(y-sz/2)+'px;';
+      playfield.appendChild(p);
+      var ang = Math.random()*Math.PI*2, sp = 80+Math.random()*180;
+      var dx = Math.cos(ang)*sp, dy = Math.sin(ang)*sp - 140;
+      var rot = (Math.random()*720-360);
+      p.animate([
+        {transform:'translate(0,0) rotate(0)', opacity:1},
+        {transform:'translate('+dx+'px,'+(dy+250)+'px) rotate('+rot+'deg)', opacity:0}
+      ], {duration:700+Math.random()*400, easing:'cubic-bezier(.2,.6,.4,1)'}).onfinish = function(){ this.remove(); }.bind(p);
+      setTimeout(function(el){ el.remove(); }, 1200, p);
+    }
+  }
+  function popup(x, y, text, bad){
+    var el = document.createElement('div'); el.className='popup'+(bad?' bad':'');
+    el.textContent = text; el.style.left = x+'px'; el.style.top = y+'px';
+    playfield.appendChild(el);
+    el.animate([
+      {transform:'translate(-50%,0) scale(.6)', opacity:1},
+      {transform:'translate(-50%,-70px) scale(1.3)', opacity:0}
+    ], {duration:900, easing:'ease-out'}).onfinish = function(){ el.remove(); };
+  }
+  function shakeScreen(heavy){
+    shakeEl.animate([
+      {transform:'translate(0,0)'},{transform:'translate('+(heavy?'-10px':'-5px')+',4px) rotate(-1deg)'},
+      {transform:'translate('+(heavy?'8px':'4px')+',-4px) rotate(1deg)'},{transform:'translate(0,0)'}
+    ], {duration:heavy?350:220});
+  }
+  function comboBadge(x, y, n){
+    var el = document.createElement('div'); el.className='combo-badge';
+    el.textContent = n+' 콤보! (COMBO)';
+    el.style.left = x+'px'; el.style.top = y+'px';
+    playfield.appendChild(el);
+    el.animate([
+      {transform:'translate(-50%,0) scale(.5) rotate(-6deg)', opacity:1},
+      {transform:'translate(-50%,-50px) scale(1.1) rotate(4deg)', opacity:0}
+    ], {duration:1000, easing:'ease-out'}).onfinish = function(){ el.remove(); };
+  }
+  function levelBanner(){
+    var el = document.createElement('div'); el.className='levelbanner';
+    el.textContent = '레벨 ' + S.level + '!';
+    shakeEl.appendChild(el);
+    el.animate([
+      {transform:'translateX(-50%) scale(.3)', opacity:0},
+      {transform:'translateX(-50%) scale(1.2)', opacity:1, offset:.2},
+      {transform:'translateX(-50%) scale(1)', opacity:1, offset:.8},
+      {transform:'translateX(-50%) scale(1.4)', opacity:0}
+    ], {duration:1600}).onfinish = function(){ el.remove(); };
+  }
+
+  // ---------- Game logic ----------
+  function pickCategory(){
+    var c = CATS[Math.floor(Math.random()*CATS.length)];
+    S.cat = c; S.targetWords = WORDS[c].map(function(w){ return w[0]; });
+    catEl.textContent = c;
+  }
+  function setLives(){
+    livesEl.textContent = S.lives > 0 ? new Array(S.lives+1).join('❤️') : '💔';
+  }
+  function levelOf(score){ return Math.min(9, 1 + Math.floor(score/120)); }
+  function applyLevel(){
+    var lv = levelOf(S.score);
+    if (lv > S.level){
+      S.level = lv; levelEl.textContent = lv;
+      S.spawnInterval = Math.max(650, 1800 - (lv-1)*150);
+      S.fallBase = 110 + (lv-1)*22;
+      levelBanner(); sfxLevel();
+      burst(window.innerWidth*.5, window.innerHeight*.4, '#9B5DE5', 22);
+    }
+  }
+  function spawn(){
+    var catKeys = CATS;
+    var correct = Math.random() < .45;
+    var cat, entry;
+    if (correct) { cat = S.cat; entry = WORDS[cat][Math.floor(Math.random()*WORDS[cat].length)]; }
+    else {
+      cat = CATS[Math.floor(Math.random()*CATS.length)];
+      if (cat === S.cat && Math.random()<.7) cat = CATS[(CATS.indexOf(cat)+1)%CATS.length];
+      if (cat === S.cat) { // fallback: pick a wrong word from target cat visually but it's correct — avoid; pick other cat
+        cat = catKeys.find(function(c){return c!==S.cat;});
+      }
+      entry = WORDS[cat][Math.floor(Math.random()*WORDS[cat].length)];
+    }
+    var el = document.createElement('div'); el.className='card';
+    el.style.setProperty('--cc', CAT_COLORS[cat] || '#9BD1FF');
+    el.innerHTML = '<span class="em">'+entry[1]+'</span><span class="w">'+entry[0]+'</span>';
+    playfield.appendChild(el);
+    var w = el.offsetWidth || 120;
+    var x = Math.random()*(window.innerWidth - w - 20) + 10;
+    el.style.left = x+'px';
+    var speed = S.fallBase * (0.85 + Math.random()*.35);
+    S.cards.push({el:el, x:x, w:w, y:-90, speed:speed, word:entry[0], correct:correct, rot:(Math.random()*16-8), wob:Math.random()*Math.PI*2});
+    if (correct) el.classList.add('correct-glow');
+  }
+
+  function catchCard(card){
+    var bx = S.basketX*window.innerWidth;
+    if (card.correct){
+      S.combo++;
+      var pts = 10 + Math.min(S.combo-1,5)*5 + S.level*2;
+      S.score += pts;
+      sfxCatch(S.combo);
+      popup(card.x + card.w/2, card.y, '+'+pts);
+      burst(bx, window.innerHeight-70, '#FFD166', 14);
+      if (S.combo >= 3) comboBadge(bx, window.innerHeight-150, S.combo);
+      basketEl.classList.add('bounce');
+      setTimeout(function(){ basketEl.classList.remove('bounce'); }, 130);
+      applyLevel();
+    } else {
+      S.combo = 0;
+      S.lives--; setLives();
+      sfxWrong(); shakeScreen(true);
+      popup(card.x + card.w/2, card.y, '앗! 틀린 단어 (-1 생명)', true);
+      burst(bx, window.innerHeight-70, '#8D99AE', 10);
+      if (S.lives <= 0) return gameOver();
+    }
+    scoreEl.textContent = S.score;
+    removeCard(card);
+  }
+  function removeCard(card){ card.el.remove(); var i=S.cards.indexOf(card); if(i>=0) S.cards.splice(i,1); }
+
+  function gameOver(){
+    S.running = false;
+    sfxOver();
+    var isRecord = S.score > S.hi;
+    if (isRecord){ S.hi = S.score; localStorage.setItem('hwc_hi', S.score); }
+    document.getElementById('finalScore').textContent = S.score;
+    document.getElementById('finalHigh').textContent = S.hi;
+    document.getElementById('newRecord').classList.toggle('hidden', !isRecord);
+    S.cards.slice().forEach(removeCard);
+    document.getElementById('overScreen') ;
+    document.getElementById('overScreen') = null;
+    setTimeout(function(){ document.getElementById('overScreen'); }, 0);
+    show('overScreen');
+  }
+  function show(id){
+    ['startScreen','overScreen'].forEach(function(s){ document.getElementById(s).classList.add('hidden'); });
+    if (id) document.getElementById(id).classList.remove('hidden');
+  }
+  // overScreen element exists? We only declared startScreen in HTML — add one dynamically.
+  var overEl = document.createElement('div');
+  overEl.className='overlay hidden'; overEl.id='overScreen';
+  overEl.innerHTML = '<div class="bigtitle" style="font-size:clamp(28px,7vw,48px)">게임 오버!</div><div class="sub">Game Over</div>'+
+    '<div class="gameover-score">점수: <span class="n" id="finalScore">0</span><br>최고 점수: <span id="finalHighEl">0</span><div class="newrecord hidden" id="newRecord">🎉 새 최고 기록!</div></div>'+
+    '<button class="bigbtn" id="restartBtn">다시 하기 (RETRY)</button>';
+  shakeEl.appendChild(overEl);
+  document.getElementById('finalHigh').textContent = S.hi;
+  overEl.querySelector('#restartBtn').addEventListener('click', startGame);
+
+  function gameOverUI(){
+    S.running = false; sfxOver();
+    var isRecord = S.score > S.hi;
+    if (isRecord){ S.hi = S.score; localStorage.setItem('hwc_hi', S.score); document.getElementById('finalHigh').textContent = S.hi; }
+    overEl.querySelector('#finalScore').textContent = S.score;
+    overEl.querySelector('#finalHighEl').textContent = S.hi;
+    overEl.querySelector('#newRecord').classList.toggle('hidden', !isRecord);
+    S.cards.slice().forEach(removeCard);
+    show('overScreen');
+  }
+  // replace earlier broken gameOver references
+  var gameOver = gameOverUI;
+
+  function loop(t){
+    if (!S.running) return;
+    var dt = Math.min(50, t - (S.lastT||t)); S.lastT = t;
+    var H = window.innerHeight;
+    // spawn
+    if (t - S.lastSpawn > S.spawnInterval){ S.lastSpawn = S.lastSpawn; spawn(); S.lastSpawn = t; }
+    // cards
+    for (var i=S.cards.length-1; i>=0; i--){
+      var c = S.cards[i];
+      c.y += c.speed * dt/1000;
+      c.wob += dt/1000 * 3;
+      var wob = Math.sin(c.wob)*10;
+      c.el.style.transform = 'translateY('+c.y+'px) rotate('+Math.sin(c.wob)*c.rot+'deg) translateX('+wob+'px)';
+      var catchY = H - 95;
+      if (c.y + 60 >= catchY && c.y < catchY + 55){
+        var cx = c.x + c.w/2;
+        var bx = S.basketX*window.innerWidth;
+        if (Math.abs(cx - bx) < 62 + c.w/4){ catchCard(c); continue; }
+      }
+      if (c.y > H + 20){
+        if (c.correct){
+          S.combo = 0; S.lives--; setLives();
+          sfxWrong(); shakeScreen(false);
+          popup(Math.min(Math.max(c.x,60), window.innerWidth-160), H-140, '놓쳤어요! (-1 생명)', true);
+          if (S.lives <= 0){ gameOverUI(); return; }
+        }
+        removeCard(c);
+      }
+    }
+    S.raf = requestAnimationFrame(loop);
+  }
+
+  // ---------- Input ----------
+  function setBasket(clientX){
+    S.basketX = Math.min(.96, Math.max(.04, clientX/window.innerWidth));
+    basketEl.style.left = (S.basketX*100)+'%';
+  }
+  basketEl.style.left = '50%';
+  basketEl.style.transform = 'translateX(-50%)';
+  basketEl.style.marginLeft = '0';
+  // position via left%; transform used for bounce — combine
+  function placeBasket(){ basketEl.style.left = (S.basketX*100)+'%'; }
+  window.addEventListener('keydown', function(e){
+    if (!S.running) { if(e.key===' '||e.key==='Enter'){ startGame(); } return; }
+    if (e.key==='ArrowLeft'){ setBasket(S.basketX*window.innerWidth - 70); placeBasket(); e.preventDefault(); }
+    if (e.key==='ArrowRight'){ setBasket(S.basketX*window.innerWidth + 70); placeBasket(); e.preventDefault(); }
+  });
+  var dragging = false;
+  function touchMove(e){ if(!S.running) return; var t = e.touches? e.touches[0] : e; setBasket(t.clientX); placeBasket(); if(e.cancelable) e.preventDefault(); }
+  document.addEventListener('touchstart', function(e){ dragging = true; touchMove(e); }, {passive:false});
+  document.addEventListener('touchmove', function(e){ if(dragging) touchMove(e); }, {passive:false});
+  document.addEventListener('touchend', function(){ dragging = false; });
+  document.addEventListener('mousemove', function(e){ if(S.running && !dragging && matchMedia('(pointer:fine)').matches){ setBasket(e.clientX); placeBasket(); } });
+  window.addEventListener('resize', placeBasket);
+
+  function startGame(){
+    S.running = true; S.score=0; S.lives=3; S.level=1; S.combo=0;
+    S.spawnInterval=1800; S.fallBase=110; S.cards=[]; S.lastSpawn=0;
+    scoreEl.textContent='0'; levelEl.textContent='1'; setLives(); pickCategory(); placeBasket();
+    show(null);
+    playfield.innerHTML='';
+    S.lastT = 0;
+    cancelAnimationFrame(S.raf);
+    S.raf = requestAnimationFrame(loop);
+    beep(660,.15,'triangle',.15);
+  }
+  document.getElementById('startBtn').addEventListener('click', startGame);
+  setLives();
+})();
+</script>
+</body>
+</html>
+</body>
+</html>
