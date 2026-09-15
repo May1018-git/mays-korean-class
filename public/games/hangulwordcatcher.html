@@ -33,10 +33,9 @@
     #catWord { font-size:14px; }
     #lives { font-size:13px; letter-spacing:1px; }
     #muteBtn { width:32px; height:32px; font-size:14px; top:7px; right:7px; border-radius:9px; }
-    .card .em { font-size:14px; }
-    .card .w { font-size:11px; }
-    .card .g { font-size:8px; }
-    .card { padding:4px 7px; gap:3px; border-radius:9px; }
+    .card .w { font-size:9px; }
+    .card .g { font-size:7px; }
+    .card { padding:3px 6px; gap:2px; border-radius:8px; }
   }
 
   /* Basket */
@@ -45,7 +44,6 @@
 
   /* Falling cards */
   .card { position:absolute; top:-90px; z-index:3; background:#fff; border-radius:16px; padding:8px 14px; display:flex; align-items:center; gap:8px; box-shadow:0 6px 0 rgba(180,120,70,.25), inset 0 0 0 3px var(--cc,#9BD1FF); will-change:transform; white-space:nowrap; }
-  .card .em { font-size:26px; }
   .card .w { font-size:19px; font-weight:900; color:#4A2E14; }
   .card .g { font-size:11px; color:#B08A5A; font-weight:700; }
 
@@ -360,7 +358,7 @@ function spawn(){
   var entry=pickWord(S.lvl,cat);
   var el=document.createElement('div'); el.className='card';
   el.style.setProperty('--cc',CAT_COLORS[cat]||'#9BD1FF');
-  el.innerHTML='<span class="em">'+entry[1]+'</span><span class="w">'+entry[0]+'</span><span class="g">'+entry[2]+'</span>';
+  el.innerHTML='<span class="w">'+entry[0]+'</span><span class="g">'+entry[2]+'</span>';
   playfield.appendChild(el);
   var w=el.offsetWidth||120;
   var x=Math.random()*(window.innerWidth-w-20)+10;
