@@ -33,10 +33,10 @@
     #catWord { font-size:14px; }
     #lives { font-size:13px; letter-spacing:1px; }
     #muteBtn { width:32px; height:32px; font-size:14px; top:7px; right:7px; border-radius:9px; }
-    .card .em { font-size:18px; }
-    .card .w { font-size:13px; }
-    .card .g { font-size:9px; }
-    .card { padding:5px 8px; gap:4px; border-radius:10px; }
+    .card .em { font-size:14px; }
+    .card .w { font-size:11px; }
+    .card .g { font-size:8px; }
+    .card { padding:4px 7px; gap:3px; border-radius:9px; }
   }
 
   /* Basket */
@@ -247,10 +247,11 @@ var livesEl   = document.getElementById('lives');
 
 /* 모바일 바구니 크기 */
 var isMobile = window.innerWidth <= 500;
+var MOBILE_SPEED_MULT = isMobile ? 0.65 : 1;
 var BK_W = isMobile ? 50 : 110;
 var BK_H = isMobile ? 36 : 78;
 var BK_HALF = BK_W / 2;
-var CATCH_TOL = Math.round(BK_W * 0.48) + 5;
+var CATCH_TOL = Math.round(BK_W * 0.48) + (isMobile ? 9 : 5);
 
 basketEl.style.width  = BK_W + 'px';
 basketEl.style.height = BK_H + 'px';
@@ -332,7 +333,7 @@ function applyRamp(){
   var st=SETTING[S.lvl];
   var stage=Math.floor(S.score/st.rampEvery);
   S.spawnInterval=Math.max(650,st.spawn-stage*130);
-  S.fallBase=st.fall+stage*st.speedRamp;
+  S.fallBase=(st.fall+stage*st.speedRamp)*MOBILE_SPEED_MULT;
 }
 
 function pickWord(lvl,cat){
@@ -496,7 +497,7 @@ function startGame(lvl,cat){
   S.lvl=lvl; S.cat=cat;
   catEl.textContent=S.cat; levelEl.textContent=S.lvl;
   S.running=true; S.score=0; S.lives=3; S.combo=0;
-  S.spawnInterval=SETTING[S.lvl].spawn; S.fallBase=SETTING[S.lvl].fall;
+  S.spawnInterval=SETTING[S.lvl].spawn; S.fallBase=SETTING[S.lvl].fall*MOBILE_SPEED_MULT;
   S.cards=[]; S.lastSpawn=0; S.recent={};
   scoreEl.textContent='0'; setLives(); placeBasket();
   show(null); playfield.innerHTML='';
