@@ -587,6 +587,9 @@
 .db-st-tr._new-row .db-st-td { background: rgba(107,79,187,.06); }
 .db-st-del-btn { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 6px; cursor: pointer; font-size: 14px; color: var(--db-tm); transition: background .1s, color .1s; margin: 0 auto; }
 .db-st-del-btn:hover { background: rgba(239,68,68,.1); color: #ef4444; }
+.db-st-drag-handle { cursor: grab; text-align: center; color: var(--db-tm); font-size: 15px; user-select: none; }
+.db-st-drag-handle.disabled { color: var(--db-bdr2); cursor: default; }
+.db-st-tr.dragging { opacity: .4; }
 .db-sh-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
 .db-sh-card { background: var(--db-card); border: 1px solid var(--db-bdr); border-radius: 16px; padding: 18px; box-shadow: var(--db-sh); }
 .db-sh-badges { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
