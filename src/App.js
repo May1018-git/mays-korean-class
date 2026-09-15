@@ -978,15 +978,15 @@ const Wrap = ({children}) => <div className="max-w-2xl mx-auto px-3 py-4">{child
 export default function App() {
   const [view,setView]=useState("loading");
   const [user,setUser]=useState(null);
-  const [data,setData]=useState({mat:[],tb:DEFAULT_TB,voc:[],ann:[],stu:[],icsUrl:'',sheetsUrl:'',sheetEdits:{},sheetNewStudents:[],sheetDeletedStudents:[]});
+  const [data,setData]=useState({mat:[],tb:DEFAULT_TB,voc:[],ann:[],stu:[],icsUrl:'',sheetsUrl:'',sheetEdits:{},sheetNewStudents:[],sheetDeletedStudents:[],sheetOrder:[]});
 
   useEffect(()=>{
     setView("login"); // show login immediately; data loads in background
     (async()=>{
-      const [mat,tb,voc,ann,stuRaw,icsUrl,sheetsUrl,sheetEdits,sheetNewStudents,sheetDeletedStudents]=await Promise.all([
-        fget("materials"),fget("textbooks"),fget("vocab"),fget("announcements"),fget("students"),fget("icsUrl"),fget("sheetsUrl"),fget("sheetEdits"),fget("sheetNewStudents"),fget("sheetDeletedStudents"),
+      const [mat,tb,voc,ann,stuRaw,icsUrl,sheetsUrl,sheetEdits,sheetNewStudents,sheetDeletedStudents,sheetOrder]=await Promise.all([
+        fget("materials"),fget("textbooks"),fget("vocab"),fget("announcements"),fget("students"),fget("icsUrl"),fget("sheetsUrl"),fget("sheetEdits"),fget("sheetNewStudents"),fget("sheetDeletedStudents"),fget("sheetOrder"),
       ]);
-      setData({mat:mat||[],tb:tb||DEFAULT_TB,voc:voc||[],ann:ann||[],stu:normStudents(stuRaw||[]),icsUrl:icsUrl||'',sheetsUrl:sheetsUrl||'',sheetEdits:sheetEdits||{},sheetNewStudents:sheetNewStudents||[],sheetDeletedStudents:sheetDeletedStudents||[]});
+      setData({mat:mat||[],tb:tb||DEFAULT_TB,voc:voc||[],ann:ann||[],stu:normStudents(stuRaw||[]),icsUrl:icsUrl||'',sheetsUrl:sheetsUrl||'',sheetEdits:sheetEdits||{},sheetNewStudents:sheetNewStudents||[],sheetDeletedStudents:sheetDeletedStudents||[],sheetOrder:sheetOrder||[]});
     })();
   },[]);
 
@@ -1003,7 +1003,7 @@ export default function App() {
   },[view]);
 
   const save = useCallback(async (key,val)=>{
-    const keyMap={mat:"materials",tb:"textbooks",voc:"vocab",ann:"announcements",stu:"students",icsUrl:"icsUrl",sheetsUrl:"sheetsUrl",sheetEdits:"sheetEdits",sheetNewStudents:"sheetNewStudents",sheetDeletedStudents:"sheetDeletedStudents"};
+    const keyMap={mat:"materials",tb:"textbooks",voc:"vocab",ann:"announcements",stu:"students",icsUrl:"icsUrl",sheetsUrl:"sheetsUrl",sheetEdits:"sheetEdits",sheetNewStudents:"sheetNewStudents",sheetDeletedStudents:"sheetDeletedStudents",sheetOrder:"sheetOrder"};
     await fset(keyMap[key],val);
     setData(d=>({...d,[key]:val}));
   },[]);
@@ -1631,11 +1631,15 @@ function TeacherSheets({data,save}){
   const [sortCol,setSortCol]=useState(null);
   const [sortDir,setSortDir]=useState('asc');
   const [confirmDel,setConfirmDel]=useState(null);
+  const [dragIdx,setDragIdx]=useState(null);
   const sheetsUrl=data.sheetsUrl||DEFAULT_SHEETS_URL;
   const sheetEdits=data.sheetEdits||{};
   const sheetNewStudents=data.sheetNewStudents||[];
   const sheetDeletedStudents=data.sheetDeletedStudents||[];
+  const sheetOrder=data.sheetOrder||[];
   const badgeClass=v=>v==='구독'?'active':v==='구독취소'?'cancelled':'trial';
+  const keyOf=s=>s._isNew?('new:'+s._id):s['이름'];
+  const canReorder=filter==='전체'&&!sortCol;
 
   useEffect(()=>{
     setLoading(true);setErr('');
@@ -1647,10 +1651,28 @@ function TeacherSheets({data,save}){
           const obj={};headers.forEach((h,i)=>{obj[h]=r[i]||'';});
           return{...obj,...(sheetEdits[obj['이름']]||{})};
         }).filter(s=>!sheetDeletedStudents.includes(s['이름']));
-        setStudents([...csvStudents,...sheetNewStudents]);
+        const merged=[...csvStudents,...sheetNewStudents];
+        if(sheetOrder.length){
+          const idx=new Map(sheetOrder.map((k,i)=>[k,i]));
+          const withIdx=merged.map((s,i)=>({s,pos:idx.has(keyOf(s))?idx.get(keyOf(s)):sheetOrder.length+i}));
+          withIdx.sort((a,b)=>a.pos-b.pos);
+          setStudents(withIdx.map(x=>x.s));
+        } else {
+          setStudents(merged);
+        }
         setLoading(false);
       }).catch(()=>{setErr('시트를 불러오지 못했어요. 잠시 후 다시 시도해주세요.');setLoading(false);});
-  },[sheetsUrl,sheetNewStudents.length]);
+  },[sheetsUrl,sheetNewStudents.length,sheetOrder.length]);
+
+  const handleDrop=async(targetRi)=>{
+    if(!canReorder||dragIdx===null||dragIdx===targetRi){setDragIdx(null);return;}
+    const reordered=[...students];
+    const[moved]=reordered.splice(dragIdx,1);
+    reordered.splice(targetRi,0,moved);
+    setStudents(reordered);
+    await save('sheetOrder',reordered.map(keyOf));
+    setDragIdx(null);
+  };
 
   const deleteStudent=async(rowIdx)=>{
     const s=students[rowIdx];
@@ -1748,12 +1770,14 @@ function TeacherSheets({data,save}){
           })}
           <button className="db-sh-addbtn" onClick={addStudent}>+ 학생 추가</button>
         </div>
+        {!canReorder&&<div style={{fontSize:13,color:'var(--db-tm)',marginBottom:10}}>전체 보기 + 정렬 없음 상태에서만 순서를 드래그로 바꿀 수 있어요.</div>}
         {sortedVisible.length===0
           ?<div style={{color:'var(--db-tm)',fontSize:15,padding:'20px 0'}}>해당하는 학생이 없어요.</div>
           :<div className="db-st-wrap">
             <table className="db-st-tbl">
               <thead>
                 <tr>
+                  <th className="db-st-th" style={{width:28,minWidth:28}}></th>
                   {ST_COLS.map(c=>(
                     <th key={c.key} className="db-st-th" style={{width:c.w,minWidth:c.w,cursor:'pointer',userSelect:'none'}}
                         onClick={()=>handleSortClick(c.key)}>
@@ -1768,7 +1792,17 @@ function TeacherSheets({data,save}){
                   const globalRi=students.indexOf(s);
                   const isEditingRow=editing&&editing.rowIdx===globalRi;
                   return(
-                    <tr key={s._id||ri} className={`db-st-tr${isEditingRow?' editing-row':''}${s._isNew?' _new-row':''}`}>
+                    <tr key={s._id||ri}
+                        draggable={canReorder}
+                        onDragStart={()=>canReorder&&setDragIdx(globalRi)}
+                        onDragOver={e=>canReorder&&e.preventDefault()}
+                        onDrop={()=>handleDrop(globalRi)}
+                        onDragEnd={()=>setDragIdx(null)}
+                        className={`db-st-tr${isEditingRow?' editing-row':''}${s._isNew?' _new-row':''}${dragIdx===globalRi?' dragging':''}`}>
+                      <td className="db-st-td">
+                        <div className={`db-st-drag-handle${canReorder?'':' disabled'}`}
+                             title={canReorder?'드래그해서 순서 변경':'전체 보기·정렬 없음 상태에서만 순서 변경 가능'}>⠿</div>
+                      </td>
                       {ST_COLS.map(col=>{
                         const isEditingCell=editing&&editing.rowIdx===globalRi&&editing.colKey===col.key;
                         const val=s[col.key]||'';
