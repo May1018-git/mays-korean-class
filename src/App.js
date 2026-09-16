@@ -1348,7 +1348,7 @@ function TeacherHome({data,setTab}){
 }
 
 function StudentHome({user,data,setTab}){
-  const latest=data.ann[data.ann.length-1];
+  const latest=data.ann[0];
   const preview=s=>s&&s.length>80?s.slice(0,80)+"…":s||"";
   const tiles=[
     {icon:"🃏",ko:"플래시카드",en:"FLASHCARDS",tab:"flash"},
