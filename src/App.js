@@ -1793,14 +1793,19 @@ function TeacherSheets({data,save}){
                   const isEditingRow=editing&&editing.rowIdx===globalRi;
                   return(
                     <tr key={s._id||ri}
-                        draggable={canReorder}
-                        onDragStart={()=>canReorder&&setDragIdx(globalRi)}
                         onDragOver={e=>canReorder&&e.preventDefault()}
                         onDrop={()=>handleDrop(globalRi)}
                         onDragEnd={()=>setDragIdx(null)}
                         className={`db-st-tr${isEditingRow?' editing-row':''}${s._isNew?' _new-row':''}${dragIdx===globalRi?' dragging':''}`}>
                       <td className="db-st-td">
                         <div className={`db-st-drag-handle${canReorder?'':' disabled'}`}
+                             draggable={canReorder}
+                             onDragStart={e=>{
+                               if(!canReorder)return;
+                               setDragIdx(globalRi);
+                               const row=e.currentTarget.closest('tr');
+                               if(row)e.dataTransfer.setDragImage(row,20,20);
+                             }}
                              title={canReorder?'드래그해서 순서 변경':'전체 보기·정렬 없음 상태에서만 순서 변경 가능'}>⠿</div>
                       </td>
                       {ST_COLS.map(col=>{
