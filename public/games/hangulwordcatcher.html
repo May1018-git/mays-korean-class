@@ -225,11 +225,7 @@ var CAT_META = {
   "사회":{em:"🤝",en:"Society"}, "언론":{em:"📰",en:"Media"}
 };
 
-var CAT_COLORS = {
-  "음식":"#FF9F1C","동물":"#4CC9F0","색깔":"#F72585","가족":"#FF6B6B","신체":"#48CAE4","날씨":"#43AA8B","장소":"#F9A03F","교통":"#9B5DE5",
-  "직장":"#577590","요리":"#FF9F1C","감정":"#F72585","쇼핑":"#9B5DE5","건강":"#43AA8B","여행":"#4CC9F0","스포츠":"#F9A03F","취미":"#B388FF",
-  "정치":"#4A6FA5","경제":"#4A7C59","의학":"#EF233C","역사":"#8D5524","환경":"#43AA8B","예술":"#9B5DE5","사회":"#577590","언론":"#F9A03F"
-};
+var CARD_COLORS = ["#FF9F1C","#4CC9F0","#F72585","#FF6B6B","#48CAE4","#43AA8B","#F9A03F","#9B5DE5","#577590","#B388FF","#4A6FA5","#4A7C59","#EF233C","#8D5524"];
 
 var LVL_BADGE_COLOR = {"초급":"#3FA34D","중급":"#F08A00","고급":"#E0406B"};
 var LVL_LABEL = {"초급":"🌱 초급 BEGINNER","중급":"🚀 중급 INTERMEDIATE","고급":"🔥 고급 ADVANCED"};
@@ -357,7 +353,7 @@ function spawn(){
   }
   var entry=pickWord(S.lvl,cat);
   var el=document.createElement('div'); el.className='card';
-  el.style.setProperty('--cc',CAT_COLORS[cat]||'#9BD1FF');
+  el.style.setProperty('--cc',CARD_COLORS[Math.floor(Math.random()*CARD_COLORS.length)]);
   el.innerHTML='<span class="w">'+entry[0]+'</span><span class="g">'+entry[2]+'</span>';
   playfield.appendChild(el);
   var w=el.offsetWidth||120;
