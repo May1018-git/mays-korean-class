@@ -1924,11 +1924,12 @@ const toEmbedUrl=url=>{
 };
 
 function MatContent({m}){
+  const isPdf=/\.pdf(\?|#|$)/i.test(m.embed||"");
   return(
     <div className="space-y-3">
       {m.embed&&(
         <div className="space-y-1.5">
-          <div className="rounded-xl overflow-hidden bg-slate-100" style={{position:"relative",paddingTop:"56.25%"}}>
+          <div className="rounded-xl overflow-hidden bg-slate-100" style={{position:"relative",paddingTop:isPdf?"130%":"56.25%"}}>
             <iframe src={toEmbedUrl(m.embed)} style={{position:"absolute",top:0,left:0,width:"100%",height:"100%"}} frameBorder="0" allowFullScreen title={m.title}/>
           </div>
           <a href={m.embed} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-1.5 w-full py-2 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-600 text-sm font-medium hover:bg-indigo-100 transition">
@@ -1992,7 +1993,7 @@ function TeacherMat({data,save}){
           <button onClick={()=>upd({images:[...imgs,""]})} className="text-purple-600 text-xs hover:underline">+ 이미지 추가</button>
         </div>
         <div className="rounded-lg border border-slate-200 p-3 bg-slate-50 space-y-1">
-          <p className="text-xs font-medium text-slate-600">📄 Google 문서 링크 (Slides · Docs · Sheets)</p>
+          <p className="text-xs font-medium text-slate-600">📄 Google 문서 · PDF 링크 (Slides · Docs · Sheets · PDF)</p>
           <input placeholder="공유 링크 붙여넣기 → 자동으로 뷰어 모드 변환" value={form.embed||""} onChange={e=>upd({embed:e.target.value})} className="w-full px-2 py-1.5 rounded-lg border border-slate-200 text-xs focus:outline-none bg-white"/>
         </div>
         <input placeholder="🔗 외부 링크 (선택)" value={form.link} onChange={e=>upd({link:e.target.value})} className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:border-purple-400 focus:outline-none"/>
