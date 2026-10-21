@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import "./dashboard.css";
 import { db } from "./firebase";
-import { doc, getDoc, setDoc, onSnapshot } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc, deleteField, onSnapshot } from "firebase/firestore";
 import { BookOpen, FileText, Bell, BarChart3, Plus, Trash2, Send, User, GraduationCap, LogOut, Sparkles, CheckCircle, XCircle, Loader2, Megaphone, Lock, Clock, UserCheck, UserX, BookMarked, Edit3, ExternalLink, ChevronDown, ChevronUp, Download, BookText, ArrowUp, ArrowDown, Layers, RotateCcw, ArrowLeft, ArrowRight, Shuffle, FlagTriangleRight } from "lucide-react";
 
 const DRIVE = "https://drive.google.com/drive/folders/1OL0qtkASaU_sj-VM0T79qXlef07zEseZ?usp=drive_link";
@@ -928,6 +928,45 @@ const fset = async (key, val) => {
 };
 
 const normStudents = a => Array.isArray(a)?a.map(s=>typeof s==="string"?{name:s,status:"approved",requestedAt:null}:s):[];
+
+// Visit log: data/visitLog { log: { [id]: {n:name, t:ms, k:"login"|tabId} } }
+// Each visit is merged in as its own map key so concurrent writes never overwrite each other.
+const visitDoc = () => doc(db,"data","visitLog");
+const VISIT_KEEP_DAYS = 60;
+const VISIT_TAB_LABEL = {ann:"공지",mat:"학습자료",tb:"수업교재",voc:"단어장",flash:"플래시카드",game:"게임"};
+const logVisit = async (name, kind) => {
+  try {
+    const t = Date.now();
+    const id = `${t}_${Math.random().toString(36).slice(2,6)}`;
+    await setDoc(visitDoc(), {log:{[id]:{n:name,t,k:kind}}}, {merge:true});
+  } catch {}
+};
+const visitEntries = log => Object.entries(log||{}).map(([id,v])=>({id,...v})).filter(v=>v.n&&v.t).sort((a,b)=>b.t-a.t);
+const pruneVisits = async entries => {
+  const cutoff = Date.now()-VISIT_KEEP_DAYS*86400000;
+  const old = entries.filter(v=>v.t<cutoff);
+  if(!old.length) return;
+  try { await updateDoc(visitDoc(), Object.fromEntries(old.map(v=>[`log.${v.id}`,deleteField()]))); } catch {}
+};
+// Newest-first sessions: a "login" starts a session; later tab entries from the same student join it.
+const groupSessions = entries => {
+  const open = {}, sessions = [];
+  for (const v of [...entries].sort((a,b)=>a.t-b.t)) {
+    if (v.k==="login" || !open[v.n]) { open[v.n] = {name:v.n, start:v.t, tabs:[]}; sessions.push(open[v.n]); }
+    if (v.k!=="login" && !open[v.n].tabs.includes(v.k)) open[v.n].tabs.push(v.k);
+  }
+  return sessions.reverse();
+};
+const fmtVisitTime = t => {
+  const now = new Date(), d = new Date(t), mins = (now-d)/60000;
+  if (mins < 1) return "방금";
+  if (mins < 60) return `${Math.floor(mins)}분 전`;
+  const hm = `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+  if (d.toDateString()===now.toDateString()) return `오늘 ${hm}`;
+  const y = new Date(now); y.setDate(now.getDate()-1);
+  if (d.toDateString()===y.toDateString()) return `어제 ${hm}`;
+  return `${d.getMonth()+1}.${d.getDate()} ${hm}`;
+};
 const LvBadge = ({lv}) => { const l=LV[lv]||LV.beginner; return <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${l.b}`}>{l.e} {l.n}</span>; };
 const Empty = ({ko,en}) => <div className="bg-white rounded-xl p-8 text-center text-slate-400 border border-dashed border-slate-300"><p>{ko}</p><p className="text-xs italic mt-1">{en}</p></div>;
 const SectionTitle = ({ko,en}) => <h2 className="text-lg font-bold text-slate-800 mb-3">{ko} <span className="text-sm text-slate-400 font-normal">/ {en}</span></h2>;
@@ -1106,6 +1145,16 @@ function GameTab(){
 
 function TeacherApp({user,data,save,onLogout}){
   const [tab,setTab]=useState("home");
+  const [visits,setVisits]=useState([]);
+  useEffect(()=>{
+    let pruned=false;
+    const unsub=onSnapshot(visitDoc(),snap=>{
+      const entries=visitEntries(snap.exists()?snap.data().log:{});
+      setVisits(entries);
+      if(!pruned){pruned=true;pruneVisits(entries);}
+    },()=>{});
+    return()=>unsub();
+  },[]);
   const pending=data.stu.filter(s=>s.status==="pending").length;
   const navItems=[
     {id:"home",    icon:"📊", ko:"대시보드",   en:"Dashboard"},
@@ -1155,8 +1204,8 @@ function TeacherApp({user,data,save,onLogout}){
           <span className="db-tb-sub">/ {cur.en}</span>
         </header>
         <div className="db-content">
-          {tab==="home"     &&<TeacherHome data={data} setTab={setTab}/>}
-          {tab==="students" &&<TeacherStudents data={data} save={save}/>}
+          {tab==="home"     &&<TeacherHome data={data} setTab={setTab} visits={visits}/>}
+          {tab==="students" &&<TeacherStudents data={data} save={save} visits={visits}/>}
           {tab==="sheets"   &&<TeacherSheets data={data} save={save}/>}
           {tab==="mat"      &&<TeacherMat data={data} save={save}/>}
           {tab==="tb"       &&<TeacherTB data={data} save={save}/>}
@@ -1181,6 +1230,14 @@ function TeacherApp({user,data,save,onLogout}){
 
 function StudentApp({user,data,onLogout}){
   const [tab,setTab]=useState("home");
+  const lastLogged=useRef({});
+  useEffect(()=>{logVisit(user.name,"login");},[user.name]);
+  useEffect(()=>{
+    if(tab==="home")return;
+    if(Date.now()-(lastLogged.current[tab]||0)<10*60000)return;
+    lastLogged.current[tab]=Date.now();
+    logVisit(user.name,tab);
+  },[tab,user.name]);
   const navItems=[
     {id:"home",  icon:"🏠", ko:"홈",         en:"Home"},
     {id:"ann",   icon:"📢", ko:"공지",       en:"Notice"},
@@ -1247,8 +1304,12 @@ function StudentApp({user,data,onLogout}){
   );
 }
 
-function TeacherHome({data,setTab}){
+function TeacherHome({data,setTab,visits=[]}){
   const pending=data.stu.filter(s=>s.status==="pending");
+  const [showAllVisits,setShowAllVisits]=useState(false);
+  const sessions=useMemo(()=>groupSessions(visits),[visits]);
+  const todayVisitors=new Set(visits.filter(v=>new Date(v.t).toDateString()===new Date().toDateString()).map(v=>v.n)).size;
+  const shownSessions=sessions.slice(0,showAllVisits?30:8);
   const now=new Date();
   const days=["일요일","월요일","화요일","수요일","목요일","금요일","토요일"];
   const dateStr=`${now.getFullYear()}년 ${now.getMonth()+1}월 ${now.getDate()}일`;
@@ -1337,6 +1398,33 @@ function TeacherHome({data,setTab}){
         </div>
         <button className="db-alert-btn" onClick={()=>setTab("students")}>학생 관리 →</button>
       </div>}
+      <div className="db-sec-hd">
+        <div className="db-sec-title">최근 방문 · Recent Visits</div>
+        <span className="db-visit-today">오늘 {todayVisitors}명 방문</span>
+      </div>
+      <div className="db-visit-card">
+        {sessions.length===0
+          ?<div className="db-visit-empty">아직 방문 기록이 없어요 · No visits yet</div>
+          :shownSessions.map(s=>(
+            <div key={`${s.name}-${s.start}`} className="db-visit-row">
+              <div className="db-visit-av">{s.name[0]}</div>
+              <div className="db-visit-main">
+                <div className="db-visit-name">{s.name}</div>
+                <div className="db-visit-tabs">
+                  {s.tabs.length===0
+                    ?<span className="db-visit-none">홈만 봤어요</span>
+                    :s.tabs.map(k=><span key={k} className="db-visit-chip">{VISIT_TAB_LABEL[k]||k}</span>)}
+                </div>
+              </div>
+              <div className="db-visit-time">{fmtVisitTime(s.start)}</div>
+            </div>
+          ))}
+        {sessions.length>8&&(
+          <button className="db-visit-more" onClick={()=>setShowAllVisits(v=>!v)}>
+            {showAllVisits?"접기":"더 보기"}
+          </button>
+        )}
+      </div>
       <div className="db-sec-hd"><div className="db-sec-title">빠른 작업 · Quick Actions</div></div>
       <div className="db-qa">
         <a href="https://preply.com/ko/messages" target="_blank" rel="noopener noreferrer" className="db-qa-btn prim">💬 메시지</a>
@@ -1862,9 +1950,19 @@ function TeacherSheets({data,save}){
     </div>
   );
 }
-function TeacherStudents({data,save}){
+function TeacherStudents({data,save,visits=[]}){
   const [del,setDel]=useState(null);
   const stu=data.stu;
+  const visitInfo=useMemo(()=>{
+    const weekAgo=Date.now()-7*86400000, info={};
+    for(const v of visits){
+      if(v.k!=="login")continue;
+      const i=info[v.n]||(info[v.n]={last:0,week:0});
+      if(v.t>i.last)i.last=v.t;
+      if(v.t>=weekAgo)i.week++;
+    }
+    return info;
+  },[visits]);
   const upd=async(name,status)=>{const u=stu.map(s=>s.name===name?{...s,status}:s);await save("stu",u);};
   const doDelete=async()=>{await save("stu",stu.filter(s=>s.name!==del));setDel(null);};
   const pending=stu.filter(s=>s.status==="pending");
@@ -1888,7 +1986,17 @@ function TeacherStudents({data,save}){
       <div className="mb-3 font-bold text-sm text-slate-700">승인됨 ({approved.length})</div>
       {approved.length===0?<Empty ko="아직 없어요" en="No approved students"/>:approved.map(s=>(
         <div key={s.name} className="bg-white rounded-xl p-3 mb-2 border border-slate-200 flex items-center justify-between">
-          <div className="flex items-center gap-2"><div className="w-8 h-8 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center font-bold text-sm">{s.name[0]}</div><span className="font-medium text-slate-800">{s.name}</span></div>
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center font-bold text-sm">{s.name[0]}</div>
+            <div>
+              <div className="font-medium text-slate-800">{s.name}</div>
+              <div className="text-xs text-slate-400">
+                {visitInfo[s.name]
+                  ?`마지막 접속 ${fmtVisitTime(visitInfo[s.name].last)} · 7일간 ${visitInfo[s.name].week}회`
+                  :"접속 기록 없음"}
+              </div>
+            </div>
+          </div>
           <button onClick={()=>setDel(s.name)} className="text-slate-300 hover:text-red-500 p-1"><Trash2 className="w-4 h-4"/></button>
         </div>
       ))}
