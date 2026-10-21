@@ -320,6 +320,42 @@
 }
 .db-section { margin-bottom: 24px; }
 
+/* ── RECENT VISITS ───────────────────────────────────────────────── */
+.db-visit-today { margin-left: auto; font-size: 15px; font-weight: 600; color: var(--db-v); }
+.db-visit-card {
+  background: var(--db-card); border: 1px solid var(--db-bdr2);
+  border-radius: 12px; box-shadow: var(--db-sh);
+  margin-bottom: 24px; overflow: hidden;
+}
+.db-visit-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px; border-bottom: 1px solid var(--db-bdr2);
+}
+.db-visit-row:last-of-type { border-bottom: none; }
+.db-visit-av {
+  width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+  background: rgba(91,76,245,.12); color: var(--db-v);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 15px;
+}
+.db-visit-main { flex: 1; min-width: 0; }
+.db-visit-name { font-size: 16px; font-weight: 700; color: var(--db-t); }
+.db-visit-tabs { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+.db-visit-chip {
+  font-size: 13px; padding: 1px 8px; border-radius: 10px;
+  background: rgba(91,76,245,.10); color: var(--db-t2);
+}
+.db-visit-none { font-size: 13px; color: var(--db-tm); }
+.db-visit-time { font-size: 14px; color: var(--db-t2); white-space: nowrap; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+.db-visit-empty { padding: 18px 16px; font-size: 15px; color: var(--db-tm); }
+.db-visit-more {
+  display: block; width: 100%; padding: 10px; border: none;
+  border-top: 1px solid var(--db-bdr2); background: none;
+  font-size: 15px; font-weight: 600; color: var(--db-v);
+  cursor: pointer; font-family: inherit;
+}
+.db-visit-more:hover { background: rgba(91,76,245,.08); }
+
 /* ── MINI TABLE (dashboard preview) ─────────────────────────────── */
 .db-table {
   background: var(--db-card);
