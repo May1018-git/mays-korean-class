@@ -1029,9 +1029,9 @@ export default function App() {
     })();
   },[]);
 
-  // Real-time listener for students (for pending approval)
+  // Real-time listener for students (pending approval screen + teacher's new-request alerts)
   useEffect(()=>{
-    if(view!=="pending") return;
+    if(view!=="pending" && view!=="teacher") return;
     const unsub = onSnapshot(doc(db,"data","students"),(snap)=>{
       if(snap.exists()){
         const list=normStudents(snap.data().value);
@@ -1143,9 +1143,65 @@ function GameTab(){
   );
 }
 
+const canNotify = () => typeof window!=="undefined" && "Notification" in window;
+const playChime = () => {
+  try {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    const ctx = new AC();
+    [[880,0],[660,0.18]].forEach(([freq,at])=>{
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = "sine"; o.frequency.value = freq;
+      g.gain.setValueAtTime(0.0001, ctx.currentTime+at);
+      g.gain.exponentialRampToValueAtTime(0.25, ctx.currentTime+at+0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime+at+0.35);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(ctx.currentTime+at); o.stop(ctx.currentTime+at+0.4);
+    });
+    setTimeout(()=>ctx.close(), 1000);
+  } catch {}
+};
+const NEW_REQUEST_WINDOW_MS = 10*60000;
+
 function TeacherApp({user,data,save,onLogout}){
   const [tab,setTab]=useState("home");
   const [visits,setVisits]=useState([]);
+  const [toast,setToast]=useState(null);
+  const toastTimer=useRef(null);
+  const prevPending=useRef([]);
+  const [notifPerm,setNotifPerm]=useState(canNotify()?Notification.permission:"unsupported");
+  const enableNotif=async()=>{
+    if(!canNotify())return;
+    try{setNotifPerm(await Notification.requestPermission());}catch{}
+  };
+  const pendingList=data.stu.filter(s=>s.status==="pending");
+  const pendingKey=pendingList.map(s=>s.name).join("\u0001");
+  useEffect(()=>{
+    const prev=prevPending.current;
+    prevPending.current=pendingList.map(s=>s.name);
+    // Only requests made in the last few minutes count as "new", so pending students that
+    // already existed when the page (or its data) loaded don't trigger an alert.
+    const fresh=pendingList
+      .filter(s=>!prev.includes(s.name)&&s.requestedAt&&Date.now()-Date.parse(s.requestedAt)<NEW_REQUEST_WINDOW_MS)
+      .map(s=>s.name);
+    if(!fresh.length)return;
+    playChime();
+    setToast(t=>[...new Set([...(t||[]),...fresh])]);
+    clearTimeout(toastTimer.current);
+    toastTimer.current=setTimeout(()=>setToast(null),10000);
+    if(canNotify()&&Notification.permission==="granted"){
+      try{
+        const n=new Notification("May's Korean Class · 새 승인 요청",{body:`${fresh.join(", ")} 학생이 가입을 요청했어요.`,tag:"approval-request"});
+        n.onclick=()=>{window.focus();setTab("students");n.close();};
+      }catch{}
+    }
+  },[pendingKey]);
+  useEffect(()=>()=>clearTimeout(toastTimer.current),[]);
+  useEffect(()=>{
+    const base=document.title.replace(/^\(\d+\)\s*/,"");
+    document.title=pendingList.length?`(${pendingList.length}) ${base}`:base;
+    return()=>{document.title=document.title.replace(/^\(\d+\)\s*/,"");};
+  },[pendingList.length]);
   useEffect(()=>{
     let pruned=false;
     const unsub=onSnapshot(visitDoc(),snap=>{
@@ -1155,7 +1211,7 @@ function TeacherApp({user,data,save,onLogout}){
     },()=>{});
     return()=>unsub();
   },[]);
-  const pending=data.stu.filter(s=>s.status==="pending").length;
+  const pending=pendingList.length;
   const navItems=[
     {id:"home",    icon:"📊", ko:"대시보드",   en:"Dashboard"},
     {id:"preply",  icon:"🔗", ko:"Preply",      en:"Preply"},
@@ -1171,6 +1227,16 @@ function TeacherApp({user,data,save,onLogout}){
   const cur=navItems.find(i=>i.id===tab)||navItems[0];
   return(
     <div className="db-app">
+      {toast&&(
+        <button className="db-toast" onClick={()=>{setTab("students");setToast(null);}}>
+          <span className="db-toast-icon">🔔</span>
+          <span className="db-toast-body">
+            <span className="db-toast-title">새 승인 요청 · New request</span>
+            <span className="db-toast-desc">{toast.join(", ")} · 눌러서 승인하기</span>
+          </span>
+          <span className="db-toast-x" onClick={e=>{e.stopPropagation();setToast(null);}}>✕</span>
+        </button>
+      )}
       <aside className="db-sidebar">
         <div className="db-brand">
           <div className="db-logo">🎓</div>
@@ -1204,7 +1270,7 @@ function TeacherApp({user,data,save,onLogout}){
           <span className="db-tb-sub">/ {cur.en}</span>
         </header>
         <div className="db-content">
-          {tab==="home"     &&<TeacherHome data={data} setTab={setTab} visits={visits}/>}
+          {tab==="home"     &&<TeacherHome data={data} setTab={setTab} visits={visits} notifPerm={notifPerm} onEnableNotif={enableNotif}/>}
           {tab==="students" &&<TeacherStudents data={data} save={save} visits={visits}/>}
           {tab==="sheets"   &&<TeacherSheets data={data} save={save}/>}
           {tab==="mat"      &&<TeacherMat data={data} save={save}/>}
@@ -1304,7 +1370,7 @@ function StudentApp({user,data,onLogout}){
   );
 }
 
-function TeacherHome({data,setTab,visits=[]}){
+function TeacherHome({data,setTab,visits=[],notifPerm,onEnableNotif}){
   const pending=data.stu.filter(s=>s.status==="pending");
   const [showAllVisits,setShowAllVisits]=useState(false);
   const sessions=useMemo(()=>groupSessions(visits),[visits]);
@@ -1389,6 +1455,15 @@ function TeacherHome({data,setTab,visits=[]}){
             </div>
           )}
         </>
+      )}
+      {notifPerm==="default"&&(
+        <div className="db-notif-prompt">
+          <span className="db-notif-text">🔔 새 승인 요청이 오면 컴퓨터 화면에 팝업으로 알려드려요 · Get a pop-up for new requests</span>
+          <button className="db-notif-btn" onClick={onEnableNotif}>알림 켜기</button>
+        </div>
+      )}
+      {notifPerm==="denied"&&(
+        <div className="db-notif-hint">브라우저 설정에서 이 사이트의 알림을 허용하면 새 승인 요청을 팝업으로 받을 수 있어요.</div>
       )}
       {pending.length>0&&<div className="db-alert">
         <span className="db-alert-icon">⚠️</span>
