@@ -652,6 +652,10 @@
 .db-sh-fbtn.active { background: var(--db-v); color: #fff; border-color: var(--db-v); }
 .db-sh-addbtn { margin-left: auto; padding: 7px 18px; border-radius: 20px; background: var(--db-v); color: #fff; border: none; font-size: 14px; font-weight: 700; cursor: pointer; transition: opacity .15s; }
 .db-sh-addbtn:hover { opacity: .85; }
+.db-sh-total { font-size: 15px; color: var(--db-t2); margin: -4px 0 12px; font-variant-numeric: tabular-nums; }
+.db-sh-total b { color: var(--db-t); font-weight: 700; margin-left: 2px; }
+.db-sh-total-sub { color: var(--db-tm); margin-left: 4px; }
+.db-st-money { margin-left: auto; font-variant-numeric: tabular-nums; }
 .db-st-tr._new-row .db-st-td { background: rgba(107,79,187,.06); }
 .db-st-del-btn { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 6px; cursor: pointer; font-size: 14px; color: var(--db-tm); transition: background .1s, color .1s; margin: 0 auto; }
 .db-st-del-btn:hover { background: rgba(239,68,68,.1); color: #ef4444; }

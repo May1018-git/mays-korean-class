@@ -1772,6 +1772,7 @@ function TeacherPreply({data,save:persist}){
 
 const ST_COLS=[
   {key:'구독여부',  label:'구독',       w:64,  type:'select', opts:['구독','구독취소','체험수업']},
+  {key:'구독료',    label:'구독료',     w:80,  type:'money'},
   {key:'이름',      label:'이름',       w:70,  type:'text'},
   {key:'모국어 이름',label:'로마자',    w:80,  type:'text'},
   {key:'레벨',      label:'레벨',       w:58,  type:'select', opts:['왕초보','초급','중급','고급']},
@@ -1784,6 +1785,8 @@ const ST_COLS=[
   {key:'모국어',    label:'언어',       w:90,  type:'text'},
 ];
 const LEVEL_ORDER=['왕초보','초급','중급','고급'];
+const parseMoney=v=>{const n=parseFloat(String(v||'').replace(/[^0-9.]/g,''));return isNaN(n)?null:n;};
+const fmtMoney=v=>{const n=parseMoney(v);return n===null?'':'$'+n.toLocaleString('en-US');};
 function TeacherSheets({data,save}){
   const [students,setStudents]=useState([]);
   const [loading,setLoading]=useState(true);
@@ -1908,6 +1911,11 @@ function TeacherSheets({data,save}){
     if(!sortCol)return base;
     return[...base].sort((a,b)=>{
       let av=a[sortCol]||'',bv=b[sortCol]||'';
+      if(sortCol==='구독료'){
+        const am=parseMoney(av),bm=parseMoney(bv);
+        if(am===null||bm===null)return am===bm?0:am===null?1:-1;
+        return sortDir==='asc'?am-bm:bm-am;
+      }
       if(sortCol==='마지막수업'){
         const pd=v=>{const m=v.match(/(\d{4})\D+(\d{1,2})\D+(\d{1,2})/);return m?new Date(+m[1],+m[2]-1,+m[3]):new Date(0);};
         av=pd(av);bv=pd(bv);
@@ -1920,6 +1928,8 @@ function TeacherSheets({data,save}){
       return 0;
     });
   },[students,filter,sortCol,sortDir]);
+  const feeFilled=sortedVisible.filter(s=>parseMoney(s['구독료'])!==null);
+  const feeTotal=feeFilled.reduce((sum,s)=>sum+parseMoney(s['구독료']),0);
 
   return(
     <div>
@@ -1933,6 +1943,12 @@ function TeacherSheets({data,save}){
           })}
           <button className="db-sh-addbtn" onClick={addStudent}>+ 학생 추가</button>
         </div>
+        {feeFilled.length>0&&(
+          <div className="db-sh-total">
+            구독료 합계 <b>{fmtMoney(feeTotal)}</b>
+            <span className="db-sh-total-sub">· 현재 목록 {sortedVisible.length}명 중 {feeFilled.length}명 입력</span>
+          </div>
+        )}
         {!canReorder&&<div style={{fontSize:13,color:'var(--db-tm)',marginBottom:10}}>전체 보기 + 정렬 없음 상태에서만 순서를 드래그로 바꿀 수 있어요.</div>}
         {sortedVisible.length===0
           ?<div style={{color:'var(--db-tm)',fontSize:15,padding:'20px 0'}}>해당하는 학생이 없어요.</div>
@@ -1988,15 +2004,22 @@ function TeacherSheets({data,save}){
                                       value={toDateInput(editVal)}
                                       onChange={e=>setEditVal(fromDateInput(e.target.value))}
                                       onBlur={commitEdit} onKeyDown={handleKey}/>
+                                  :col.type==='money'
+                                  ?<input className="db-st-input" autoFocus inputMode="decimal" placeholder="$"
+                                      value={editVal}
+                                      onChange={e=>setEditVal(e.target.value.replace(/[^0-9.]/g,''))}
+                                      onBlur={commitEdit} onKeyDown={handleKey}/>
                                   :<input className="db-st-input" autoFocus value={editVal}
                                       onChange={e=>setEditVal(e.target.value)}
                                       onBlur={commitEdit} onKeyDown={handleKey}
                                       onPaste={handlePaste}/>
                             ):(
                               <div className="db-st-td-inner" style={{minWidth:col.w-24}}
-                                onClick={()=>startEdit(globalRi,col.key,val)}>
+                                onClick={()=>startEdit(globalRi,col.key,col.type==='money'?String(parseMoney(val)??''):val)}>
                                 {col.key==='구독여부'&&val
                                   ?<span className={`db-st-badge ${badgeClass(val)}`}>{val}</span>
+                                  :col.type==='money'
+                                  ?<span className="db-st-money" style={{color:fmtMoney(val)?'var(--db-t)':'var(--db-tm)',fontStyle:fmtMoney(val)?'normal':'italic'}}>{fmtMoney(val)||'—'}</span>
                                   :<span style={{color:val?'var(--db-t)':'var(--db-tm)',fontStyle:val?'normal':'italic'}}>{val||'—'}</span>
                                 }
                               </div>
