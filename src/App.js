@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import "./dashboard.css";
 import { db } from "./firebase";
-import { doc, getDoc, setDoc, updateDoc, deleteField, onSnapshot } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc, deleteField, onSnapshot, runTransaction, arrayUnion } from "firebase/firestore";
 import { BookOpen, FileText, Bell, BarChart3, Plus, Trash2, Send, User, GraduationCap, LogOut, Sparkles, CheckCircle, XCircle, Loader2, Megaphone, Lock, Clock, UserCheck, UserX, BookMarked, Edit3, ExternalLink, ChevronDown, ChevronUp, Download, BookText, ArrowUp, ArrowDown, Layers, RotateCcw, ArrowLeft, ArrowRight, Shuffle, FlagTriangleRight } from "lucide-react";
 
 const DRIVE = "https://drive.google.com/drive/folders/1OL0qtkASaU_sj-VM0T79qXlef07zEseZ?usp=drive_link";
@@ -1041,6 +1041,17 @@ export default function App() {
     return ()=>unsub();
   },[view]);
 
+  // Keep student-info data live on the teacher screen, so edits from another computer show up without a reload.
+  useEffect(()=>{
+    if(view!=="teacher") return;
+    const docs=[["sheetEdits",{}],["sheetNewStudents",[]],["sheetDeletedStudents",[]],["sheetOrder",[]]];
+    const unsubs=docs.map(([key,empty])=>onSnapshot(doc(db,"data",key),snap=>{
+      const v=snap.exists()?snap.data().value:null;
+      setData(d=>({...d,[key]:v??empty}));
+    },()=>{}));
+    return ()=>unsubs.forEach(u=>u());
+  },[view]);
+
   const save = useCallback(async (key,val)=>{
     const keyMap={mat:"materials",tb:"textbooks",voc:"vocab",ann:"announcements",stu:"students",icsUrl:"icsUrl",sheetsUrl:"sheetsUrl",sheetEdits:"sheetEdits",sheetNewStudents:"sheetNewStudents",sheetDeletedStudents:"sheetDeletedStudents",sheetOrder:"sheetOrder"};
     await fset(keyMap[key],val);
@@ -1272,7 +1283,7 @@ function TeacherApp({user,data,save,onLogout}){
         <div className="db-content">
           {tab==="home"     &&<TeacherHome data={data} setTab={setTab} visits={visits} notifPerm={notifPerm} onEnableNotif={enableNotif}/>}
           {tab==="students" &&<TeacherStudents data={data} save={save} visits={visits}/>}
-          {tab==="sheets"   &&<TeacherSheets data={data} save={save}/>}
+          {tab==="sheets"   &&<TeacherSheets data={data}/>}
           {tab==="mat"      &&<TeacherMat data={data} save={save}/>}
           {tab==="tb"       &&<TeacherTB data={data} save={save}/>}
           {tab==="voc"      &&<TeacherVoc data={data} save={save}/>}
@@ -1785,26 +1796,42 @@ const ST_COLS=[
   {key:'모국어',    label:'언어',       w:90,  type:'text'},
 ];
 const LEVEL_ORDER=['왕초보','초급','중급','고급'];
+// Student-info writes change only what was edited, so a device holding stale data
+// can't overwrite edits made elsewhere. They throw on failure (shown as save status).
+const sheetRef=k=>doc(db,"data",k);
+const sheetSaveCell=(name,col,val)=>setDoc(sheetRef("sheetEdits"),{value:{[name]:{[col]:val}}},{merge:true});
+const sheetMarkDeleted=name=>setDoc(sheetRef("sheetDeletedStudents"),{value:arrayUnion(name)},{merge:true});
+const sheetSaveOrder=keys=>setDoc(sheetRef("sheetOrder"),{value:keys});
+const sheetUpdateNew=fn=>runTransaction(db,async tx=>{
+  const snap=await tx.get(sheetRef("sheetNewStudents"));
+  const cur=snap.exists()&&Array.isArray(snap.data().value)?snap.data().value:[];
+  tx.set(sheetRef("sheetNewStudents"),{value:fn(cur)});
+});
 const parseMoney=v=>{const n=parseFloat(String(v||'').replace(/[^0-9.]/g,''));return isNaN(n)?null:n;};
 const fmtMoney=v=>{const n=parseMoney(v);return n===null?'':'$'+n.toLocaleString('en-US');};
-function TeacherSheets({data,save}){
-  const [students,setStudents]=useState([]);
+function TeacherSheets({data}){
+  const [csvBase,setCsvBase]=useState([]);
   const [loading,setLoading]=useState(true);
   const [err,setErr]=useState('');
   const [filter,setFilter]=useState('전체');
-  const [editing,setEditing]=useState(null);
+  const [editing,setEditing]=useState(null); // {key, colKey}
   const [editVal,setEditVal]=useState('');
   const [sortCol,setSortCol]=useState(null);
   const [sortDir,setSortDir]=useState('asc');
-  const [confirmDel,setConfirmDel]=useState(null);
-  const [dragIdx,setDragIdx]=useState(null);
+  const [confirmDel,setConfirmDel]=useState(null); // student key
+  const [dragKey,setDragKey]=useState(null);
+  const [newPatches,setNewPatches]=useState({}); // optimistic values for new-student edits until the transaction lands
+  const [saveState,setSaveState]=useState({status:'idle'});
+  const [slowSave,setSlowSave]=useState(false);
+  const pendingSaves=useRef(0);
   const sheetsUrl=data.sheetsUrl||DEFAULT_SHEETS_URL;
   const sheetEdits=data.sheetEdits||{};
   const sheetNewStudents=data.sheetNewStudents||[];
   const sheetDeletedStudents=data.sheetDeletedStudents||[];
   const sheetOrder=data.sheetOrder||[];
   const badgeClass=v=>v==='구독'?'active':v==='구독취소'?'cancelled':'trial';
-  const keyOf=s=>s._isNew?('new:'+s._id):s['이름'];
+  // _src = the student's name as it appears in the Google Sheet; edits stay keyed to it even if 이름 is edited.
+  const keyOf=s=>s._isNew?('new:'+s._id):s._src;
   const canReorder=filter==='전체'&&!sortCol;
 
   useEffect(()=>{
@@ -1813,70 +1840,96 @@ function TeacherSheets({data,save}){
       .then(r=>{if(!r.ok)throw new Error('서버 오류');return r.text();})
       .then(text=>{
         const{headers,rows}=parseSheetsCSV(text);
-        const csvStudents=rows.map(r=>{
-          const obj={};headers.forEach((h,i)=>{obj[h]=r[i]||'';});
-          return{...obj,...(sheetEdits[obj['이름']]||{})};
-        }).filter(s=>!sheetDeletedStudents.includes(s['이름']));
-        const merged=[...csvStudents,...sheetNewStudents];
-        if(sheetOrder.length){
-          const idx=new Map(sheetOrder.map((k,i)=>[k,i]));
-          const withIdx=merged.map((s,i)=>({s,pos:idx.has(keyOf(s))?idx.get(keyOf(s)):sheetOrder.length+i}));
-          withIdx.sort((a,b)=>a.pos-b.pos);
-          setStudents(withIdx.map(x=>x.s));
-        } else {
-          setStudents(merged);
-        }
+        setCsvBase(rows.map(r=>{const obj={};headers.forEach((h,i)=>{obj[h]=r[i]||'';});return obj;}));
         setLoading(false);
       }).catch(()=>{setErr('시트를 불러오지 못했어요. 잠시 후 다시 시도해주세요.');setLoading(false);});
-  },[sheetsUrl,sheetNewStudents.length,sheetOrder.length]);
+  },[sheetsUrl]);
 
-  const handleDrop=async(targetRi)=>{
-    if(!canReorder||dragIdx===null||dragIdx===targetRi){setDragIdx(null);return;}
-    const reordered=[...students];
-    const[moved]=reordered.splice(dragIdx,1);
-    reordered.splice(targetRi,0,moved);
-    setStudents(reordered);
-    await save('sheetOrder',reordered.map(keyOf));
-    setDragIdx(null);
-  };
+  useEffect(()=>{setNewPatches({});},[sheetNewStudents]);
 
-  const deleteStudent=async(rowIdx)=>{
-    const s=students[rowIdx];
-    setStudents(prev=>prev.filter((_,i)=>i!==rowIdx));
-    if(s._isNew){
-      const updated=sheetNewStudents.filter(n=>n._id!==s._id);
-      await save('sheetNewStudents',updated);
-    } else {
-      const updated=[...sheetDeletedStudents,s['이름']];
-      await save('sheetDeletedStudents',updated);
+  const students=useMemo(()=>{
+    const csv=csvBase
+      .filter(o=>!sheetDeletedStudents.includes(o['이름']))
+      .map(o=>({...o,...(sheetEdits[o['이름']]||{}),_src:o['이름']}));
+    const fresh=sheetNewStudents.map(n=>({...n,...(newPatches['new:'+n._id]||{})}));
+    const merged=[...csv,...fresh];
+    if(!sheetOrder.length)return merged;
+    const idx=new Map(sheetOrder.map((k,i)=>[k,i]));
+    const key=s=>s._isNew?('new:'+s._id):s._src;
+    return merged.map((s,i)=>({s,pos:idx.has(key(s))?idx.get(key(s)):sheetOrder.length+i}))
+      .sort((a,b)=>a.pos-b.pos).map(x=>x.s);
+  },[csvBase,sheetEdits,sheetNewStudents,sheetDeletedStudents,sheetOrder,newPatches]);
+  const findStudent=key=>students.find(s=>keyOf(s)===key);
+
+  // Save tracking: shows 저장 중 / 저장됨 / 저장 실패 and warns before closing the tab mid-save.
+  const runSave=async fn=>{
+    pendingSaves.current++;
+    setSaveState({status:'saving'});
+    try{
+      await fn();
+      pendingSaves.current--;
+      if(!pendingSaves.current)setSaveState({status:'saved',at:Date.now()});
+    }catch(e){
+      pendingSaves.current--;
+      console.error(e);
+      setSaveState({status:'error',retry:()=>runSave(fn)});
     }
+  };
+  useEffect(()=>{
+    if(saveState.status!=='saving'){setSlowSave(false);return;}
+    const t=setTimeout(()=>setSlowSave(true),8000);
+    return()=>clearTimeout(t);
+  },[saveState]);
+  useEffect(()=>{
+    const warn=e=>{if(pendingSaves.current>0){e.preventDefault();e.returnValue='';}};
+    window.addEventListener('beforeunload',warn);
+    return()=>window.removeEventListener('beforeunload',warn);
+  },[]);
+
+  const persistCell=(s,colKey,val)=>{
+    if(val===(s[colKey]||''))return;
+    if(s._isNew){
+      setNewPatches(p=>({...p,[keyOf(s)]:{...(p[keyOf(s)]||{}),[colKey]:val}}));
+      runSave(()=>sheetUpdateNew(arr=>arr.map(n=>n._id===s._id?{...n,[colKey]:val}:n)));
+    } else {
+      runSave(()=>sheetSaveCell(s._src,colKey,val));
+    }
+  };
+
+  const handleDrop=targetKey=>{
+    if(!canReorder||dragKey===null||dragKey===targetKey){setDragKey(null);return;}
+    const keys=students.map(keyOf);
+    const from=keys.indexOf(dragKey),to=keys.indexOf(targetKey);
+    setDragKey(null);
+    if(from<0||to<0)return;
+    const[moved]=keys.splice(from,1);
+    keys.splice(to,0,moved);
+    runSave(()=>sheetSaveOrder(keys));
+  };
+
+  const deleteStudent=key=>{
+    const s=findStudent(key);
     setConfirmDel(null);
+    if(!s)return;
+    if(s._isNew)runSave(()=>sheetUpdateNew(arr=>arr.filter(n=>n._id!==s._id)));
+    else runSave(()=>sheetMarkDeleted(s._src));
   };
 
-  const addStudent=async()=>{
+  const addStudent=()=>{
     const newS={_isNew:true,_id:Date.now(),...Object.fromEntries(ST_COLS.map(c=>[c.key,c.key==='구독여부'?'구독':'']))};
-    const updated=[...sheetNewStudents,newS];
-    setStudents(prev=>[...prev,newS]);
-    await save('sheetNewStudents',updated);
+    runSave(()=>sheetUpdateNew(arr=>[...arr,newS]));
   };
 
-  const startEdit=(rowIdx,colKey,cur)=>{setEditing({rowIdx,colKey});setEditVal(cur);};
+  const startEdit=(key,colKey,cur)=>{setEditing({key,colKey});setEditVal(cur);};
   const cancelEdit=()=>setEditing(null);
 
-  const commitEdit=async()=>{
+  const commitEdit=()=>{
     if(!editing)return;
-    const{rowIdx,colKey}=editing;
-    const s=students[rowIdx];
-    setStudents(prev=>prev.map((p,i)=>i===rowIdx?{...p,[colKey]:editVal}:p));
-    if(s._isNew){
-      const updated=sheetNewStudents.map(n=>n._id===s._id?{...n,[colKey]:editVal}:n);
-      await save('sheetNewStudents',updated);
-    } else {
-      const name=s['이름'];
-      const newEdits={...sheetEdits,[name]:{...(sheetEdits[name]||{}),[colKey]:editVal}};
-      await save('sheetEdits',newEdits);
-    }
+    const{key,colKey}=editing;
+    const val=editVal;
     setEditing(null);
+    const s=findStudent(key);
+    if(s)persistCell(s,colKey,val);
   };
 
   const handleKey=e=>{if(e.key==='Enter'){commitEdit();}else if(e.key==='Escape'){cancelEdit();}};
@@ -1885,18 +1938,10 @@ function TeacherSheets({data,save}){
     const pasted=e.clipboardData.getData('text').replace(/[\t\r\n]+/g,' ').trim();
     setEditVal(pasted);
   };
-  const handleSelectChange=async(rowIdx,colKey,val)=>{
-    const s=students[rowIdx];
-    setStudents(prev=>prev.map((p,i)=>i===rowIdx?{...p,[colKey]:val}:p));
-    if(s._isNew){
-      const updated=sheetNewStudents.map(n=>n._id===s._id?{...n,[colKey]:val}:n);
-      await save('sheetNewStudents',updated);
-    } else {
-      const name=s['이름'];
-      const newEdits={...sheetEdits,[name]:{...(sheetEdits[name]||{}),[colKey]:val}};
-      await save('sheetEdits',newEdits);
-    }
-    setEditing(null);
+  const handleSelectChange=(key,colKey,val)=>{
+    setEditing(null); // close first so the select's onBlur can't re-save the old value
+    const s=findStudent(key);
+    if(s)persistCell(s,colKey,val);
   };
 
   const handleSortClick=key=>{
@@ -1943,10 +1988,30 @@ function TeacherSheets({data,save}){
           })}
           <button className="db-sh-addbtn" onClick={addStudent}>+ 학생 추가</button>
         </div>
-        {feeFilled.length>0&&(
-          <div className="db-sh-total">
-            구독료 합계 <b>{fmtMoney(feeTotal)}</b>
-            <span className="db-sh-total-sub">· 현재 목록 {sortedVisible.length}명 중 {feeFilled.length}명 입력</span>
+        {(feeFilled.length>0||saveState.status!=='idle')&&(
+          <div className="db-sh-meta">
+            {feeFilled.length>0&&(
+              <div className="db-sh-total">
+                구독료 합계 <b>{fmtMoney(feeTotal)}</b>
+                <span className="db-sh-total-sub">· 현재 목록 {sortedVisible.length}명 중 {feeFilled.length}명 입력</span>
+              </div>
+            )}
+            {saveState.status==='saving'&&(
+              <div className="db-save-status saving" role="status">
+                저장 중…{slowSave&&<span className="db-save-sub"> 인터넷이 연결되면 자동으로 저장돼요</span>}
+              </div>
+            )}
+            {saveState.status==='saved'&&(
+              <div className="db-save-status saved" role="status">
+                ✓ 저장됨 {new Date(saveState.at).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',hour12:false})}
+              </div>
+            )}
+            {saveState.status==='error'&&(
+              <div className="db-save-status error" role="alert">
+                ⚠ 저장 실패 · 인터넷 연결을 확인해 주세요
+                <button className="db-save-retry" onClick={saveState.retry}>다시 시도</button>
+              </div>
+            )}
           </div>
         )}
         {!canReorder&&<div style={{fontSize:13,color:'var(--db-tm)',marginBottom:10}}>전체 보기 + 정렬 없음 상태에서만 순서를 드래그로 바꿀 수 있어요.</div>}
@@ -1967,35 +2032,35 @@ function TeacherSheets({data,save}){
                 </tr>
               </thead>
               <tbody>
-                {sortedVisible.map((s,ri)=>{
-                  const globalRi=students.indexOf(s);
-                  const isEditingRow=editing&&editing.rowIdx===globalRi;
+                {sortedVisible.map(s=>{
+                  const sKey=keyOf(s);
+                  const isEditingRow=editing&&editing.key===sKey;
                   return(
-                    <tr key={s._id||ri}
+                    <tr key={sKey}
                         onDragOver={e=>canReorder&&e.preventDefault()}
-                        onDrop={()=>handleDrop(globalRi)}
-                        onDragEnd={()=>setDragIdx(null)}
-                        className={`db-st-tr${isEditingRow?' editing-row':''}${s._isNew?' _new-row':''}${dragIdx===globalRi?' dragging':''}`}>
+                        onDrop={()=>handleDrop(sKey)}
+                        onDragEnd={()=>setDragKey(null)}
+                        className={`db-st-tr${isEditingRow?' editing-row':''}${s._isNew?' _new-row':''}${dragKey===sKey?' dragging':''}`}>
                       <td className="db-st-td">
                         <div className={`db-st-drag-handle${canReorder?'':' disabled'}`}
                              draggable={canReorder}
                              onDragStart={e=>{
                                if(!canReorder)return;
-                               setDragIdx(globalRi);
+                               setDragKey(sKey);
                                const row=e.currentTarget.closest('tr');
                                if(row)e.dataTransfer.setDragImage(row,20,20);
                              }}
                              title={canReorder?'드래그해서 순서 변경':'전체 보기·정렬 없음 상태에서만 순서 변경 가능'}>⠿</div>
                       </td>
                       {ST_COLS.map(col=>{
-                        const isEditingCell=editing&&editing.rowIdx===globalRi&&editing.colKey===col.key;
+                        const isEditingCell=isEditingRow&&editing.colKey===col.key;
                         const val=s[col.key]||'';
                         return(
                           <td key={col.key} className="db-st-td">
                             {isEditingCell?(
                               col.type==='select'
                                 ?<select className="db-st-select" autoFocus value={editVal}
-                                    onChange={e=>handleSelectChange(globalRi,col.key,e.target.value)}
+                                    onChange={e=>handleSelectChange(sKey,col.key,e.target.value)}
                                     onBlur={commitEdit} onKeyDown={handleKey}>
                                     {col.opts.map(o=><option key={o}>{o}</option>)}
                                   </select>
@@ -2015,7 +2080,7 @@ function TeacherSheets({data,save}){
                                       onPaste={handlePaste}/>
                             ):(
                               <div className="db-st-td-inner" style={{minWidth:col.w-24}}
-                                onClick={()=>startEdit(globalRi,col.key,col.type==='money'?String(parseMoney(val)??''):val)}>
+                                onClick={()=>startEdit(sKey,col.key,col.type==='money'?String(parseMoney(val)??''):val)}>
                                 {col.key==='구독여부'&&val
                                   ?<span className={`db-st-badge ${badgeClass(val)}`}>{val}</span>
                                   :col.type==='money'
@@ -2028,7 +2093,7 @@ function TeacherSheets({data,save}){
                         );
                       })}
                       <td className="db-st-td">
-                        <div className="db-st-del-btn" onClick={()=>setConfirmDel(globalRi)}>🗑</div>
+                        <div className="db-st-del-btn" onClick={()=>setConfirmDel(sKey)}>🗑</div>
                       </td>
                     </tr>
                   );
@@ -2039,7 +2104,7 @@ function TeacherSheets({data,save}){
         }
         {confirmDel!==null&&(
           <ConfirmDelete
-            label={students[confirmDel]?.['이름']||'신규 학생'}
+            label={findStudent(confirmDel)?.['이름']||'신규 학생'}
             onConfirm={()=>deleteStudent(confirmDel)}
             onCancel={()=>setConfirmDel(null)}
           />
