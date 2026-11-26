@@ -1786,6 +1786,7 @@ const ST_COLS=[
   {key:'구독료',    label:'구독료',     w:80,  type:'money'},
   {key:'이름',      label:'이름',       w:70,  type:'text'},
   {key:'모국어 이름',label:'로마자',    w:80,  type:'text'},
+  {key:'구독 시작일',label:'구독 시작일',w:100, type:'date'},
   {key:'레벨',      label:'레벨',       w:58,  type:'select', opts:['왕초보','초급','중급','고급']},
   {key:'진도',      label:'진도',       w:148, type:'text'},
   {key:'마지막수업',label:'마지막수업', w:100, type:'date'},
@@ -1961,10 +1962,13 @@ function TeacherSheets({data}){
         if(am===null||bm===null)return am===bm?0:am===null?1:-1;
         return sortDir==='asc'?am-bm:bm-am;
       }
-      if(sortCol==='마지막수업'){
-        const pd=v=>{const m=v.match(/(\d{4})\D+(\d{1,2})\D+(\d{1,2})/);return m?new Date(+m[1],+m[2]-1,+m[3]):new Date(0);};
-        av=pd(av);bv=pd(bv);
-      } else if(sortCol==='레벨'){
+      if(ST_COLS.find(c=>c.key===sortCol)?.type==='date'){
+        const pd=v=>{const m=v.match(/(\d{4})\D+(\d{1,2})\D+(\d{1,2})/);return m?new Date(+m[1],+m[2]-1,+m[3]).getTime():null;};
+        const ad=pd(av),bd=pd(bv);
+        if(ad===null||bd===null)return ad===bd?0:ad===null?1:-1;
+        return sortDir==='asc'?ad-bd:bd-ad;
+      }
+      if(sortCol==='레벨'){
         av=LEVEL_ORDER.indexOf(av);bv=LEVEL_ORDER.indexOf(bv);
         if(av===-1)av=999;if(bv===-1)bv=999;
       }
